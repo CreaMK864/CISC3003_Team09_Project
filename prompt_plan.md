@@ -92,17 +92,17 @@ Output the updated code for the database connection, models, and sample endpoint
 #### **Prompt 3: Supabase Authentication Integration**
 
 ```text
-Integrate Supabase authentication into the project. Using the backend setup from previous prompts, do the following:
+Integrate Supabase authentication into your Chatbot Website project by adjusting the current authentication flow. Instead of reimplementing user registration and login in FastAPI, do the following:
 
-1. Update dependencies if needed (e.g., httpx or another HTTP client library).
-2. Create a new module (e.g., `auth.py`) to handle user authentication using Supabase.
-3. Implement endpoints for:
-   - User registration (using email, password, and display name).
-   - User login, which retrieves and returns a token from Supabase.
-   - A route that checks the current session/token and returns user profile information.
-4. Ensure these authentication endpoints are wired into your FastAPI app and that they integrate with the User model defined earlier.
+1. Use Supabase’s client libraries on the frontend to handle user signup, login, email verification, and session management.
+2. Create a new module in your FastAPI backend (e.g., auth.py) that implements a dependency to validate Supabase-issued JWT tokens. This module should:
+   - Extract the JWT from the HTTP Authorization header (using the format "Bearer <token>").
+   - Verify the token’s signature, issuer, and audience by using Supabase’s public key (e.g., using python-jose).
+   - Decode the token to retrieve user details (user ID, email, display name) for downstream processing.
+3. Update your FastAPI routes to include this dependency. Protected endpoints (for instance, a /profile route) should use the verified token information to return or process user data.
+4. Ensure that the backend does not duplicate the client-side authentication processes provided by Supabase, and solely focuses on verifying the legitimacy of the user’s token.
 
-Provide code for your authentication module and the updated FastAPI app that includes the authentication endpoints.
+Output the code for the new authentication module (auth.py) and an updated main application file (main.py) that demonstrates a protected endpoint using the token verification dependency.
 ```
 
 ---
