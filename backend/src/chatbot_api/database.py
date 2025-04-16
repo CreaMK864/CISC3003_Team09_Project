@@ -111,6 +111,14 @@ class Message(SQLModel, table=True):
     conversation: Conversation = Relationship(back_populates="messages")
 
 
+async def delete_all_tables():
+    """
+    Delete all tables in the database.
+    """
+    async with engine.begin() as conn:
+        await conn.run_sync(SQLModel.metadata.drop_all)
+
+
 async def create_db_and_tables():
     """
     Create all database tables if they don't exist.

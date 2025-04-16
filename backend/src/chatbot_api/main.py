@@ -23,7 +23,7 @@ from pydantic import BaseModel
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from chatbot_api.database import Conversation, Message, User, create_db_and_tables, get_session
+from chatbot_api.database import Conversation, Message, User, delete_all_tables, create_db_and_tables, get_session
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -34,6 +34,7 @@ async def lifespan(app: FastAPI):
     Args:
         app: FastAPI application instance
     """
+    await delete_all_tables()
     await create_db_and_tables()
     yield
 
