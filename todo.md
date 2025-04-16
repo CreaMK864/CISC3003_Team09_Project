@@ -8,10 +8,10 @@
     - `main.py` file.
     - `requirements.txt` file.
     - `Dockerfile` for deployment.
-- [ ] **Basic FastAPI App**
-  - [ ] Initialize a FastAPI application in `main.py`.
-  - [ ] Add a simple `/health` endpoint returning JSON (e.g., `{"status": "ok"}`).
-  - [ ] Set up Uvicorn to run the app when executing `main.py`.
+- [x] **Basic FastAPI App**
+  - [x] Initialize a FastAPI application in `main.py`.
+  - [x] Add a simple `/health` endpoint returning JSON (e.g., `{"status": "ok"}`).
+  - [x] Set up Uvicorn to run the app when executing `main.py`.
 
 ## 2. Database Integration & Data Modeling
 - [ ] **Update Dependencies**
@@ -96,7 +96,7 @@
   - [ ] Enhance HTTP endpoints with comprehensive error handling and proper HTTP status codes.
   - [ ] Improve WebSocket error handling and client notifications.
 - [ ] **Logging**
-  - [ ] Integrate Python’s logging module to log important events and errors.
+  - [ ] Integrate Python's logging module to log important events and errors.
 - [ ] **Security Measures**
   - [ ] Enforce HTTPS and secure session token management.
   - [ ] Secure passwords by using bcrypt (or similar) for hashing.
