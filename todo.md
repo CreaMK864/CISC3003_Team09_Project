@@ -14,18 +14,18 @@
   - [x] Set up Uvicorn to run the app when executing `main.py`.
 
 ## 2. Database Integration & Data Modeling
-- [ ] **Update Dependencies**
-  - [ ] Add SQLModel and the necessary PostgreSQL driver (e.g., asyncpg or psycopg2) to `requirements.txt`.
-- [ ] **Database Connection Module**
-  - [ ] Create a `database.py` module.
-  - [ ] Configure database connection using SQLModel.
-- [ ] **Data Models**
-  - [ ] Define the `User` model with fields: id, email, display_name, profile_picture_url, password_hash, last_selected_model.
-  - [ ] Define the `Conversation` model with fields: id, user_id, title, timestamps, and selected model.
-  - [ ] Define the `Message` model with fields: conversation_id, sender (user/bot), content, timestamp.
-- [ ] **CRUD Endpoints/Functions**
-  - [ ] Implement basic CRUD operations to test model creation and retrieval.
-  - [ ] Integrate these endpoints or internal functions into the FastAPI app.
+- [x] **Update Dependencies**
+  - [x] Add SQLModel and the necessary PostgreSQL driver (e.g., asyncpg or psycopg2) to `requirements.txt`.
+- [x] **Database Connection Module**
+  - [x] Create a `database.py` module.
+  - [x] Configure database connection using SQLModel.
+- [x] **Data Models**
+  - [x] Define the `User` model with fields: id, email, display_name, profile_picture_url, password_hash, last_selected_model.
+  - [x] Define the `Conversation` model with fields: id, user_id, title, timestamps, and selected model.
+  - [x] Define the `Message` model with fields: conversation_id, sender (user/bot), content, timestamp.
+- [x] **CRUD Endpoints/Functions**
+  - [x] Implement basic CRUD operations to test model creation and retrieval.
+  - [x] Integrate these endpoints or internal functions into the FastAPI app.
 
 ## 3. Supabase Authentication Integration
 - [ ] **Auth Dependencies**
