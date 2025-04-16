@@ -16,6 +16,7 @@ The models use SQLModel's relationship system to establish connections between r
 
 import os
 import datetime
+import uuid
 from enum import Enum
 
 from dotenv import load_dotenv
@@ -45,17 +46,15 @@ class User(SQLModel, table=True):
         email: User's email address (unique, indexed)
         display_name: User's display name
         profile_picture_url: URL to the user's profile picture
-        password_hash: Hashed version of the user's password
         last_selected_model: The model the user last selected
         created_at: Timestamp when the user was created
         updated_at: Timestamp when the user was last updated
         conversations: Relationship to the user's conversations
     """
-    id: int | None = Field(default=None, primary_key=True)
+    id: uuid.UUID | None = Field(default=None, primary_key=True)
     email: str = Field(unique=True, index=True)
     display_name: str
     profile_picture_url: str | None = None
-    password_hash: str | None = None
     last_selected_model: str = "gpt-4.1-nano"
     created_at: datetime.datetime = Field(default_factory=datetime.datetime.now(datetime.UTC))
     updated_at: datetime.datetime = Field(default_factory=datetime.datetime.now(datetime.UTC))
@@ -78,7 +77,7 @@ class Conversation(SQLModel, table=True):
         messages: Relationship to the messages in this conversation
     """
     id: int | None = Field(default=None, primary_key=True)
-    user_id: int = Field(foreign_key="user.id")
+    user_id: uuid.UUID = Field(foreign_key="user.id")
     title: str = "New Conversation"
     model: str = "gpt-4.1-nano"
     created_at: datetime.datetime = Field(default_factory=datetime.datetime.now(datetime.UTC))
@@ -127,6 +126,9 @@ async def create_db_and_tables():
     """
     async with engine.begin() as conn:
         await conn.run_sync(SQLModel.metadata.create_all)
+        # It is very difficult to set user.id to be a foreign key to auth.users.id, so we use SQL directly to do this.
+        # Related discussion: https://github.com/sqlalchemy/alembic/discussions/1144
+        await conn.exec_driver_sql("ALTER TABLE public.user ADD CONSTRAINT fk_user_id FOREIGN KEY (id) REFERENCES auth.users (id) ON UPDATE CASCADE ON DELETE CASCADE")
 
 
 async def get_session():
