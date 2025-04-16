@@ -1,0 +1,6 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+This is a chatbot website project, the specifications can be found in [spec.md](mdc:spec.md). The project is a monorepo, the backend is a python uv project. We are on Windows.
