@@ -181,7 +181,6 @@ async def create_conversation(
     
     Args:
         conversation: Conversation information from request body
-        current_user: User information from JWT token
         session: Database session
         
     Returns:
@@ -361,9 +360,11 @@ async def get_conversation_messages(
 
 def main():
     """
-    Entry point function to run the application with uvicorn server.
+    Entry point for the application when run directly.
+    
+    Starts the uvicorn server with the FastAPI application.
     """
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run("chatbot_api.main:app", host="0.0.0.0", port=8000, reload=True)
 
 
 if __name__ == "__main__":
