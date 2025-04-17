@@ -6,7 +6,7 @@ It implements token extraction, verification, and user information retrieval fro
 """
 
 import os
-from typing import Annotated, Optional, TypedDict
+from typing import Annotated, TypedDict
 
 from dotenv import load_dotenv
 from fastapi import Depends, HTTPException, status

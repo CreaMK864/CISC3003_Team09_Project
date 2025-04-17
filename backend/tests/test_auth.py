@@ -2,14 +2,13 @@
 Tests for the authentication module of the chatbot API.
 """
 
-import os
 from unittest.mock import MagicMock, patch
 
 import pytest
 from fastapi import HTTPException
 from jose import jwt
 
-from chatbot_api.auth import UserInfo, get_current_user
+from chatbot_api.auth import get_current_user
 
 
 @pytest.fixture

@@ -87,12 +87,12 @@ class Conversation(SQLModel, table=True):
     title: str = Field(sa_column=Column(Text, default="New Conversation"))
     model: str = Field(sa_column=Column(Text, default="gpt-4.1-nano"))
     created_at: datetime.datetime = Field(
-        default_factory=lambda: datetime.datetime.now(datetime.UTC), 
-        sa_column=Column(DateTime(timezone=True), server_default=text("(now() AT TIME ZONE 'UTC')"))
+        default_factory=lambda: datetime.datetime.now(datetime.UTC),
+        sa_column=Column(DateTime(timezone=True), server_default=text("(now() AT TIME ZONE 'UTC')")),
     )
     updated_at: datetime.datetime = Field(
-        default_factory=lambda: datetime.datetime.now(datetime.UTC), 
-        sa_column=Column(DateTime(timezone=True), server_default=text("(now() AT TIME ZONE 'UTC')"))
+        default_factory=lambda: datetime.datetime.now(datetime.UTC),
+        sa_column=Column(DateTime(timezone=True), server_default=text("(now() AT TIME ZONE 'UTC')")),
     )
 
     user: User = Relationship(back_populates="conversations")
@@ -119,8 +119,8 @@ class Message(SQLModel, table=True):
     role: Role  # Enum for message sender role
     content: str = Field(sa_column=Column(Text))
     timestamp: datetime.datetime = Field(
-        default_factory=lambda: datetime.datetime.now(datetime.UTC), 
-        sa_column=Column(DateTime(timezone=True), server_default=text("(now() AT TIME ZONE 'UTC')"))
+        default_factory=lambda: datetime.datetime.now(datetime.UTC),
+        sa_column=Column(DateTime(timezone=True), server_default=text("(now() AT TIME ZONE 'UTC')")),
     )
 
     conversation: Conversation = Relationship(back_populates="messages")
@@ -135,7 +135,7 @@ async def delete_all_tables():
             await conn.run_sync(SQLModel.metadata.drop_all)
             await conn.run_sync(lambda conn: conn.execute(text("DROP TRIGGER on_auth_user_created ON auth.users")))
             await conn.run_sync(lambda conn: conn.execute(text("DROP FUNCTION handle_new_user")))
-        except Exception as e:
+        except Exception:
             pass
 
 
