@@ -14,25 +14,25 @@ The module includes the following main components:
 The models use SQLModel's relationship system to establish connections between related entities.
 """
 
-import os
 import datetime
+import os
 import uuid
 from enum import Enum
 
 from dotenv import load_dotenv
-from sqlmodel import Field, Relationship, SQLModel
+from sqlalchemy import Column, DateTime, Text, text
 from sqlalchemy.ext.asyncio import create_async_engine
+from sqlmodel import Field, Relationship, SQLModel
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 load_dotenv()
-DATABASE_URL = os.getenv(
-    "DATABASE_URL", "postgresql+asyncpg://postgres:postgres@localhost/chatbot"
-)
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+asyncpg://postgres:postgres@localhost/chatbot")
 engine = create_async_engine(DATABASE_URL, echo=True, future=True)
 
 
 class Role(str, Enum):
     """Enum representing the possible roles in a conversation."""
+
     USER = "user"
     BOT = "bot"
 
@@ -40,10 +40,9 @@ class Role(str, Enum):
 class User(SQLModel, table=True):
     """
     SQLModel representing a user in the system.
-    
+
     Attributes:
         id: Primary key identifier for the user
-        email: User's email address (unique, indexed)
         display_name: User's display name
         profile_picture_url: URL to the user's profile picture
         last_selected_model: The model the user last selected
@@ -51,13 +50,19 @@ class User(SQLModel, table=True):
         updated_at: Timestamp when the user was last updated
         conversations: Relationship to the user's conversations
     """
+
     id: uuid.UUID | None = Field(default=None, primary_key=True)
-    email: str = Field(unique=True, index=True)
-    display_name: str
-    profile_picture_url: str | None = None
-    last_selected_model: str = "gpt-4.1-nano"
-    created_at: datetime.datetime = Field(default_factory=datetime.datetime.now(datetime.UTC))
-    updated_at: datetime.datetime = Field(default_factory=datetime.datetime.now(datetime.UTC))
+    display_name: str = Field(sa_column=Column(Text), default="User")
+    profile_picture_url: str | None = Field(sa_column=Column(Text))
+    last_selected_model: str = Field(sa_column=Column(Text, default="gpt-4.1-nano"))
+    created_at: datetime.datetime = Field(
+        default_factory=lambda: datetime.datetime.now(datetime.UTC),
+        sa_column=Column(DateTime(timezone=True), server_default=text("(now() AT TIME ZONE 'UTC')")),
+    )
+    updated_at: datetime.datetime = Field(
+        default_factory=lambda: datetime.datetime.now(datetime.UTC),
+        sa_column=Column(DateTime(timezone=True), server_default=text("(now() AT TIME ZONE 'UTC')")),
+    )
 
     conversations: list["Conversation"] = Relationship(back_populates="user")
 
@@ -65,7 +70,7 @@ class User(SQLModel, table=True):
 class Conversation(SQLModel, table=True):
     """
     SQLModel representing a conversation between a user and the chatbot.
-    
+
     Attributes:
         id: Primary key identifier for the conversation
         user_id: Foreign key to the user who owns this conversation
@@ -76,12 +81,19 @@ class Conversation(SQLModel, table=True):
         user: Relationship back to the user
         messages: Relationship to the messages in this conversation
     """
+
     id: int | None = Field(default=None, primary_key=True)
     user_id: uuid.UUID = Field(foreign_key="user.id")
-    title: str = "New Conversation"
-    model: str = "gpt-4.1-nano"
-    created_at: datetime.datetime = Field(default_factory=datetime.datetime.now(datetime.UTC))
-    updated_at: datetime.datetime = Field(default_factory=datetime.datetime.now(datetime.UTC))
+    title: str = Field(sa_column=Column(Text, default="New Conversation"))
+    model: str = Field(sa_column=Column(Text, default="gpt-4.1-nano"))
+    created_at: datetime.datetime = Field(
+        default_factory=lambda: datetime.datetime.now(datetime.UTC), 
+        sa_column=Column(DateTime(timezone=True), server_default=text("(now() AT TIME ZONE 'UTC')"))
+    )
+    updated_at: datetime.datetime = Field(
+        default_factory=lambda: datetime.datetime.now(datetime.UTC), 
+        sa_column=Column(DateTime(timezone=True), server_default=text("(now() AT TIME ZONE 'UTC')"))
+    )
 
     user: User = Relationship(back_populates="conversations")
     messages: list["Message"] = Relationship(back_populates="conversation")
@@ -90,7 +102,7 @@ class Conversation(SQLModel, table=True):
 class Message(SQLModel, table=True):
     """
     SQLModel representing a message in a conversation.
-    
+
     Attributes:
         id: Primary key identifier for the message
         index: Order index of the message in the conversation
@@ -100,12 +112,16 @@ class Message(SQLModel, table=True):
         timestamp: Timestamp when the message was created
         conversation: Relationship back to the conversation
     """
+
     id: int | None = Field(default=None, primary_key=True)
     index: int
     conversation_id: int = Field(foreign_key="conversation.id")
     role: Role  # Enum for message sender role
-    content: str
-    timestamp: datetime.datetime = Field(default_factory=datetime.datetime.now(datetime.UTC))
+    content: str = Field(sa_column=Column(Text))
+    timestamp: datetime.datetime = Field(
+        default_factory=lambda: datetime.datetime.now(datetime.UTC), 
+        sa_column=Column(DateTime(timezone=True), server_default=text("(now() AT TIME ZONE 'UTC')"))
+    )
 
     conversation: Conversation = Relationship(back_populates="messages")
 
@@ -115,28 +131,41 @@ async def delete_all_tables():
     Delete all tables in the database.
     """
     async with engine.begin() as conn:
-        await conn.run_sync(SQLModel.metadata.drop_all)
+        try:
+            await conn.run_sync(SQLModel.metadata.drop_all)
+            await conn.run_sync(lambda conn: conn.execute(text("DROP TRIGGER on_auth_user_created ON auth.users")))
+            await conn.run_sync(lambda conn: conn.execute(text("DROP FUNCTION handle_new_user")))
+        except Exception as e:
+            pass
 
 
 async def create_db_and_tables():
     """
     Create all database tables if they don't exist.
-    
+
     This function should be called when the application starts.
     """
     async with engine.begin() as conn:
         await conn.run_sync(SQLModel.metadata.create_all)
         # It is very difficult to set user.id to be a foreign key to auth.users.id, so we use SQL directly to do this.
         # Related discussion: https://github.com/sqlalchemy/alembic/discussions/1144
-        await conn.exec_driver_sql("ALTER TABLE public.user ADD CONSTRAINT fk_user_id FOREIGN KEY (id) REFERENCES auth.users (id) ON UPDATE CASCADE ON DELETE CASCADE")
+        try:
+            await conn.exec_driver_sql(
+                "ALTER TABLE public.user ADD CONSTRAINT fk_user_id FOREIGN KEY (id) REFERENCES auth.users (id) ON UPDATE CASCADE ON DELETE CASCADE"
+            )
+        except Exception as e:
+            if "already exists" not in str(e):
+                raise
+
+    # TODO: Create a trigger to automatically create a user entry when a new user signs up via Supabase Auth.
 
 
 async def get_session():
     """
     Create and yield a database session.
-    
+
     This function is used as a FastAPI dependency for database access.
-    
+
     Yields:
         A SQLModel Session object that is automatically closed when done
     """
