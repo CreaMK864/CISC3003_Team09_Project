@@ -1,0 +1,22 @@
+set windows-shell := ["powershell.exe", "-NoLogo", "-Command"]
+
+# Default recipe to run when none is specified
+default:
+    just --list
+
+# Format and lint the code
+lint:
+    uv run ruff check --extend-select I --fix --exit-zero
+    uv run ruff format --target-version py312
+
+# Run tests
+test:
+    uv run pytest
+
+# Run the server
+serve:
+    uvicorn src.main:app --reload
+
+# Install dependencies
+install:
+    uv sync
