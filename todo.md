@@ -38,15 +38,15 @@
   - [x] Ensure that user data integrates well with the defined User model.
 
 ## 4. Real-Time Chat with WebSockets
-- [ ] **WebSocket Endpoint**
-  - [ ] Create a WebSocket endpoint (e.g., `/ws/chat`) in your FastAPI app.
-- [ ] **Message Handling**
-  - [ ] Implement functionality to receive chat messages from clients.
-  - [ ] Send responses (or stream responses) back to the client.
-- [ ] **Database Integration**
-  - [ ] Store incoming chat messages in the database using the Message model.
-- [ ] **Error Handling**
-  - [ ] Add basic error handling and reconnection strategies in the WebSocket endpoint.
+- [x] **WebSocket Endpoint**
+  - [x] Create a WebSocket endpoint (e.g., `/ws/chat`) in your FastAPI app.
+- [x] **Message Handling**
+  - [x] Implement functionality to receive chat messages from clients.
+  - [x] Send responses (or stream responses) back to the client.
+- [x] **Database Integration**
+  - [x] Store incoming chat messages in the database using the Message model.
+- [x] **Error Handling**
+  - [x] Add basic error handling and reconnection strategies in the WebSocket endpoint.
 
 ## 5. Frontend Basic Setup & HTML/CSS/JS Structure
 - [ ] **Static Files Setup**
