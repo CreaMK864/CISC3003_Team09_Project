@@ -22,6 +22,7 @@ from contextlib import asynccontextmanager
 
 import uvicorn
 from fastapi import Depends, FastAPI, HTTPException, WebSocket, WebSocketDisconnect, status
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, field_validator
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -47,6 +48,13 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Chatbot API", lifespan=lifespan)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
+)
 
 
 class ConversationCreate(BaseModel):
@@ -316,50 +324,6 @@ async def get_user_conversations(
     return conversations
 
 
-# Message CRUD operations
-@app.post("/messages/", response_model=Message)
-async def create_message(
-    message: MessageCreate,
-    current_user: UserInfo = Depends(get_current_user),
-    session: AsyncSession = Depends(get_session),
-):
-    """
-    Create a new message in a conversation.
-    Requires authentication with Supabase JWT.
-
-    Args:
-        message: Message information from request body
-        current_user: User information from JWT token
-        session: Database session
-
-    Returns:
-        The created message object
-
-    Notes:
-        Also updates the conversation's updated_at timestamp
-    """
-    # Verify that the user has access to the conversation
-    conversation = await verify_conversation_access(message.conversation_id, current_user, session)
-
-    # Get current max index for the conversation to properly order messages
-    statement = select(Message).where(Message.conversation_id == message.conversation_id)
-    result = await session.exec(statement)
-    existing_messages = result.all()
-    index = len(existing_messages)
-
-    db_message = Message(
-        conversation_id=message.conversation_id, role=message.role, content=message.content, index=index
-    )
-    session.add(db_message)
-    await session.commit()
-    await session.refresh(db_message)
-
-    conversation.updated_at = datetime.datetime.now(datetime.UTC)
-    session.add(conversation)
-    await session.commit()
-
-    return db_message
-
 
 @app.get("/conversations/{conversation_id}/messages", response_model=list[Message])
 async def get_conversation_messages(
@@ -390,204 +354,169 @@ async def get_conversation_messages(
     return messages
 
 
-@app.websocket("/ws/chat")
-async def chat_websocket(websocket: WebSocket):
+@app.post("/chat", response_model=dict)
+async def start_chat(
+    message: MessageCreate,
+    current_user: UserInfo = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+):
     """
-    WebSocket endpoint for real-time chat interaction with OpenAI API.
-
-    The client must provide a valid Supabase JWT token in the Authorization header.
-    Example of connecting with a JWT token:
-    ```javascript
-    // Example client-side JavaScript
-    const token = "your-supabase-jwt-token";
-    const socket = new WebSocket("wss://your-api.com/ws/chat");
-
-    // Add the authorization header during connection
-    socket.onopen = function() {
-    // Send the authorization header in the first message
-    socket.send(JSON.stringify({
-        action: "authenticate",
-        token: token
-    }));
+    Start a chat session by sending a message and receiving a stream URL.
     
-    // Then continue with regular chat messages
-    // ...
-    };
-    ```
-
-    The client sends a JSON message with the following structure:
-    ```
-    {
-        "action": "chat",
-        "conversation_id": 123,
-        "content": "User message content",
-        "model": "model-name"  # Optional, defaults to user's preferred model or a system default
+    Args:
+        message: Message information from request body
+        current_user: User information from JWT token
+        session: Database session
+        
+    Returns:
+        A dictionary containing the WebSocket URL for streaming the response
+    """
+    # Verify that the user has access to the conversation
+    conversation = await verify_conversation_access(message.conversation_id, current_user, session)
+    
+    # Generate a unique stream ID
+    stream_id = str(uuid.uuid4())
+    
+    # Get current max index for the conversation to properly order messages
+    statement = select(Message).where(Message.conversation_id == message.conversation_id)
+    result = await session.exec(statement)
+    existing_messages = result.all()
+    index = len(existing_messages)
+    
+    # Create and store the user message
+    db_message = Message(
+        conversation_id=message.conversation_id, 
+        role=message.role, 
+        content=message.content, 
+        index=index
+    )
+    session.add(db_message)
+    await session.commit()
+    await session.refresh(db_message)
+    
+    # Update conversation timestamp
+    conversation.updated_at = datetime.datetime.now(datetime.UTC)
+    session.add(conversation)
+    await session.commit()
+    
+    # Construct websocket URL for streaming
+    protocol = "wss" if app.root_path.startswith("https") else "ws"
+    host = "localhost:8000"  # In production, this should be determined dynamically
+    
+    # Store information about this stream in app state
+    if not hasattr(app, "stream_requests"):
+        app.stream_requests = {}
+        
+    # Store conversation and message information for the websocket handler
+    app.stream_requests[stream_id] = {
+        "conversation_id": message.conversation_id,
+        "model": conversation.model,
+        "user_id": current_user["id"],
+        "created_at": datetime.datetime.now(datetime.UTC)
     }
-    ```
-
-    The server will respond with streaming responses from the OpenAI API.
-    When the response is complete, the server will send a special message:
-    ```
-    {
-        "event": "chat_ended"
+    
+    # Return the WebSocket URL
+    return {
+        "ws_url": f"{protocol}://{host}/ws/stream/{stream_id}"
     }
-    ```
 
+@app.websocket("/ws/stream/{stream_id}")
+async def stream_chat_response(websocket: WebSocket, stream_id: str):
+    """
+    WebSocket endpoint for streaming chat responses after a message is sent via POST.
+    
     Args:
         websocket: WebSocket connection
+        stream_id: Unique ID for this streaming session
     """
     try:
         await websocket.accept()
-
-        # Get token from headers
-        headers = websocket.headers
-        auth_header = headers.get("authorization")
         
-        if not auth_header or not auth_header.startswith("Bearer "):
-            await websocket.send_text(json.dumps({"error": "Missing or invalid authorization header"}))
+        # Verify the stream ID exists
+        if not hasattr(app, "stream_requests") or stream_id not in app.stream_requests:
+            await websocket.send_text(json.dumps({"error": "Invalid or expired stream ID"}))
             await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
             return
-            
-        token = auth_header.replace("Bearer ", "")
-
-        # Validate JWT token
-        try:
-            current_user = get_current_user(token)
-            user_id = uuid.UUID(current_user["id"])
-        except Exception:
-            await websocket.send_text(json.dumps({"error": "Invalid authentication token"}))
+        
+        # Get stream data
+        stream_data = app.stream_requests[stream_id]
+        conversation_id = stream_data["conversation_id"]
+        model = stream_data["model"]
+        user_id = stream_data["user_id"]
+        
+        # Clean up the stream request after use
+        # Set a reasonable timeout (e.g. 5 minutes)
+        created_at = stream_data["created_at"]
+        if (datetime.datetime.now(datetime.UTC) - created_at).total_seconds() > 300:
+            del app.stream_requests[stream_id]
+            await websocket.send_text(json.dumps({"error": "Stream session expired"}))
             await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
             return
-
-        # Create a database session
+        
+        # Create database session
         async with get_session() as session:
+            # Prepare conversation history for OpenAI
+            statement = select(Message).where(Message.conversation_id == conversation_id)
+            result = await session.exec(statement)
+            all_messages = sorted(result.all(), key=lambda m: m.index)
+            openai_messages = [{"role": msg.role, "content": msg.content} for msg in all_messages]
+            
+            # Create a placeholder for the assistant's response
+            assistant_message = Message(
+                conversation_id=conversation_id,
+                role="assistant",
+                content="",
+                index=len(all_messages),
+            )
+            session.add(assistant_message)
+            await session.commit()
+            await session.refresh(assistant_message)
+            
+            # Stream response from OpenAI
+            full_response = ""
             try:
-                # Get user's default model
-                db_user: User | None = await session.get(User, user_id)
-                if not db_user:
-                    await websocket.send_text(json.dumps({"error": "User not found"}))
-                    await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
-                    return
-
-                # User's preferred model, unless it's invalid
-                if is_valid_model(db_user.last_selected_model):
-                    default_model = db_user.last_selected_model
-                else:
-                    db_user.last_selected_model = DEFAULT_MODEL
-                    session.add(db_user)
-                    await session.commit()
-                    await session.refresh(db_user)
-                    default_model = DEFAULT_MODEL
-
-                # Listen for messages
-                while True:
-                    data = await websocket.receive_text()
-                    message_data = json.loads(data)
-
-                    action = message_data.get("action")
-
-                    if action == "chat":
-                        conversation_id = message_data.get("conversation_id")
-                        content = message_data.get("content", "")
-                        model = message_data.get("model", default_model)
-
-                        if not is_valid_model(model):
-                            await websocket.send_text(
-                                json.dumps({"error": f"Invalid model. Available models: {', '.join(AVAILABLE_MODELS)}"})
-                            )
-                            continue
-
-                        try:
-                            conversation = await verify_conversation_access(conversation_id, current_user, session)
-                        except HTTPException:
-                            await websocket.send_text(json.dumps({"error": "Conversation not found"}))
-                            continue
-
-                        user_message = Message(
-                            conversation_id=conversation_id,
-                            role="user",
-                            content=content,
-                            index=0,  # Will be updated after getting existing messages
-                        )
-
-                        statement = select(Message).where(Message.conversation_id == conversation_id)
-                        result = await session.exec(statement)
-                        existing_messages = result.all()
-                        user_message.index = len(existing_messages)
-
-                        session.add(user_message)
-                        await session.commit()
-                        await session.refresh(user_message)
-
-                        conversation.updated_at = datetime.datetime.now(datetime.UTC)
-                        conversation.model = model
-                        session.add(conversation)
-                        await session.commit()
-
-                        # Prepare conversation history for OpenAI
-                        all_messages = sorted(existing_messages + [user_message], key=lambda m: m.index)
-                        openai_messages = [{"role": msg.role, "content": msg.content} for msg in all_messages]
-
-                        assistant_message = Message(
-                            conversation_id=conversation_id,
-                            role="assistant",
-                            content="",
-                            index=len(all_messages),
-                        )
-                        session.add(assistant_message)
-                        await session.commit()
-                        await session.refresh(assistant_message)
-
-                        # Stream response from OpenAI
-                        full_response = ""
-                        try:
-                            async for response_chunk in stream_chat_completion(openai_messages, model):
-                                full_response += response_chunk
-
-                                await websocket.send_text(
-                                    json.dumps({"event": "chat_response", "content": response_chunk})
-                                )
-
-                                # Update assistant message in the database periodically
-                                # For performance, we don't update the database on every chunk
-                                if len(response_chunk) > 50:
-                                    assistant_message.content = full_response
-                                    session.add(assistant_message)
-                                    await session.commit()
-
-                        except Exception as e:
-                            await websocket.send_text(json.dumps({"error": f"Error from OpenAI API: {str(e)}"}))
-                            continue
-
-                        # Update complete response in the database
+                async for response_chunk in stream_chat_completion(openai_messages, model):
+                    full_response += response_chunk
+                    
+                    await websocket.send_text(response_chunk)
+                    
+                    # Update assistant message in the database periodically
+                    if len(response_chunk) > 50:
                         assistant_message.content = full_response
                         session.add(assistant_message)
                         await session.commit()
-
-                        # Send completion signal
-                        await websocket.send_text(json.dumps({"event": "chat_ended"}))
-
-                    else:
-                        await websocket.send_text(json.dumps({"error": f"Unknown action: {action}"}))
-
-            except WebSocketDisconnect:
-                # Handle client disconnect gracefully
-                pass
+                        
             except Exception as e:
-                # Send error message
-                await websocket.send_text(json.dumps({"error": f"Server error: {str(e)}"}))
-
+                await websocket.send_text(json.dumps({"error": f"Error from OpenAI API: {str(e)}"}))
+                return
+                
+            # Update complete response in the database
+            assistant_message.content = full_response
+            session.add(assistant_message)
+            await session.commit()
+            
+            await websocket.send_text(json.dumps({"event": "chat_ended"}))
+            
+            del app.stream_requests[stream_id]
+                
+    except WebSocketDisconnect:
+        # Handle client disconnect
+        if hasattr(app, "stream_requests") and stream_id in app.stream_requests:
+            del app.stream_requests[stream_id]
     except Exception as e:
-        # Send error message if WebSocket is still connected
+        # Send error message if possible
         try:
             await websocket.send_text(json.dumps({"error": f"Server error: {str(e)}"}))
         except:
             pass
-
+        
         try:
             await websocket.close()
         except:
             pass
+            
+        if hasattr(app, "stream_requests") and stream_id in app.stream_requests:
+            del app.stream_requests[stream_id]
 
 
 @app.get("/models")
