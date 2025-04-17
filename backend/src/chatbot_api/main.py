@@ -136,7 +136,7 @@ async def get_user(user_id: uuid.UUID, session: AsyncSession = Depends(get_sessi
     """
     user = await session.get(User, user_id)
     if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     return user
 
 
@@ -171,7 +171,7 @@ async def update_user(
     # Get the user from the database
     db_user = await session.get(User, user_id)
     if not db_user:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
     # Update user fields if provided in the request
     update_data = user_update.model_dump(exclude_unset=True)
@@ -238,13 +238,13 @@ async def verify_conversation_access(
     """
     conversation = await session.get(Conversation, conversation_id)
     if not conversation:
-        raise HTTPException(status_code=404, detail="Conversation not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Conversation not found")
 
     # Check if the conversation belongs to the authenticated user
     user_id = uuid.UUID(current_user["id"])
     if conversation.user_id != user_id:
         # Don't leak information about whether a conversation exists or not
-        raise HTTPException(status_code=404, detail="Conversation not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Conversation not found")
 
     return conversation
 
