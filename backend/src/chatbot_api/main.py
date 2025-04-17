@@ -371,20 +371,17 @@ async def start_chat(
     Returns:
         A dictionary containing the WebSocket URL for streaming the response
     """
-    # Verify that the user has access to the conversation
     conversation = await verify_conversation_access(message.conversation_id, current_user, session)
     model = conversation.model
     
-    # Generate a unique stream ID
+    # unique stream ID
     stream_id = str(uuid.uuid4())
     
-    # Get current max index for the conversation to properly order messages
     statement = select(Message).where(Message.conversation_id == message.conversation_id)
     result = await session.exec(statement)
     existing_messages = result.all()
     index = len(existing_messages)
     
-    # Create and store the user message
     db_message = Message(
         conversation_id=message.conversation_id, 
         role=message.role, 
@@ -395,20 +392,16 @@ async def start_chat(
     await session.commit()
     await session.refresh(db_message)
     
-    # Update conversation timestamp
     conversation.updated_at = datetime.datetime.now(datetime.UTC)
     session.add(conversation)
     await session.commit()
     
-    # Construct websocket URL for streaming
     protocol = "wss" if app.root_path.startswith("https") else "ws"
     host = "localhost:8000"  # In production, this should be determined dynamically
     
-    # Store information about this stream in app state
     if not hasattr(app, "stream_requests"):
         app.stream_requests = {}
         
-    # Store conversation and message information for the websocket handler
     app.stream_requests[stream_id] = {
         "conversation_id": message.conversation_id,
         "model": model,
@@ -439,7 +432,6 @@ async def stream_chat_response(websocket: WebSocket, stream_id: str):
             await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
             return
         
-        # Get stream data
         stream_data = app.stream_requests[stream_id]
         conversation_id = stream_data["conversation_id"]
         model = stream_data["model"]
@@ -454,15 +446,12 @@ async def stream_chat_response(websocket: WebSocket, stream_id: str):
             await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
             return
         
-        # Create database session
         async with get_session() as session:
-            # Prepare conversation history for OpenAI
             statement = select(Message).where(Message.conversation_id == conversation_id)
             result = await session.exec(statement)
             all_messages = sorted(result.all(), key=lambda m: m.index)
             openai_messages = [{"role": msg.role, "content": msg.content} for msg in all_messages]
             
-            # Create a placeholder for the assistant's response
             assistant_message = Message(
                 conversation_id=conversation_id,
                 role="assistant",
@@ -473,7 +462,6 @@ async def stream_chat_response(websocket: WebSocket, stream_id: str):
             await session.commit()
             await session.refresh(assistant_message)
             
-            # Stream response from OpenAI
             full_response = ""
             try:
                 async for response_chunk in stream_chat_completion(openai_messages, model):
@@ -501,7 +489,6 @@ async def stream_chat_response(websocket: WebSocket, stream_id: str):
             del app.stream_requests[stream_id]
                 
     except WebSocketDisconnect:
-        # Handle client disconnect
         if hasattr(app, "stream_requests") and stream_id in app.stream_requests:
             del app.stream_requests[stream_id]
     except Exception as e:
