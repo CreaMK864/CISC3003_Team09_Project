@@ -17,6 +17,7 @@ All database models are defined in the database module.
 
 import datetime
 import json
+from typing import Any, TypedDict
 import uuid
 from contextlib import asynccontextmanager
 
@@ -29,12 +30,12 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from chatbot_api.auth import UserInfo, get_current_user
 from chatbot_api.config import AVAILABLE_MODELS, DEFAULT_MODEL, is_valid_model
-from chatbot_api.database import Conversation, Message, Role, User, create_db_and_tables, delete_all_tables, get_session, create_session
+from chatbot_api.database import Conversation, Message, Role, User, create_db_and_tables, get_session, create_session
 from chatbot_api.openai_client import stream_chat_completion
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI):  # pyright: ignore[reportUnusedParameter]
     """
     Lifecycle event handler that runs when the application starts.
     Creates database tables before the application starts serving requests.
@@ -57,6 +58,16 @@ app.add_middleware(
 )
 
 
+class StreamRequest(TypedDict):
+    """TypedDict representing stream request data structure"""
+    conversation_id: int
+    model: str
+    user_id: str
+    created_at: datetime.datetime
+
+stream_requests: dict[str, StreamRequest] = {}
+
+
 class ConversationCreate(BaseModel):
     """
     Request model for creating a new conversation.
@@ -71,7 +82,7 @@ class ConversationCreate(BaseModel):
 
     @field_validator("model")
     @classmethod
-    def validate_model(cls, v):
+    def validate_model(cls, v: Any) -> str:
         if not is_valid_model(v):
             raise ValueError(f"Invalid model. Available models: {', '.join(AVAILABLE_MODELS)}")
         return v
@@ -83,12 +94,10 @@ class MessageCreate(BaseModel):
 
     Attributes:
         conversation_id: ID of the conversation this message belongs to
-        role: Role of the sender ("user" or "bot")
         content: Content of the message
     """
 
     conversation_id: int
-    role: str
     content: str
 
 
@@ -108,7 +117,7 @@ class UserUpdate(BaseModel):
 
     @field_validator("last_selected_model")
     @classmethod
-    def validate_model(cls, v):
+    def validate_model(cls, v: Any) -> str:
         if v is not None and not is_valid_model(v):
             raise ValueError(f"Invalid model. Available models: {', '.join(AVAILABLE_MODELS)}")
         return v
@@ -384,7 +393,7 @@ async def start_chat(
     
     db_message = Message(
         conversation_id=message.conversation_id, 
-        role=message.role, 
+        role=Role.USER,
         content=message.content, 
         index=index
     )
@@ -398,11 +407,8 @@ async def start_chat(
     
     protocol = "wss" if app.root_path.startswith("https") else "ws"
     host = "localhost:8000"  # In production, this should be determined dynamically
-    
-    if not hasattr(app, "stream_requests"):
-        app.stream_requests = {}
         
-    app.stream_requests[stream_id] = {
+    stream_requests[stream_id] = {
         "conversation_id": message.conversation_id,
         "model": model,
         "user_id": current_user["id"],
@@ -427,12 +433,12 @@ async def stream_chat_response(websocket: WebSocket, stream_id: str):
         await websocket.accept()
         
         # Verify the stream ID exists
-        if not hasattr(app, "stream_requests") or stream_id not in app.stream_requests:
+        if stream_id not in stream_requests:
             await websocket.send_text(json.dumps({"error": "Invalid or expired stream ID"}))
             await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
             return
         
-        stream_data = app.stream_requests[stream_id]
+        stream_data = stream_requests[stream_id]
         conversation_id = stream_data["conversation_id"]
         model = stream_data["model"]
         
@@ -440,7 +446,7 @@ async def stream_chat_response(websocket: WebSocket, stream_id: str):
         # Set a reasonable timeout (e.g. 5 minutes)
         created_at = stream_data["created_at"]
         if (datetime.datetime.now(datetime.UTC) - created_at).total_seconds() > 300:
-            del app.stream_requests[stream_id]
+            del stream_requests[stream_id]
             await websocket.send_text(json.dumps({"error": "Stream session expired"}))
             await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
             return
@@ -485,11 +491,11 @@ async def stream_chat_response(websocket: WebSocket, stream_id: str):
             
             await websocket.send_text(json.dumps({"event": "chat_ended"}))
             
-            del app.stream_requests[stream_id]
+            del stream_requests[stream_id]
                 
     except WebSocketDisconnect:
-        if hasattr(app, "stream_requests") and stream_id in app.stream_requests:
-            del app.stream_requests[stream_id]
+        if stream_id in stream_requests:
+            del stream_requests[stream_id]
     except Exception as e:
         # Send error message if possible
         try:
@@ -502,8 +508,8 @@ async def stream_chat_response(websocket: WebSocket, stream_id: str):
         except:
             pass
             
-        if hasattr(app, "stream_requests") and stream_id in app.stream_requests:
-            del app.stream_requests[stream_id]
+        if stream_id in stream_requests:
+            del stream_requests[stream_id]
 
 
 @app.get("/models")

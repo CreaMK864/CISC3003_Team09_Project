@@ -2,5 +2,7 @@
 <project version="4">
   <component name="com.insyncwithfoo.pyright.configurations.Local">
     <option name="configurationFile" value="D:\Code\CISC3003_Team09_Project\backend\pyproject.toml" />
+    <option name="executable" value="D:\Code\CISC3003_Team09_Project\backend\.venv\Scripts\basedpyright.exe" />
+    <option name="languageServerExecutable" value="D:\Code\CISC3003_Team09_Project\backend\.venv\Scripts\basedpyright-langserver.exe" />
   </component>
 </project>

@@ -6,13 +6,13 @@ to generate responses for the chatbot application using the official OpenAI libr
 """
 
 import os
-from typing import AsyncGenerator
+from collections.abc import AsyncGenerator
 
 from fastapi import HTTPException
 from openai import AsyncOpenAI
 from openai.types.chat import ChatCompletionMessageParam
 
-from chatbot_api.config import DEFAULT_MODEL, is_valid_model
+from chatbot_api.config import DEFAULT_MODEL
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 if OPENAI_API_KEY is None:
@@ -31,7 +31,7 @@ def convert_to_openai_messages(messages: list[dict[str, str]]) -> list[ChatCompl
     Returns:
         list of messages in OpenAI API format
     """
-    return [{"role": msg["role"], "content": msg["content"]} for msg in messages]
+    return [{"role": msg["role"], "content": msg["content"]} for msg in messages]  # pyright: ignore[reportReturnType]
 
 
 async def stream_chat_completion(

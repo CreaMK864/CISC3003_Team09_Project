@@ -33,7 +33,7 @@ class UserInfo(TypedDict):
 
     id: str
     email: str
-    claims: dict
+    claims: dict[str, str]
 
 
 class SupabaseAuth:
@@ -58,7 +58,7 @@ class SupabaseAuth:
             HTTPException: If the token is invalid or verification fails
         """
         if not credentials:
-            raise HTTPException(
+            raise HTTPException(  # pyright: ignore[reportUnreachable]
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Missing authorization credentials",
                 headers={"WWW-Authenticate": "Bearer"},

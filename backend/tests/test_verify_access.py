@@ -26,7 +26,7 @@ def test_session():
 
 
 @pytest.mark.asyncio
-async def test_verify_access_with_valid_conversation(test_user, test_session):
+async def test_verify_access_with_valid_conversation(test_user: UserInfo, test_session: AsyncMock):
     # Create a test conversation that belongs to the user
     user_id = uuid.UUID(test_user["id"])
     test_conversation = Conversation(id=1, user_id=user_id, title="Test Conversation", model=DEFAULT_MODEL)
@@ -40,7 +40,7 @@ async def test_verify_access_with_valid_conversation(test_user, test_session):
 
 
 @pytest.mark.asyncio
-async def test_verify_access_with_nonexistent_conversation(test_user, test_session):
+async def test_verify_access_with_nonexistent_conversation(test_user: UserInfo, test_session: AsyncMock):
     test_session.get.return_value = None
 
     with pytest.raises(HTTPException) as exc_info:
@@ -52,7 +52,7 @@ async def test_verify_access_with_nonexistent_conversation(test_user, test_sessi
 
 
 @pytest.mark.asyncio
-async def test_verify_access_with_unauthorized_conversation(test_user, test_session):
+async def test_verify_access_with_unauthorized_conversation(test_user: UserInfo, test_session: AsyncMock):
     # Create a test conversation that belongs to another user
     other_user_id = uuid.uuid4()
     test_conversation = Conversation(

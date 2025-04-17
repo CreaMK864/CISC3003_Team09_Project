@@ -31,7 +31,7 @@ def invalid_token():
 
 
 @pytest.mark.asyncio
-async def test_valid_token_authentication(valid_token):
+async def test_valid_token_authentication(valid_token: str):
     """Test authentication with a valid token."""
     with patch("chatbot_api.auth.SUPABASE_JWT_SECRET", "test_secret"):
         mock_credentials = MagicMock()
@@ -45,7 +45,7 @@ async def test_valid_token_authentication(valid_token):
 
 
 @pytest.mark.asyncio
-async def test_invalid_token_authentication(invalid_token):
+async def test_invalid_token_authentication(invalid_token: str):
     """Test authentication with an invalid token."""
     with patch("chatbot_api.auth.SUPABASE_JWT_SECRET", "test_secret"):
         mock_credentials = MagicMock()
@@ -62,7 +62,7 @@ async def test_invalid_token_authentication(invalid_token):
 async def test_missing_credentials():
     """Test authentication with missing credentials."""
     with pytest.raises(HTTPException) as exc_info:
-        await get_current_user(None)
+        await get_current_user(None)  # pyright: ignore[reportArgumentType]
 
     assert exc_info.value.status_code == 401
     assert "Missing authorization credentials" in exc_info.value.detail

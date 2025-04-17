@@ -38,12 +38,27 @@ target-version = "py312"
 [tool.basedpyright]
 pythonVersion = "3.12"
 pythonPlatform = "All"
-typeCheckingMode = "standard"
+typeCheckingMode = "recommended"
 
+# Type checking strictness
 strictListInference = true
 strictDictionaryInference = true
 strictSetInference = true
+strictParameterNoneValue = true
 deprecateTypingAliases = true
+
+# Project structure
+include = ["src"]
+venvPath = "."
+venv = ".venv"
+executionEnvironments = [
+    { root = "src/chatbot_api" },
+    { root = "tests", extraPaths = ["src"] },
+]
+
+# Error reporting
+reportMissingImports = "warning"
+reportMissingTypeStubs = "information"
 reportPropertyTypeMismatch = "error"
 reportImportCycles = "information"
 reportUnusedCallResult = "none"
@@ -64,3 +79,5 @@ reportUnnecessaryContains = "error"
 reportImplicitOverride = "error"
 reportShadowedImports = "error"
 reportAny = false
+reportCallInDefaultInitializer = false
+reportExplicitAny = false
