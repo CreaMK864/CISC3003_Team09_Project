@@ -28,16 +28,14 @@
   - [x] Integrate these endpoints or internal functions into the FastAPI app.
 
 ## 3. Supabase Authentication Integration
-- [ ] **Auth Dependencies**
-  - [ ] Ensure necessary libraries (like httpx) are added to the dependencies.
+- [x] **Auth Dependencies**
+  - [x] Ensure necessary libraries (like httpx) are added to the dependencies.
 - [ ] **Auth Module**
-  - [ ] Create an `auth.py` module.
-  - [ ] Implement user registration endpoint (email, password, display name).
-  - [ ] Implement user login endpoint that retrieves a token from Supabase.
-  - [ ] Create a route to check the current session/token and return user profile information.
-- [ ] **Integration**
-  - [ ] Wire the authentication endpoints into your main FastAPI app.
-  - [ ] Ensure that user data integrates well with the defined User model.
+  - [x] Create an `auth.py` module.
+  - [x] Create a route to check the current session/token and return user profile information.
+- [x] **Integration**
+  - [x] Wire the authentication endpoints into your main FastAPI app.
+  - [x] Ensure that user data integrates well with the defined User model.
 
 ## 4. Real-Time Chat with WebSockets
 - [ ] **WebSocket Endpoint**
