@@ -27,8 +27,9 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from chatbot_api.auth import UserInfo, get_current_user
-from chatbot_api.database import Conversation, Message, User, create_db_and_tables, get_session
-from chatbot_api.openai_client import AVAILABLE_MODELS, is_valid_model, stream_chat_completion
+from chatbot_api.config import AVAILABLE_MODELS, DEFAULT_MODEL, is_valid_model
+from chatbot_api.database import Conversation, Message, User, create_db_and_tables, delete_all_tables, get_session
+from chatbot_api.openai_client import stream_chat_completion
 
 
 @asynccontextmanager
@@ -54,11 +55,11 @@ class ConversationCreate(BaseModel):
 
     Attributes:
         title: Title of the conversation, defaults to "New Conversation"
-        model: The model used for this conversation, defaults to "gpt-4.1-nano"
+        model: The model used for this conversation, defaults to DEFAULT_MODEL
     """
 
     title: str = "New Conversation"
-    model: str = "gpt-4.1-nano"
+    model: str = DEFAULT_MODEL
 
     @field_validator("model")
     @classmethod
@@ -408,7 +409,7 @@ async def chat_websocket(websocket: WebSocket):
         action: "authenticate",
         token: token
     }));
-
+    
     // Then continue with regular chat messages
     // ...
     };
@@ -420,7 +421,7 @@ async def chat_websocket(websocket: WebSocket):
         "action": "chat",
         "conversation_id": 123,
         "content": "User message content",
-        "model": "gpt-4.1-nano"  # Optional, defaults to user's preferred model or a system default
+        "model": "model-name"  # Optional, defaults to user's preferred model or a system default
     }
     ```
 
@@ -441,12 +442,12 @@ async def chat_websocket(websocket: WebSocket):
         # Get token from headers
         headers = websocket.headers
         auth_header = headers.get("authorization")
-
+        
         if not auth_header or not auth_header.startswith("Bearer "):
             await websocket.send_text(json.dumps({"error": "Missing or invalid authorization header"}))
             await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
             return
-
+            
         token = auth_header.replace("Bearer ", "")
 
         # Validate JWT token
@@ -472,11 +473,11 @@ async def chat_websocket(websocket: WebSocket):
                 if is_valid_model(db_user.last_selected_model):
                     default_model = db_user.last_selected_model
                 else:
-                    db_user.last_selected_model = "gpt-4.1-nano"
+                    db_user.last_selected_model = DEFAULT_MODEL
                     session.add(db_user)
                     await session.commit()
                     await session.refresh(db_user)
-                    default_model = "gpt-4.1-nano"
+                    default_model = DEFAULT_MODEL
 
                 # Listen for messages
                 while True:

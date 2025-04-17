@@ -10,6 +10,7 @@ from fastapi import HTTPException
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from chatbot_api.auth import UserInfo
+from chatbot_api.config import DEFAULT_MODEL
 from chatbot_api.database import Conversation
 from chatbot_api.main import verify_conversation_access
 
@@ -28,7 +29,7 @@ def test_session():
 async def test_verify_access_with_valid_conversation(test_user, test_session):
     # Create a test conversation that belongs to the user
     user_id = uuid.UUID(test_user["id"])
-    test_conversation = Conversation(id=1, user_id=user_id, title="Test Conversation", model="gpt-4.1-nano")
+    test_conversation = Conversation(id=1, user_id=user_id, title="Test Conversation", model=DEFAULT_MODEL)
 
     test_session.get.return_value = test_conversation
 
@@ -55,7 +56,7 @@ async def test_verify_access_with_unauthorized_conversation(test_user, test_sess
     # Create a test conversation that belongs to another user
     other_user_id = uuid.uuid4()
     test_conversation = Conversation(
-        id=1, user_id=other_user_id, title="Other User's Conversation", model="gpt-4.1-nano"
+        id=1, user_id=other_user_id, title="Other User's Conversation", model=DEFAULT_MODEL
     )
 
     test_session.get.return_value = test_conversation

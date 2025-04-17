@@ -18,16 +18,20 @@ import datetime
 import os
 import uuid
 from enum import Enum
+from contextlib import asynccontextmanager
 
 from dotenv import load_dotenv
 from sqlalchemy import Column, DateTime, Text, text
 from sqlalchemy.ext.asyncio import create_async_engine
-from sqlmodel import Field, Relationship, SQLModel
+from sqlmodel import Field, Relationship, SQLModel, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from chatbot_api.config import DEFAULT_MODEL
+
 load_dotenv()
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+asyncpg://postgres:postgres@localhost/chatbot")
-engine = create_async_engine(DATABASE_URL, echo=True, future=True)
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///chatbot.db")
+engine = create_async_engine(DATABASE_URL)
+sync_engine = create_engine(DATABASE_URL.replace("+aiosqlite", ""), future=True)
 
 
 class Role(str, Enum):
@@ -51,10 +55,10 @@ class User(SQLModel, table=True):
         conversations: Relationship to the user's conversations
     """
 
-    id: uuid.UUID | None = Field(default=None, primary_key=True)
-    display_name: str = Field(sa_column=Column(Text), default="User")
-    profile_picture_url: str | None = Field(sa_column=Column(Text))
-    last_selected_model: str = Field(sa_column=Column(Text, default="gpt-4.1-nano"))
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    display_name: str | None = None
+    profile_picture_url: str | None = None
+    last_selected_model: str = Field(sa_column=Column(Text, default=DEFAULT_MODEL))
     created_at: datetime.datetime = Field(
         default_factory=lambda: datetime.datetime.now(datetime.UTC),
         sa_column=Column(DateTime(timezone=True), server_default=text("(now() AT TIME ZONE 'UTC')")),
@@ -83,9 +87,9 @@ class Conversation(SQLModel, table=True):
     """
 
     id: int | None = Field(default=None, primary_key=True)
-    user_id: uuid.UUID = Field(foreign_key="user.id")
+    user_id: uuid.UUID = Field(foreign_key="user.id", index=True)
     title: str = Field(sa_column=Column(Text, default="New Conversation"))
-    model: str = Field(sa_column=Column(Text, default="gpt-4.1-nano"))
+    model: str = Field(sa_column=Column(Text, default=DEFAULT_MODEL))
     created_at: datetime.datetime = Field(
         default_factory=lambda: datetime.datetime.now(datetime.UTC),
         sa_column=Column(DateTime(timezone=True), server_default=text("(now() AT TIME ZONE 'UTC')")),
@@ -115,9 +119,9 @@ class Message(SQLModel, table=True):
 
     id: int | None = Field(default=None, primary_key=True)
     index: int
-    conversation_id: int = Field(foreign_key="conversation.id")
+    conversation_id: int = Field(foreign_key="conversation.id", index=True)
     role: Role  # Enum for message sender role
-    content: str = Field(sa_column=Column(Text))
+    content: str = Field(sa_column=Column(Text, default=""))
     timestamp: datetime.datetime = Field(
         default_factory=lambda: datetime.datetime.now(datetime.UTC),
         sa_column=Column(DateTime(timezone=True), server_default=text("(now() AT TIME ZONE 'UTC')")),
@@ -160,6 +164,7 @@ async def create_db_and_tables():
     # TODO: Create a trigger to automatically create a user entry when a new user signs up via Supabase Auth.
 
 
+@asynccontextmanager
 async def get_session():
     """
     Create and yield a database session.
@@ -169,5 +174,6 @@ async def get_session():
     Yields:
         A SQLModel Session object that is automatically closed when done
     """
-    async with AsyncSession(engine) as session:
+    session_maker = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+    async with session_maker() as session:
         yield session

@@ -12,30 +12,13 @@ from fastapi import HTTPException
 from openai import AsyncOpenAI
 from openai.types.chat import ChatCompletionMessageParam
 
+from chatbot_api.config import DEFAULT_MODEL, is_valid_model
+
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 if OPENAI_API_KEY is None:
     raise ValueError("OPENAI_API_KEY environment variable is not set")
 
 client = AsyncOpenAI(api_key=OPENAI_API_KEY)
-
-AVAILABLE_MODELS = [
-    "gpt-4o",
-    "gpt-4.1-nano",
-    "gpt-4.1-mini",
-]
-
-
-def is_valid_model(model: str) -> bool:
-    """
-    Check if a model is valid.
-
-    Args:
-        model: Model name to check
-
-    Returns:
-        True if the model is valid, False otherwise
-    """
-    return model in AVAILABLE_MODELS
 
 
 def convert_to_openai_messages(messages: list[dict[str, str]]) -> list[ChatCompletionMessageParam]:
@@ -53,7 +36,7 @@ def convert_to_openai_messages(messages: list[dict[str, str]]) -> list[ChatCompl
 
 async def stream_chat_completion(
     messages: list[dict[str, str]],
-    model: str = "gpt-4.1-nano",
+    model: str = DEFAULT_MODEL,
 ) -> AsyncGenerator[str, None]:
     """
     Stream chat completion from OpenAI API.
@@ -89,7 +72,7 @@ async def stream_chat_completion(
 
 async def get_completion(
     messages: list[dict[str, str]],
-    model: str = "gpt-4.1-nano",
+    model: str = DEFAULT_MODEL,
 ) -> str:
     """
     Get a complete response (non-streaming) from OpenAI API.
