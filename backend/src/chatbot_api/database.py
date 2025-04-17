@@ -17,7 +17,7 @@ The models use SQLModel's relationship system to establish connections between r
 import datetime
 import os
 import uuid
-from enum import Enum
+from enum import StrEnum
 
 from dotenv import load_dotenv
 from sqlalchemy import Column, DateTime, Text, text
@@ -32,7 +32,7 @@ DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+asyncpg://postgres:postgres
 engine = create_async_engine(DATABASE_URL, echo=True, future=True)
 
 
-class Role(str, Enum):
+class Role(StrEnum):
     """Enum representing the possible roles in a conversation."""
 
     USER = "user"
