@@ -36,7 +36,7 @@ class Role(StrEnum):
     """Enum representing the possible roles in a conversation."""
 
     USER = "user"
-    BOT = "bot"
+    ASSISTANT = "assistant"
 
 
 class User(SQLModel, table=True):
