@@ -373,6 +373,7 @@ async def start_chat(
     """
     # Verify that the user has access to the conversation
     conversation = await verify_conversation_access(message.conversation_id, current_user, session)
+    model = conversation.model
     
     # Generate a unique stream ID
     stream_id = str(uuid.uuid4())
@@ -410,7 +411,7 @@ async def start_chat(
     # Store conversation and message information for the websocket handler
     app.stream_requests[stream_id] = {
         "conversation_id": message.conversation_id,
-        "model": conversation.model,
+        "model": model,
         "user_id": current_user["id"],
         "created_at": datetime.datetime.now(datetime.UTC)
     }
