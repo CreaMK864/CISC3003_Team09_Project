@@ -119,6 +119,7 @@ Build the real-time chat feature using FastAPI's WebSocket support. Extend your 
    - Basic error and reconnection handling.
 3. Tie the WebSocket endpoint into your conversation history by storing each message (using the Message model) in the database.
 4. Ensure that all new WebSocket functionality is fully integrated with the existing FastAPI app, and that messages are handled in real-time.
+5. Add necessary documentations for using the WebSocket endpoint.
 
 Output code that demonstrates the WebSocket endpoint, integration with message storage, and minimal error handling.
 ```

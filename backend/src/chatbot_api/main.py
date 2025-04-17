@@ -9,23 +9,26 @@ The module provides the following main features:
 - User management (create and retrieve users)
 - Conversation management (create, retrieve, and list conversations)
 - Message management (create and retrieve messages)
+- Real-time chat using WebSockets with OpenAI integration
 - Health check endpoint
 
 All database models are defined in the database module.
 """
 
 import datetime
+import json
 import uuid
 from contextlib import asynccontextmanager
 
 import uvicorn
-from fastapi import Depends, FastAPI, HTTPException, status
-from pydantic import BaseModel
+from fastapi import Depends, FastAPI, HTTPException, WebSocket, WebSocketDisconnect, status
+from pydantic import BaseModel, field_validator
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from chatbot_api.auth import UserInfo, get_current_user
-from chatbot_api.database import Conversation, Message, User, create_db_and_tables, delete_all_tables, get_session
+from chatbot_api.database import Conversation, Message, User, create_db_and_tables, get_session
+from chatbot_api.openai_client import AVAILABLE_MODELS, is_valid_model, stream_chat_completion
 
 
 @asynccontextmanager
@@ -37,7 +40,7 @@ async def lifespan(app: FastAPI):
     Args:
         app: FastAPI application instance
     """
-    await delete_all_tables()
+    # await delete_all_tables()
     await create_db_and_tables()
     yield
 
@@ -56,6 +59,13 @@ class ConversationCreate(BaseModel):
 
     title: str = "New Conversation"
     model: str = "gpt-4.1-nano"
+
+    @field_validator("model")
+    @classmethod
+    def validate_model(cls, v):
+        if not is_valid_model(v):
+            raise ValueError(f"Invalid model. Available models: {', '.join(AVAILABLE_MODELS)}")
+        return v
 
 
 class MessageCreate(BaseModel):
@@ -86,6 +96,13 @@ class UserUpdate(BaseModel):
     display_name: str | None = None
     profile_picture_url: str | None = None
     last_selected_model: str | None = None
+
+    @field_validator("last_selected_model")
+    @classmethod
+    def validate_model(cls, v):
+        if v is not None and not is_valid_model(v):
+            raise ValueError(f"Invalid model. Available models: {', '.join(AVAILABLE_MODELS)}")
+        return v
 
 
 @app.get("/health")
@@ -162,7 +179,7 @@ async def update_user(
 
     Raises:
         HTTPException: If the user is not found or if the authenticated user
-                      is trying to update another user's profile
+                      is trying to update another user's profile, or if the model is invalid
     """
     # Verify the authenticated user is modifying their own profile
     if str(user_id) != current_user["id"]:
@@ -206,8 +223,10 @@ async def create_conversation(
 
     Returns:
         The created conversation object
+
+    Raises:
+        HTTPException: If the model is invalid
     """
-    # Use the authenticated user's ID from the JWT token
     user_id = uuid.UUID(current_user["id"])
 
     db_conversation = Conversation(user_id=user_id, title=conversation.title, model=conversation.model)
@@ -334,7 +353,6 @@ async def create_message(
     await session.commit()
     await session.refresh(db_message)
 
-    # Update conversation's updated_at timestamp
     conversation.updated_at = datetime.datetime.now(datetime.UTC)
     session.add(conversation)
     await session.commit()
@@ -363,14 +381,223 @@ async def get_conversation_messages(
     Raises:
         HTTPException: If the conversation is not found or doesn't belong to the user
     """
-    # Verify that the conversation exists and user has access
     await verify_conversation_access(conversation_id, current_user, session)
 
-    # Retrieve messages
     statement = select(Message).where(Message.conversation_id == conversation_id)
     result = await session.exec(statement)
     messages = result.all()
     return messages
+
+
+@app.websocket("/ws/chat")
+async def chat_websocket(websocket: WebSocket):
+    """
+    WebSocket endpoint for real-time chat interaction with OpenAI API.
+
+    The client must provide a valid Supabase JWT token in the Authorization header.
+    Example of connecting with a JWT token:
+    ```javascript
+    // Example client-side JavaScript
+    const token = "your-supabase-jwt-token";
+    const socket = new WebSocket("wss://your-api.com/ws/chat");
+
+    // Add the authorization header during connection
+    socket.onopen = function() {
+    // Send the authorization header in the first message
+    socket.send(JSON.stringify({
+        action: "authenticate",
+        token: token
+    }));
+
+    // Then continue with regular chat messages
+    // ...
+    };
+    ```
+
+    The client sends a JSON message with the following structure:
+    ```
+    {
+        "action": "chat",
+        "conversation_id": 123,
+        "content": "User message content",
+        "model": "gpt-4.1-nano"  # Optional, defaults to user's preferred model or a system default
+    }
+    ```
+
+    The server will respond with streaming responses from the OpenAI API.
+    When the response is complete, the server will send a special message:
+    ```
+    {
+        "event": "chat_ended"
+    }
+    ```
+
+    Args:
+        websocket: WebSocket connection
+    """
+    try:
+        await websocket.accept()
+
+        # Get token from headers
+        headers = websocket.headers
+        auth_header = headers.get("authorization")
+
+        if not auth_header or not auth_header.startswith("Bearer "):
+            await websocket.send_text(json.dumps({"error": "Missing or invalid authorization header"}))
+            await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+            return
+
+        token = auth_header.replace("Bearer ", "")
+
+        # Validate JWT token
+        try:
+            current_user = get_current_user(token)
+            user_id = uuid.UUID(current_user["id"])
+        except Exception:
+            await websocket.send_text(json.dumps({"error": "Invalid authentication token"}))
+            await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+            return
+
+        # Create a database session
+        async with get_session() as session:
+            try:
+                # Get user's default model
+                db_user: User | None = await session.get(User, user_id)
+                if not db_user:
+                    await websocket.send_text(json.dumps({"error": "User not found"}))
+                    await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+                    return
+
+                # User's preferred model, unless it's invalid
+                if is_valid_model(db_user.last_selected_model):
+                    default_model = db_user.last_selected_model
+                else:
+                    db_user.last_selected_model = "gpt-4.1-nano"
+                    session.add(db_user)
+                    await session.commit()
+                    await session.refresh(db_user)
+                    default_model = "gpt-4.1-nano"
+
+                # Listen for messages
+                while True:
+                    data = await websocket.receive_text()
+                    message_data = json.loads(data)
+
+                    action = message_data.get("action")
+
+                    if action == "chat":
+                        conversation_id = message_data.get("conversation_id")
+                        content = message_data.get("content", "")
+                        model = message_data.get("model", default_model)
+
+                        if not is_valid_model(model):
+                            await websocket.send_text(
+                                json.dumps({"error": f"Invalid model. Available models: {', '.join(AVAILABLE_MODELS)}"})
+                            )
+                            continue
+
+                        try:
+                            conversation = await verify_conversation_access(conversation_id, current_user, session)
+                        except HTTPException:
+                            await websocket.send_text(json.dumps({"error": "Conversation not found"}))
+                            continue
+
+                        user_message = Message(
+                            conversation_id=conversation_id,
+                            role="user",
+                            content=content,
+                            index=0,  # Will be updated after getting existing messages
+                        )
+
+                        statement = select(Message).where(Message.conversation_id == conversation_id)
+                        result = await session.exec(statement)
+                        existing_messages = result.all()
+                        user_message.index = len(existing_messages)
+
+                        session.add(user_message)
+                        await session.commit()
+                        await session.refresh(user_message)
+
+                        conversation.updated_at = datetime.datetime.now(datetime.UTC)
+                        conversation.model = model
+                        session.add(conversation)
+                        await session.commit()
+
+                        # Prepare conversation history for OpenAI
+                        all_messages = sorted(existing_messages + [user_message], key=lambda m: m.index)
+                        openai_messages = [{"role": msg.role, "content": msg.content} for msg in all_messages]
+
+                        assistant_message = Message(
+                            conversation_id=conversation_id,
+                            role="assistant",
+                            content="",
+                            index=len(all_messages),
+                        )
+                        session.add(assistant_message)
+                        await session.commit()
+                        await session.refresh(assistant_message)
+
+                        # Stream response from OpenAI
+                        full_response = ""
+                        try:
+                            async for response_chunk in stream_chat_completion(openai_messages, model):
+                                full_response += response_chunk
+
+                                await websocket.send_text(
+                                    json.dumps({"event": "chat_response", "content": response_chunk})
+                                )
+
+                                # Update assistant message in the database periodically
+                                # For performance, we don't update the database on every chunk
+                                if len(response_chunk) > 50:
+                                    assistant_message.content = full_response
+                                    session.add(assistant_message)
+                                    await session.commit()
+
+                        except Exception as e:
+                            await websocket.send_text(json.dumps({"error": f"Error from OpenAI API: {str(e)}"}))
+                            continue
+
+                        # Update complete response in the database
+                        assistant_message.content = full_response
+                        session.add(assistant_message)
+                        await session.commit()
+
+                        # Send completion signal
+                        await websocket.send_text(json.dumps({"event": "chat_ended"}))
+
+                    else:
+                        await websocket.send_text(json.dumps({"error": f"Unknown action: {action}"}))
+
+            except WebSocketDisconnect:
+                # Handle client disconnect gracefully
+                pass
+            except Exception as e:
+                # Send error message
+                await websocket.send_text(json.dumps({"error": f"Server error: {str(e)}"}))
+
+    except Exception as e:
+        # Send error message if WebSocket is still connected
+        try:
+            await websocket.send_text(json.dumps({"error": f"Server error: {str(e)}"}))
+        except:
+            pass
+
+        try:
+            await websocket.close()
+        except:
+            pass
+
+
+@app.get("/models")
+async def get_available_models():
+    """
+    Get a list of available language models.
+
+    Returns:
+        A list of available model names
+    """
+    return {"models": AVAILABLE_MODELS}
 
 
 def main():
