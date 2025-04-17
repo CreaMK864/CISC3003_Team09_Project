@@ -18,6 +18,7 @@ import datetime
 import os
 import uuid
 from enum import StrEnum
+from contextlib import asynccontextmanager
 
 from dotenv import load_dotenv
 from sqlalchemy import Column, DateTime, Text, text
@@ -167,6 +168,19 @@ async def get_session():
     Create and yield a database session.
 
     This function is used as a FastAPI dependency for database access.
+
+    Yields:
+        A SQLModel Session object that is automatically closed when done
+    """
+    async with AsyncSession(engine) as session:
+        yield session
+
+@asynccontextmanager
+async def create_session():
+    """
+    Create and yield a database session using an async context manager.
+
+    This function can be used with 'async with' syntax for database access.
 
     Yields:
         A SQLModel Session object that is automatically closed when done

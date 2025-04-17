@@ -29,7 +29,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from chatbot_api.auth import UserInfo, get_current_user
 from chatbot_api.config import AVAILABLE_MODELS, DEFAULT_MODEL, is_valid_model
-from chatbot_api.database import Conversation, Message, User, create_db_and_tables, delete_all_tables, get_session
+from chatbot_api.database import Conversation, Message, Role, User, create_db_and_tables, delete_all_tables, get_session, create_session
 from chatbot_api.openai_client import stream_chat_completion
 
 
@@ -435,7 +435,6 @@ async def stream_chat_response(websocket: WebSocket, stream_id: str):
         stream_data = app.stream_requests[stream_id]
         conversation_id = stream_data["conversation_id"]
         model = stream_data["model"]
-        user_id = stream_data["user_id"]
         
         # Clean up the stream request after use
         # Set a reasonable timeout (e.g. 5 minutes)
@@ -446,7 +445,7 @@ async def stream_chat_response(websocket: WebSocket, stream_id: str):
             await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
             return
         
-        async with get_session() as session:
+        async with create_session() as session:
             statement = select(Message).where(Message.conversation_id == conversation_id)
             result = await session.exec(statement)
             all_messages = sorted(result.all(), key=lambda m: m.index)
@@ -454,7 +453,7 @@ async def stream_chat_response(websocket: WebSocket, stream_id: str):
             
             assistant_message = Message(
                 conversation_id=conversation_id,
-                role="assistant",
+                role=Role.ASSISTANT,
                 content="",
                 index=len(all_messages),
             )
