@@ -14,25 +14,26 @@ The module provides the following main features:
 All database models are defined in the database module.
 """
 
-from contextlib import asynccontextmanager
 import datetime
 import uuid
+from contextlib import asynccontextmanager
 
 import uvicorn
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, status
 from pydantic import BaseModel
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from chatbot_api.database import Conversation, Message, User, delete_all_tables, create_db_and_tables, get_session
-from chatbot_api.auth import get_current_user, UserInfo
+from chatbot_api.auth import UserInfo, get_current_user
+from chatbot_api.database import Conversation, Message, User, create_db_and_tables, delete_all_tables, get_session
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """
     Lifecycle event handler that runs when the application starts.
     Creates database tables before the application starts serving requests.
-    
+
     Args:
         app: FastAPI application instance
     """
@@ -40,38 +41,19 @@ async def lifespan(app: FastAPI):
     await create_db_and_tables()
     yield
 
+
 app = FastAPI(title="Chatbot API", lifespan=lifespan)
-
-
-# Create request models
-class UserCreate(BaseModel):
-    """
-    Request model for creating a new user.
-    
-    Attributes:
-        email: User's email address
-        display_name: User's display name
-        profile_picture_url: Optional URL to the user's profile picture
-        password_hash: Optional hashed password
-        last_selected_model: The model the user last selected, defaults to "gpt-4.1-nano"
-    """
-    email: str
-    display_name: str
-    profile_picture_url: str | None = None
-    password_hash: str | None = None
-    last_selected_model: str = "gpt-4.1-nano"
 
 
 class ConversationCreate(BaseModel):
     """
     Request model for creating a new conversation.
-    
+
     Attributes:
-        user_id: ID of the user who owns the conversation
         title: Title of the conversation, defaults to "New Conversation"
         model: The model used for this conversation, defaults to "gpt-4.1-nano"
     """
-    user_id: int
+
     title: str = "New Conversation"
     model: str = "gpt-4.1-nano"
 
@@ -79,12 +61,13 @@ class ConversationCreate(BaseModel):
 class MessageCreate(BaseModel):
     """
     Request model for creating a new message.
-    
+
     Attributes:
         conversation_id: ID of the conversation this message belongs to
         role: Role of the sender ("user" or "bot")
         content: Content of the message
     """
+
     conversation_id: int
     role: str
     content: str
@@ -94,7 +77,7 @@ class MessageCreate(BaseModel):
 async def health_check():
     """
     Health check endpoint to verify that the API is running.
-    
+
     Returns:
         A dictionary with a status message
     """
@@ -107,10 +90,10 @@ async def get_profile(current_user: UserInfo = Depends(get_current_user)):
     """
     Protected endpoint that requires a valid Supabase JWT token.
     Returns the user's profile information extracted from the token.
-    
+
     Args:
         current_user: User information extracted from the JWT token
-        
+
     Returns:
         User profile information
     """
@@ -121,44 +104,18 @@ async def get_profile(current_user: UserInfo = Depends(get_current_user)):
     }
 
 
-# User CRUD operations
-@app.post("/users/", response_model=User)
-async def create_user(user: UserCreate, session: AsyncSession = Depends(get_session)):
-    """
-    Create a new user in the database.
-    
-    Args:
-        user: User information from request body
-        session: Database session
-        
-    Returns:
-        The created user object
-    """
-    db_user = User(
-        email=user.email,
-        display_name=user.display_name,
-        profile_picture_url=user.profile_picture_url,
-        password_hash=user.password_hash,
-        last_selected_model=user.last_selected_model,
-    )
-    session.add(db_user)
-    await session.commit()
-    await session.refresh(db_user)
-    return db_user
-
-
 @app.get("/users/{user_id}", response_model=User)
-async def get_user(user_id: int, session: AsyncSession = Depends(get_session)):
+async def get_user(user_id: uuid.UUID, session: AsyncSession = Depends(get_session)):
     """
     Get a user by their ID.
-    
+
     Args:
         user_id: The ID of the user to retrieve
         session: Database session
-        
+
     Returns:
         The user object if found
-        
+
     Raises:
         HTTPException: If the user is not found
     """
@@ -171,27 +128,26 @@ async def get_user(user_id: int, session: AsyncSession = Depends(get_session)):
 # Conversation CRUD operations
 @app.post("/conversations/", response_model=Conversation)
 async def create_conversation(
-    conversation: ConversationCreate, 
+    conversation: ConversationCreate,
     current_user: UserInfo = Depends(get_current_user),
-    session: AsyncSession = Depends(get_session)
+    session: AsyncSession = Depends(get_session),
 ):
     """
     Create a new conversation.
     Requires authentication with Supabase JWT.
-    
+
     Args:
         conversation: Conversation information from request body
+        current_user: User information from JWT token
         session: Database session
-        
+
     Returns:
         The created conversation object
     """
     # Use the authenticated user's ID from the JWT token
     user_id = uuid.UUID(current_user["id"])
-    
-    db_conversation = Conversation(
-        user_id=user_id, title=conversation.title, model=conversation.model
-    )
+
+    db_conversation = Conversation(user_id=user_id, title=conversation.title, model=conversation.model)
     session.add(db_conversation)
     await session.commit()
     await session.refresh(db_conversation)
@@ -199,55 +155,55 @@ async def create_conversation(
 
 
 async def verify_conversation_access(
-    conversation_id: int, 
+    conversation_id: int,
     current_user: UserInfo,
     session: AsyncSession,
 ) -> Conversation:
     """
     Verify that a conversation exists and belongs to the current user.
-    
+
     Args:
         conversation_id: The ID of the conversation to verify
         current_user: User information from the JWT token
         session: Database session
-        
+
     Returns:
         The conversation object if it exists and belongs to the user
-        
+
     Raises:
         HTTPException: If the conversation is not found or doesn't belong to the user
     """
     conversation = await session.get(Conversation, conversation_id)
     if not conversation:
         raise HTTPException(status_code=404, detail="Conversation not found")
-    
+
     # Check if the conversation belongs to the authenticated user
     user_id = uuid.UUID(current_user["id"])
     if conversation.user_id != user_id:
         # Don't leak information about whether a conversation exists or not
         raise HTTPException(status_code=404, detail="Conversation not found")
-    
+
     return conversation
 
 
 @app.get("/conversations/{conversation_id}", response_model=Conversation)
 async def get_conversation(
-    conversation_id: int, 
+    conversation_id: int,
     current_user: UserInfo = Depends(get_current_user),
-    session: AsyncSession = Depends(get_session)
+    session: AsyncSession = Depends(get_session),
 ):
     """
     Get a conversation by its ID.
     Requires authentication with Supabase JWT.
-    
+
     Args:
         conversation_id: The ID of the conversation to retrieve
         current_user: User information from JWT token
         session: Database session
-        
+
     Returns:
         The conversation object if found
-        
+
     Raises:
         HTTPException: If the conversation is not found or doesn't belong to the user
     """
@@ -257,17 +213,16 @@ async def get_conversation(
 
 @app.get("/conversations", response_model=list[Conversation])
 async def get_user_conversations(
-    current_user: UserInfo = Depends(get_current_user),
-    session: AsyncSession = Depends(get_session)
+    current_user: UserInfo = Depends(get_current_user), session: AsyncSession = Depends(get_session)
 ):
     """
     Get all conversations for the authenticated user.
     Requires authentication with Supabase JWT.
-    
+
     Args:
         current_user: User information from JWT token
         session: Database session
-        
+
     Returns:
         A list of conversation objects belonging to the user
     """
@@ -281,39 +236,36 @@ async def get_user_conversations(
 # Message CRUD operations
 @app.post("/messages/", response_model=Message)
 async def create_message(
-    message: MessageCreate, 
+    message: MessageCreate,
     current_user: UserInfo = Depends(get_current_user),
-    session: AsyncSession = Depends(get_session)
+    session: AsyncSession = Depends(get_session),
 ):
     """
     Create a new message in a conversation.
     Requires authentication with Supabase JWT.
-    
+
     Args:
         message: Message information from request body
         current_user: User information from JWT token
         session: Database session
-        
+
     Returns:
         The created message object
-    
+
     Notes:
         Also updates the conversation's updated_at timestamp
     """
     # Verify that the user has access to the conversation
     conversation = await verify_conversation_access(message.conversation_id, current_user, session)
-    
+
     # Get current max index for the conversation to properly order messages
     statement = select(Message).where(Message.conversation_id == message.conversation_id)
     result = await session.exec(statement)
     existing_messages = result.all()
     index = len(existing_messages)
-    
+
     db_message = Message(
-        conversation_id=message.conversation_id,
-        role=message.role,
-        content=message.content,
-        index=index
+        conversation_id=message.conversation_id, role=message.role, content=message.content, index=index
     )
     session.add(db_message)
     await session.commit()
@@ -329,28 +281,28 @@ async def create_message(
 
 @app.get("/conversations/{conversation_id}/messages", response_model=list[Message])
 async def get_conversation_messages(
-    conversation_id: int, 
+    conversation_id: int,
     current_user: UserInfo = Depends(get_current_user),
-    session: AsyncSession = Depends(get_session)
+    session: AsyncSession = Depends(get_session),
 ):
     """
     Get all messages for a specific conversation.
     Requires authentication with Supabase JWT.
-    
+
     Args:
         conversation_id: The ID of the conversation whose messages to retrieve
         current_user: User information from JWT token
         session: Database session
-        
+
     Returns:
         A list of message objects belonging to the conversation
-        
+
     Raises:
         HTTPException: If the conversation is not found or doesn't belong to the user
     """
     # Verify that the conversation exists and user has access
     await verify_conversation_access(conversation_id, current_user, session)
-    
+
     # Retrieve messages
     statement = select(Message).where(Message.conversation_id == conversation_id)
     result = await session.exec(statement)
@@ -361,7 +313,7 @@ async def get_conversation_messages(
 def main():
     """
     Entry point for the application when run directly.
-    
+
     Starts the uvicorn server with the FastAPI application.
     """
     uvicorn.run("chatbot_api.main:app", host="0.0.0.0", port=8000, reload=True)
