@@ -1,0 +1,11 @@
+{
+  "private": true,
+  "workspaces": ["frontend/*"],
+  "scripts": {
+    "prepare": "husky",
+    "pre-commit": "npm run --prefix frontend pre-commit"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7"
+  }
+}
