@@ -130,3 +130,6 @@ dist
 .yarn/install-state.gz
 .pnp.*
 
+
+*.env
+supabase-project/volumes/db/data
