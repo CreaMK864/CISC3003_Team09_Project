@@ -22,7 +22,7 @@ from contextlib import asynccontextmanager
 from typing import Any, TypedDict
 
 import uvicorn
-from fastapi import Depends, FastAPI, HTTPException, WebSocket, WebSocketDisconnect, status
+from fastapi import Depends, FastAPI, HTTPException, WebSocket, WebSocketDisconnect, status, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, field_validator
 from sqlmodel import select
@@ -366,6 +366,7 @@ async def get_conversation_messages(
 
 @app.post("/chat", response_model=dict)
 async def start_chat(
+    request: Request,
     message: MessageCreate,
     current_user: UserInfo = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
@@ -374,6 +375,7 @@ async def start_chat(
     Start a chat session by sending a message and receiving a stream URL.
 
     Args:
+        request: HTTP request object
         message: Message information from request body
         current_user: User information from JWT token
         session: Database session
@@ -401,8 +403,10 @@ async def start_chat(
     session.add(conversation)
     await session.commit()
 
-    protocol = "wss" if app.root_path.startswith("https") else "ws"
-    host = "localhost:8000"  # In production, this should be determined dynamically
+    scheme = "wss" if request.url.scheme == "https" else "ws"
+    host = request.headers.get("host", request.url.hostname)
+    root_path = request.scope.get("root_path", "").rstrip("/")
+    ws_path = f"{root_path}/ws/stream/{stream_id}"
 
     stream_requests[stream_id] = {
         "conversation_id": message.conversation_id,
@@ -412,7 +416,7 @@ async def start_chat(
     }
 
     # Return the WebSocket URL
-    return {"ws_url": f"{protocol}://{host}/ws/stream/{stream_id}"}
+    return {"ws_url": f"{scheme}://{host}{ws_path}"}
 
 
 @app.websocket("/ws/stream/{stream_id}")
