@@ -1,8 +1,8 @@
 import {
-  initializeAuth,
-  showLoginForm,
-  getAuthToken,
-  getCurrentUser,
+    initializeAuth,
+    showLoginForm,
+    getAuthToken,
+    getCurrentUser,
 } from "./auth.js";
 
 // DOM elements
@@ -18,19 +18,22 @@ let activeSocket = null;
 /** @type {number|null} */
 let currentConversationId = null;
 
+// Use localhost for development, update to https://api.saviomak.com for production
 /** @type {string} */
-const API_BASE_URL = "http://localhost:8000"; // TODO: Change to the actual host in production
+const API_BASE_URL = "http://localhost:8000"; // TODO: Change to "https://api.saviomak.com" in production
 
 /**
  * Initialize the application
  * @returns {Promise<void>}
  */
 async function initialize() {
-  const user = await initializeAuth();
+    const user = await initializeAuth();
 
-  if (user) {
-    await getOrCreateConversation();
-  }
+    if (user) {
+        await getOrCreateConversation();
+    } else {
+        displayErrorMessage("Failed to authenticate. Please try again.");
+    }
 }
 
 /**
@@ -38,40 +41,38 @@ async function initialize() {
  * @returns {Promise<void>}
  */
 async function getOrCreateConversation() {
-  try {
-    // Get existing conversations for the user
-    const response = await fetch(`${API_BASE_URL}/conversations`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${await getAuthToken()}`,
-      },
-    });
+    try {
+        // Get existing conversations for the user
+        const response = await fetch(`${API_BASE_URL}/conversations`, {
+            method: "GET",
+            headers: {
+                Authorization: `Bearer ${await getAuthToken()}`,
+            },
+        });
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status} - ${await response.text()}`);
+        }
+
+        /** @type {Array<{id: number, title: string}>} */
+        const conversations = await response.json();
+
+        if (conversations.length > 0) {
+            currentConversationId = conversations[0].id;
+            document.querySelector(".chat-header h2").textContent = conversations[0].title;
+        } else {
+            await createNewConversation();
+        }
+
+        localStorage.setItem("current_conversation_id", currentConversationId.toString());
+    } catch (error) {
+        console.error("Error getting conversations:", error);
+        displayErrorMessage("Failed to load conversations. Using a default conversation.");
+        // Fallback to a default conversation ID
+        currentConversationId = 1;
+        document.querySelector(".chat-header h2").textContent = "Default Conversation";
+        localStorage.setItem("current_conversation_id", currentConversationId.toString());
     }
-
-    /** @type {Array<{id: number, title: string}>} */
-    const conversations = await response.json();
-
-    if (conversations.length > 0) {
-      currentConversationId = conversations[0].id;
-      document.querySelector(".chat-header h2").textContent =
-        conversations[0].title;
-    } else {
-      await createNewConversation();
-    }
-
-    localStorage.setItem(
-      "current_conversation_id",
-      currentConversationId.toString(),
-    );
-  } catch (error) {
-    console.error("Error getting conversations:", error);
-    alert(
-      "Failed to load conversations. Please refresh the page or try again later.",
-    );
-  }
 }
 
 /**
@@ -79,31 +80,31 @@ async function getOrCreateConversation() {
  * @returns {Promise<void>}
  */
 async function createNewConversation() {
-  try {
-    const response = await fetch(`${API_BASE_URL}/conversations/`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${await getAuthToken()}`,
-      },
-      body: JSON.stringify({
-        title: "New Conversation",
-        model: "gpt-4.1-nano",
-      }),
-    });
+    try {
+        const response = await fetch(`${API_BASE_URL}/conversations/`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${await getAuthToken()}`,
+            },
+            body: JSON.stringify({
+                title: "New Conversation",
+                model: "gpt-4.1-nano",
+            }),
+        });
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status} - ${await response.text()}`);
+        }
+
+        /** @type {{id: number, title: string}} */
+        const conversation = await response.json();
+        currentConversationId = conversation.id;
+        document.querySelector(".chat-header h2").textContent = conversation.title;
+    } catch (error) {
+        console.error("Error creating conversation:", error);
+        throw error; // Let the caller handle the error
     }
-
-    /** @type {{id: number, title: string}} */
-    const conversation = await response.json();
-    currentConversationId = conversation.id;
-    document.querySelector(".chat-header h2").textContent = conversation.title;
-  } catch (error) {
-    console.error("Error creating conversation:", error);
-    alert("Failed to create a new conversation.");
-  }
 }
 
 /**
@@ -113,16 +114,27 @@ async function createNewConversation() {
  * @returns {void}
  */
 function displayMessage(content, role) {
-  const messageElement = document.createElement("div");
-  messageElement.classList.add("message");
-  messageElement.classList.add(
-    role === "user" ? "user-message" : "bot-message",
-  );
-  messageElement.textContent = content;
+    const messageElement = document.createElement("div");
+    messageElement.classList.add("message");
+    messageElement.classList.add(role === "user" ? "user-message" : "bot-message");
+    messageElement.textContent = content;
 
-  messagesContainer.appendChild(messageElement);
+    messagesContainer.appendChild(messageElement);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+}
 
-  messagesContainer.scrollTop = messagesContainer.scrollHeight;
+/**
+ * Display an error message in the chat UI
+ * @param {string} content - The error message content
+ * @returns {void}
+ */
+function displayErrorMessage(content) {
+    const messageElement = document.createElement("div");
+    messageElement.classList.add("message", "error-message");
+    messageElement.textContent = content;
+
+    messagesContainer.appendChild(messageElement);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
 }
 
 /**
@@ -131,103 +143,102 @@ function displayMessage(content, role) {
  * @returns {Promise<void>}
  */
 async function sendMessage(content) {
-  try {
-    if (!getCurrentUser()) {
-      alert("You need to be logged in to send messages.");
-      showLoginForm();
-      return;
-    }
-
-    if (!currentConversationId) {
-      await getOrCreateConversation();
-    }
-
-    displayMessage(content, "user");
-
-    const botMessageElement = document.createElement("div");
-    botMessageElement.classList.add("message", "bot-message");
-    botMessageElement.textContent = "";
-    messagesContainer.appendChild(botMessageElement);
-
-    const response = await fetch(`${API_BASE_URL}/chat`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${await getAuthToken()}`,
-      },
-      body: JSON.stringify({
-        conversation_id: getCurrentConversationId(),
-        role: "user",
-        content: content,
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
-
-    /** @type {{ws_url: string}} */
-    const data = await response.json();
-    const wsUrl = data.ws_url;
-
-    if (activeSocket && activeSocket.readyState === WebSocket.OPEN) {
-      activeSocket.close();
-    }
-
-    activeSocket = new WebSocket(wsUrl);
-
-    /** @type {string} */
-    let fullResponse = "";
-
-    activeSocket.addEventListener("open", () => {
-      console.log("Connected to WebSocket for streaming response");
-    });
-
-    activeSocket.addEventListener("message", (event) => {
-      try {
-        /** @type {{error?: string, event?: string}} */
-        const jsonData = JSON.parse(event.data);
-
-        // Check if this is an error or event message
-        if (jsonData.error) {
-          console.error("Error from server:", jsonData.error);
-          botMessageElement.textContent = `Error: ${jsonData.error}`;
-          return;
+    try {
+        if (!getCurrentUser()) {
+            displayErrorMessage("You need to be logged in to send messages.");
+            showLoginForm();
+            return;
         }
 
-        if (jsonData.event === "chat_ended") {
-          console.log("Chat response complete");
-          return;
+        if (!currentConversationId) {
+            await getOrCreateConversation();
         }
 
-        // If we got here, it's actually a JSON message, append it
-        fullResponse += JSON.stringify(jsonData);
-        botMessageElement.textContent = fullResponse;
-      } catch {
-        // Not JSON, so it's a plain text chunk of the response
-        fullResponse += event.data;
-        botMessageElement.textContent = fullResponse;
-      }
+        displayMessage(content, "user");
 
-      messagesContainer.scrollTop = messagesContainer.scrollHeight;
-    });
+        const botMessageElement = document.createElement("div");
+        botMessageElement.classList.add("message", "bot-message");
+        botMessageElement.textContent = "";
+        messagesContainer.appendChild(botMessageElement);
 
-    activeSocket.addEventListener("close", () => {
-      console.log("Disconnected from WebSocket");
-    });
+        const response = await fetch(`${API_BASE_URL}/chat`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${await getAuthToken()}`,
+            },
+            body: JSON.stringify({
+                conversation_id: getCurrentConversationId(),
+                role: "user",
+                content: content,
+            }),
+        });
 
-    activeSocket.addEventListener("error", (event) => {
-      console.error("WebSocket error:", event);
-      botMessageElement.textContent =
-        "Error: Failed to connect to response stream";
-    });
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status} - ${await response.text()}`);
+        }
 
-    // Clear the input
-    messageInput.value = "";
-  } catch (error) {
-    console.error("Error sending message:", error);
-    alert("Failed to send message. Please try again.");
-  }
+        /** @type {{ws_url: string}} */
+        const data = await response.json();
+        const wsUrl = data.ws_url;
+
+        if (activeSocket && activeSocket.readyState === WebSocket.OPEN) {
+            activeSocket.close();
+        }
+
+        activeSocket = new WebSocket(wsUrl);
+
+        /** @type {string} */
+        let fullResponse = "";
+
+        activeSocket.addEventListener("open", () => {
+            console.log("Connected to WebSocket for streaming response");
+        });
+
+        activeSocket.addEventListener("message", (event) => {
+            try {
+                /** @type {{error?: string, event?: string}} */
+                const jsonData = JSON.parse(event.data);
+
+                // Check if this is an error or event message
+                if (jsonData.error) {
+                    console.error("Error from server:", jsonData.error);
+                    botMessageElement.textContent = `Error: ${jsonData.error}`;
+                    return;
+                }
+
+                if (jsonData.event === "chat_ended") {
+                    console.log("Chat response complete");
+                    return;
+                }
+
+                // If we got here, it's actually a JSON message, append it
+                fullResponse += JSON.stringify(jsonData);
+                botMessageElement.textContent = fullResponse;
+            } catch {
+                // Not JSON, so it's a plain text chunk of the response
+                fullResponse += event.data;
+                botMessageElement.textContent = fullResponse;
+            }
+
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        });
+
+        activeSocket.addEventListener("close", () => {
+            console.log("Disconnected from WebSocket");
+        });
+
+        activeSocket.addEventListener("error", (event) => {
+            console.error("WebSocket error:", event);
+            botMessageElement.textContent = "Error: Failed to connect to response stream";
+        });
+
+        // Clear the input
+        messageInput.value = "";
+    } catch (error) {
+        console.error("Error sending message:", error);
+        displayErrorMessage("Failed to send message: " + error.message);
+    }
 }
 
 /**
@@ -235,20 +246,20 @@ async function sendMessage(content) {
  * @returns {number|null} The current conversation ID
  */
 function getCurrentConversationId() {
-  return currentConversationId;
+    return currentConversationId;
 }
 
 // Handle form submission
 messageForm.addEventListener("submit", (event) => {
-  event.preventDefault();
+    event.preventDefault();
 
-  const message = messageInput.value.trim();
-  if (message) {
-    sendMessage(message);
-  }
+    const message = messageInput.value.trim();
+    if (message) {
+        sendMessage(message);
+    }
 });
 
 // Initialize the app when the page loads
 document.addEventListener("DOMContentLoaded", () => {
-  initialize();
+    initialize();
 });
