@@ -49,22 +49,22 @@
   - [x] Add basic error handling and reconnection strategies in the WebSocket endpoint.
 
 ## 5. Frontend Basic Setup & HTML/CSS/JS Structure
-- [ ] **Static Files Setup**
-  - [ ] Create a `static` or `public` directory.
-- [ ] **Basic HTML Page**
-  - [ ] Build an `index.html` file that includes:
+- [x] **Static Files Setup**
+  - [x] Create a `static` or `public` directory.
+- [x] **Basic HTML Page**
+  - [x] Build an `index.html` file that includes:
     - A chat area.
     - An input field for sending messages.
     - A sidebar for navigation (to be extended later).
-- [ ] **CSS Styling**
-  - [ ] Write minimal CSS to style the chat interface (mobile-first and responsive).
-- [ ] **JavaScript Integration**
-  - [ ] Write JS code to:
+- [x] **CSS Styling**
+  - [x] Write minimal CSS to style the chat interface (mobile-first and responsive).
+- [x] **JavaScript Integration**
+  - [x] Write JS code to:
     - Connect to the WebSocket endpoint.
     - Send messages from the input field.
     - Display received messages in the chat area.
-- [ ] **Backend Serving**
-  - [ ] Configure FastAPI to serve static files.
+- [x] **Backend Serving**
+  - [x] Configure FastAPI to serve static files.
 
 ## 6. Markdown Rendering & Enhanced UI
 - [ ] **Markdown Parser Integration**
