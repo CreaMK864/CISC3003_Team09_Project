@@ -24,11 +24,8 @@ pip install -e .
 ```
 
 4. Configure environment variables:
-   - Copy `.env.example` to `.env`
-   - Update the variables with your actual values:
-     - `DATABASE_URL`: PostgreSQL connection string
-     - `SUPABASE_URL`: Your Supabase project URL
-     - `SUPABASE_JWT_SECRET`: Your Supabase JWT secret
+   - In the root directory, copy `.env.cloud-db.example` or `.env.self-host.example` to `.env`
+   - Update the variables with your actual values
 
 ## Supabase Authentication
 
