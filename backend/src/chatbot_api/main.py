@@ -528,7 +528,9 @@ def main():
 
     Starts the uvicorn server with the FastAPI application.
     """
-    uvicorn.run("chatbot_api.main:app", host="0.0.0.0", port=8000, reload=True, proxy_headers=True, forwarded_allow_ips="*")
+    uvicorn.run(
+        "chatbot_api.main:app", host="0.0.0.0", port=8000, reload=True, proxy_headers=True, forwarded_allow_ips="*"
+    )
 
 
 if __name__ == "__main__":
