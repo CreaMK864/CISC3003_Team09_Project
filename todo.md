@@ -103,20 +103,20 @@
   - [ ] Review and test all endpoints for robust error handling and security compliance.
 
 ## 9. Dockerization & Deployment Setup
-- [ ] **Dockerfile**
-  - [ ] Update or create a `Dockerfile` that:
+- [x] **Dockerfile**
+  - [x] Update or create a `Dockerfile` that:
     - Copies the application code.
     - Installs all dependencies.
     - Exposes the required port.
     - Launches the FastAPI app with Uvicorn.
-- [ ] **docker-compose Setup**
-  - [ ] Create a `docker-compose.yml` file for:
+- [x] **docker-compose Setup**
+  - [x] Create a `docker-compose.yml` file for:
     - The FastAPI application service.
     - A PostgreSQL service linked properly to the backend.
-- [ ] **Environment Variables**
-  - [ ] Parameterize database URLs, Supabase configuration, and other sensitive settings.
-- [ ] **Integration Testing**
-  - [ ] Ensure the full stack (backend, database, frontend) runs within containers.
+- [x] **Environment Variables**
+  - [x] Parameterize database URLs, Supabase configuration, and other sensitive settings.
+- [x] **Integration Testing**
+  - [x] Ensure the full stack (backend, database, frontend) runs within containers.
 
 ## 10. CI/CD Pipeline with GitHub Actions Integration
 - [ ] **GitHub Actions Workflow**
