@@ -1,3 +1,5 @@
+@charset "UTF-8";
+
 /* Minimal styling for the chatbot interface */
 * {
     box-sizing: border-box;
@@ -79,6 +81,16 @@ body {
     background-color: #f5f5f5;
 }
 
+.error-message {
+    background-color: #ffebee;
+    color: #c62828;
+    border: 1px solid #ef5350;
+    max-width: 80%;
+    margin-bottom: 15px;
+    padding: 10px;
+    border-radius: 5px;
+}
+
 .chat-input {
     padding: 15px;
     border-top: 1px solid #ddd;
@@ -117,4 +129,4 @@ button {
         border-right: none;
         border-bottom: 1px solid #ddd;
     }
-} 
+}
