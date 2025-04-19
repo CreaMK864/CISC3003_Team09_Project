@@ -17,8 +17,8 @@ The models use SQLModel's relationship system to establish connections between r
 import datetime
 import os
 import uuid
-from enum import StrEnum
 from contextlib import asynccontextmanager
+from enum import StrEnum
 
 from dotenv import load_dotenv
 from sqlalchemy import Column, DateTime, Text, text
@@ -174,6 +174,7 @@ async def get_session():
     """
     async with AsyncSession(engine) as session:
         yield session
+
 
 @asynccontextmanager
 async def create_session():

@@ -17,9 +17,9 @@ All database models are defined in the database module.
 
 import datetime
 import json
-from typing import Any, TypedDict
 import uuid
 from contextlib import asynccontextmanager
+from typing import Any, TypedDict
 
 import uvicorn
 from fastapi import Depends, FastAPI, HTTPException, WebSocket, WebSocketDisconnect, status
@@ -30,7 +30,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from chatbot_api.auth import UserInfo, get_current_user
 from chatbot_api.config import AVAILABLE_MODELS, DEFAULT_MODEL, is_valid_model
-from chatbot_api.database import Conversation, Message, Role, User, create_db_and_tables, get_session, create_session
+from chatbot_api.database import Conversation, Message, Role, User, create_db_and_tables, create_session, get_session
 from chatbot_api.openai_client import stream_chat_completion
 
 
@@ -60,10 +60,12 @@ app.add_middleware(
 
 class StreamRequest(TypedDict):
     """TypedDict representing stream request data structure"""
+
     conversation_id: int
     model: str
     user_id: str
     created_at: datetime.datetime
+
 
 stream_requests: dict[str, StreamRequest] = {}
 
@@ -333,7 +335,6 @@ async def get_user_conversations(
     return conversations
 
 
-
 @app.get("/conversations/{conversation_id}/messages", response_model=list[Message])
 async def get_conversation_messages(
     conversation_id: int,
@@ -371,77 +372,71 @@ async def start_chat(
 ):
     """
     Start a chat session by sending a message and receiving a stream URL.
-    
+
     Args:
         message: Message information from request body
         current_user: User information from JWT token
         session: Database session
-        
+
     Returns:
         A dictionary containing the WebSocket URL for streaming the response
     """
     conversation = await verify_conversation_access(message.conversation_id, current_user, session)
     model = conversation.model
-    
+
     # unique stream ID
     stream_id = str(uuid.uuid4())
-    
+
     statement = select(Message).where(Message.conversation_id == message.conversation_id)
     result = await session.exec(statement)
     existing_messages = result.all()
     index = len(existing_messages)
-    
-    db_message = Message(
-        conversation_id=message.conversation_id, 
-        role=Role.USER,
-        content=message.content, 
-        index=index
-    )
+
+    db_message = Message(conversation_id=message.conversation_id, role=Role.USER, content=message.content, index=index)
     session.add(db_message)
     await session.commit()
     await session.refresh(db_message)
-    
+
     conversation.updated_at = datetime.datetime.now(datetime.UTC)
     session.add(conversation)
     await session.commit()
-    
+
     protocol = "wss" if app.root_path.startswith("https") else "ws"
     host = "localhost:8000"  # In production, this should be determined dynamically
-        
+
     stream_requests[stream_id] = {
         "conversation_id": message.conversation_id,
         "model": model,
         "user_id": current_user["id"],
-        "created_at": datetime.datetime.now(datetime.UTC)
+        "created_at": datetime.datetime.now(datetime.UTC),
     }
-    
+
     # Return the WebSocket URL
-    return {
-        "ws_url": f"{protocol}://{host}/ws/stream/{stream_id}"
-    }
+    return {"ws_url": f"{protocol}://{host}/ws/stream/{stream_id}"}
+
 
 @app.websocket("/ws/stream/{stream_id}")
 async def stream_chat_response(websocket: WebSocket, stream_id: str):
     """
     WebSocket endpoint for streaming chat responses after a message is sent via POST.
-    
+
     Args:
         websocket: WebSocket connection
         stream_id: Unique ID for this streaming session
     """
     try:
         await websocket.accept()
-        
+
         # Verify the stream ID exists
         if stream_id not in stream_requests:
             await websocket.send_text(json.dumps({"error": "Invalid or expired stream ID"}))
             await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
             return
-        
+
         stream_data = stream_requests[stream_id]
         conversation_id = stream_data["conversation_id"]
         model = stream_data["model"]
-        
+
         # Clean up the stream request after use
         # Set a reasonable timeout (e.g. 5 minutes)
         created_at = stream_data["created_at"]
@@ -450,13 +445,13 @@ async def stream_chat_response(websocket: WebSocket, stream_id: str):
             await websocket.send_text(json.dumps({"error": "Stream session expired"}))
             await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
             return
-        
+
         async with create_session() as session:
             statement = select(Message).where(Message.conversation_id == conversation_id)
             result = await session.exec(statement)
             all_messages = sorted(result.all(), key=lambda m: m.index)
             openai_messages = [{"role": msg.role, "content": msg.content} for msg in all_messages]
-            
+
             assistant_message = Message(
                 conversation_id=conversation_id,
                 role=Role.ASSISTANT,
@@ -466,33 +461,33 @@ async def stream_chat_response(websocket: WebSocket, stream_id: str):
             session.add(assistant_message)
             await session.commit()
             await session.refresh(assistant_message)
-            
+
             full_response = ""
             try:
                 async for response_chunk in stream_chat_completion(openai_messages, model):
                     full_response += response_chunk
-                    
+
                     await websocket.send_text(response_chunk)
-                    
+
                     # Update assistant message in the database periodically
                     if len(response_chunk) > 50:
                         assistant_message.content = full_response
                         session.add(assistant_message)
                         await session.commit()
-                        
+
             except Exception as e:
                 await websocket.send_text(json.dumps({"error": f"Error from OpenAI API: {str(e)}"}))
                 return
-                
+
             # Update complete response in the database
             assistant_message.content = full_response
             session.add(assistant_message)
             await session.commit()
-            
+
             await websocket.send_text(json.dumps({"event": "chat_ended"}))
-            
+
             del stream_requests[stream_id]
-                
+
     except WebSocketDisconnect:
         if stream_id in stream_requests:
             del stream_requests[stream_id]
@@ -502,12 +497,12 @@ async def stream_chat_response(websocket: WebSocket, stream_id: str):
             await websocket.send_text(json.dumps({"error": f"Server error: {str(e)}"}))
         except:
             pass
-        
+
         try:
             await websocket.close()
         except:
             pass
-            
+
         if stream_id in stream_requests:
             del stream_requests[stream_id]
 

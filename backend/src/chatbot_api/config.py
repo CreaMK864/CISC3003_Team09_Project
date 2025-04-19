@@ -25,4 +25,4 @@ def is_valid_model(model: str) -> bool:
     Returns:
         True if the model is valid, False otherwise
     """
-    return model in AVAILABLE_MODELS 
+    return model in AVAILABLE_MODELS
