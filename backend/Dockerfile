@@ -71,4 +71,4 @@ COPY --from=builder --chown=app:app /app/.venv /app/.venv
 EXPOSE 8000
 
 # Run the application.
-CMD ["/app/.venv/bin/uvicorn", "chatbot_api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["/app/.venv/bin/uvicorn", "chatbot_api.main:app", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers", "--forwarded-allow-ips=*"]
