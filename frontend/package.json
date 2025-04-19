@@ -20,7 +20,7 @@
       "prettier --write"
     ],
     "!(*.css|*.js|*.jsx)": [
-      "prettier --write"
+      "prettier --write --ignore-unknown"
     ]
   },
   "devDependencies": {
