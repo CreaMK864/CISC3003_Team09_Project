@@ -25,6 +25,7 @@
   },
   "devDependencies": {
     "eslint": "^9.24.0",
+    "eslint-config-prettier": "^10.1.2",
     "husky": "^9.1.7",
     "lint-staged": "^15.5.1",
     "live-server": "^1.2.2",
