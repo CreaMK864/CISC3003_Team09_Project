@@ -25,7 +25,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     ports:
-      - "3000:3000"
+      - "3001:3000"
     volumes:
       # Mount source code as volume for development
       # Comment out in production
