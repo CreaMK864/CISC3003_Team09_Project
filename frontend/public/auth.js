@@ -1,13 +1,9 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { SUPABASE_ANON_KEY, SUPABASE_URL } from "./config.js";
 
 // Initialize Supabase client
-/** @type {string} */
-const supabaseUrl = "https://rktloofzzbabyeugqots.supabase.co";
-/** @type {string} */
-const supabaseKey =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJrdGxvb2Z6emJhYnlldWdxb3RzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ3OTgyNjMsImV4cCI6MjA2MDM3NDI2M30.f992jGcCkSeX7qKwCQ7viJ-3i7IQXdakx2YD4rJ9UGc";
 /** @type {import('@supabase/supabase-js').SupabaseClient} */
-const supabase = createClient(supabaseUrl, supabaseKey);
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 /** @type {import('@supabase/supabase-js').User|null} */
 let currentUser = null;
