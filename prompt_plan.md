@@ -13,7 +13,7 @@ Below is a comprehensive blueprint along with a series of iterative prompts that
    • Build simple CRUD endpoints to test database connectivity and model operations.
 
 3. **Supabase Authentication Setup**  
-   • Implement authentication endpoints that connect with Supabase’s API for Google and email-based sign-in.  
+   • Implement authentication endpoints that connect with Supabase's API for Google and email-based sign-in.  
    • Wire up endpoints so that user sessions, authentication tokens, and profile info are handled correctly.
 
 4. **Real-Time Chat Using WebSockets**  
@@ -94,13 +94,13 @@ Output the updated code for the database connection, models, and sample endpoint
 ```text
 Integrate Supabase authentication into your Chatbot Website project by adjusting the current authentication flow. Instead of reimplementing user registration and login in FastAPI, do the following:
 
-1. Use Supabase’s client libraries on the frontend to handle user signup, login, email verification, and session management.
+1. Use Supabase's client libraries on the frontend to handle user signup, login, email verification, and session management.
 2. Create a new module in your FastAPI backend (e.g., auth.py) that implements a dependency to validate Supabase-issued JWT tokens. This module should:
    - Extract the JWT from the HTTP Authorization header (using the format "Bearer <token>").
-   - Verify the token’s signature, issuer, and audience by using Supabase’s public key (e.g., using python-jose).
+   - Verify the token's signature, issuer, and audience by using Supabase's public key (e.g., using python-jose).
    - Decode the token to retrieve user details (user ID, email, display name) for downstream processing.
 3. Update your FastAPI routes to include this dependency. Protected endpoints (for instance, a /profile route) should use the verified token information to return or process user data.
-4. Ensure that the backend does not duplicate the client-side authentication processes provided by Supabase, and solely focuses on verifying the legitimacy of the user’s token.
+4. Ensure that the backend does not duplicate the client-side authentication processes provided by Supabase, and solely focuses on verifying the legitimacy of the user's token.
 
 Output the code for the new authentication module (auth.py) and an updated main application file (main.py) that demonstrates a protected endpoint using the token verification dependency.
 ```
@@ -170,7 +170,7 @@ Expand the application to include additional pages, forming a complete multi-pag
 
 1. Create new HTML pages for:
    - Conversation History: Displays a list of past conversations with infinite scrolling, inline renaming, and deletion (with confirmation).
-   - User Profile: Displays and allows editing of the user’s profile (display name, profile picture, email, password).
+   - User Profile: Displays and allows editing of the user's profile (display name, profile picture, email, password).
    - Subscription Simulation: Shows static subscription details and current status.
    - Settings/Configuration: Provides basic settings like language preference or notification toggles.
 2. Update the sidebar or main navigation on each page to allow seamless navigation between pages.
@@ -190,7 +190,7 @@ Improve the reliability and security of the application by adding thorough error
 1. Review each API endpoint (both HTTP and WebSocket) and add comprehensive error handling that:
    - Returns appropriate HTTP status codes.
    - Notifies the user (or client) of connection drops in the WebSocket.
-2. Add logging using Python’s built-in logging module in all critical sections of your FastAPI application.
+2. Add logging using Python's built-in logging module in all critical sections of your FastAPI application.
 3. Enforce basic security measures:
    - Ensure the application only runs over HTTPS.
    - Secure session tokens and sensitive data (e.g., use bcrypt for password hashing).
@@ -226,17 +226,33 @@ Output the complete `Dockerfile` and `docker-compose.yml` that allow the full ap
 #### **Prompt 10: CI/CD Pipeline with GitHub Actions Integration**
 
 ```text
-Integrate CI/CD to ensure that the application builds, tests, and deploys automatically. Follow these steps:
+Set up CI/CD for your project using two separate GitHub Actions workflows, both running on GitHub-hosted runners. Follow these steps:
 
-1. Create a GitHub Actions workflow (a YAML file in `.github/workflows/`) that:
-   - Checks out your repository on each push.
-   - Sets up a Python environment and installs dependencies.
-   - Runs unit and integration tests (you may simulate some tests for the key endpoints and database operations).
-   - Builds the Docker image.
-   - Optionally deploys the application (for example, by pushing the Docker image or running a deployment script).
-2. Ensure that the CI/CD workflow is wired into the repository so that any code push triggers the pipeline.
+1. **Continuous Integration (CI) Workflow**
+   - Create a workflow file at `.github/workflows/ci.yml` that:
+     - Triggers on every push or pull request to main branches.
+     - Checks out the repository.
+     - Sets up a Python environment and installs dependencies.
+     - Runs unit and integration tests (simulate tests for key endpoints and database operations if needed).
+     - Builds the Docker image(s).
 
-Output the GitHub Actions workflow YAML file with steps that cover testing, building, and deployment.
+2. **Continuous Deployment (CD) Workflow**
+   - Create a workflow file at `.github/workflows/cd.yml` that:
+     - Triggers on push to the main branch (or on release/tag, as desired).
+     - Checks out the repository.
+     - Builds the Docker image(s) if not already built.
+     - Uses SSH to connect to your VPS and runs a deployment script that is versioned in the repository (e.g., `deploy/deploy.sh`).
+     - The deployment script should handle pulling the latest code, rebuilding containers, and restarting services as needed.
+
+3. **Deployment Script**
+   - Add a script (e.g., `deploy/deploy.sh`) to your repository that will be executed on your VPS by the CD workflow. This script should:
+     - Pull the latest code from the repository.
+     - Rebuild Docker containers as needed.
+     - Restart services to apply the new deployment.
+
+**Output:**
+- Two GitHub Actions workflow YAML files: `.github/workflows/ci.yml` and `.github/workflows/cd.yml`.
+- A deployment script (e.g., `deploy/deploy.sh`) in the repository, invoked by the CD workflow via SSH on your VPS.
 ```
 
 ---
