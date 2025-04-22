@@ -499,12 +499,12 @@ async def stream_chat_response(websocket: WebSocket, stream_id: str):
         # Send error message if possible
         try:
             await websocket.send_text(json.dumps({"error": f"Server error: {str(e)}"}))
-        except:
+        except WebSocketDisconnect:
             pass
 
         try:
             await websocket.close()
-        except:
+        except WebSocketDisconnect:
             pass
 
         if stream_id in stream_requests:
