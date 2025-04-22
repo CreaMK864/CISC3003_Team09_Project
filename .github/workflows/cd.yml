@@ -3,6 +3,7 @@ name: Continuous Deployment
 on:
   push:
     branches: [ deploy ]
+  workflow_dispatch:
 
 jobs:
   deploy:

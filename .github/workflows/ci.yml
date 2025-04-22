@@ -5,6 +5,7 @@ on:
     branches: [ main, deploy ]
   pull_request:
     branches: [ main, deploy ]
+  workflow_dispatch:
 
 env:
   OPENAI_API_KEY: "fake-openai-api-key"  # Needed for tests to run
