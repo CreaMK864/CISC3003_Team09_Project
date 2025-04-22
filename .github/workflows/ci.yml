@@ -42,7 +42,7 @@ jobs:
     
     - name: Run backend tests
       working-directory: ./backend
-      run: uv run pytest tests --cov=app --cov-report=term-missing --cov-report=html
+      run: uv run pytest tests --cov=src/chatbot_api --cov-report=term-missing --cov-report=html
 
     - name: Upload coverage report
       uses: actions/upload-artifact@v4
