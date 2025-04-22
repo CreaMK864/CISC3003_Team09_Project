@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [ main, deploy ]
 
+env:
+  OPENAI_API_KEY: "fake-openai-api-key"  # Needed for tests to run
+
 jobs:
   test:
     runs-on: ubuntu-latest
