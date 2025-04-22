@@ -1,0 +1,77 @@
+name: Continuous Integration
+
+on:
+  push:
+    branches: [ main, deploy ]
+  pull_request:
+    branches: [ main, deploy ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install uv
+      uses: astral-sh/setup-uv@v5
+      with:
+        # Install a specific version of uv.
+        version: "0.6.14"
+        enable-cache: true
+        cache-dependency-glob: "backend/uv.lock"
+
+    - name: "Set up Python"
+      uses: actions/setup-python@v5
+      with:
+        python-version-file: "backend/pyproject.toml"
+    
+    - name: Install the project
+      working-directory: ./backend
+      run: uv sync --all-extras --dev
+
+    - name: Lint and format backend
+      working-directory: ./backend
+      run: |
+        uv run ruff check --extend-select I
+        uv run ruff format --target-version py312 --check
+
+    - name: Type check backend
+      working-directory: ./backend
+      run: uv run pyright
+    
+    - name: Run backend tests
+      working-directory: ./backend
+      run: uv run pytest tests --cov=app --cov-report=term-missing --cov-report=html
+
+    - name: Upload coverage report
+      uses: actions/upload-artifact@v4
+      with:
+        name: backend-coverage
+        path: backend/htmlcov/
+
+    - name: Minimize uv cache
+      working-directory: ./backend
+      run: uv cache prune --ci
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+    
+    - name: Install frontend dependencies
+      working-directory: ./frontend
+      run: npm ci
+    
+    - name: Lint frontend
+      working-directory: ./frontend
+      run: |
+        npm run lint
+        npx prettier --check ./public
+
+    # Too difficult to enforce type checking on frontend JS
+    # - name: Typecheck frontend JS with TypeScript
+    #   working-directory: ./frontend
+    #   run: npx tsc
