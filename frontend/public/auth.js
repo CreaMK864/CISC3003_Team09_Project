@@ -10,7 +10,7 @@ let currentUser = null;
 
 /**
  * Check if user is already authenticated and initialize the app
- * @returns {Promise<User | void>}
+ * @returns {Promise<import("@supabase/supabase-js").User | void>}
  */
 async function initializeAuth() {
   // Get session from local storage
