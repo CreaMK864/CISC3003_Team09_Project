@@ -5,5 +5,5 @@
     "noEmit": true,
     "strict": true
   },
-  "include": ["public/**/*.js"]
+  "include": ["types/**/*.d.ts", "public/**/*.js"]
 }

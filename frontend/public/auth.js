@@ -2,7 +2,6 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from "./config.js";
 
 // Initialize Supabase client
-/** @type {import('@supabase/supabase-js').SupabaseClient} */
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 /** @type {import('@supabase/supabase-js').User|null} */
@@ -10,7 +9,7 @@ let currentUser = null;
 
 /**
  * Check if user is already authenticated and initialize the app
- * @returns {Promise<import("@supabase/supabase-js").User | void>}
+ * @returns {Promise<import("@supabase/supabase-js").User | null>}
  */
 async function initializeAuth() {
   // Get session from local storage
@@ -50,6 +49,7 @@ function showLoginForm() {
  */
 async function signInWithEmail(email, password) {
   try {
+    /** @type {import('@supabase/supabase-js').AuthResponse} */
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
