@@ -27,3 +27,5 @@
 # with the python modules ``pickle``, ``dbm.*``,
 # ``shelve``, ``marshal``, ``anydbm``, & ``bsddb``
 # (among others).
+
+supabase-project/pooler/pooler.exs lf eol=lf
