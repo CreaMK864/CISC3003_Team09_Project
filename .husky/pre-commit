@@ -1,6 +1,6 @@
 # Backup pre-commit hook
-uv run ruff check --extend-select I --fix --exit-zero
-uv run ruff format --target-version py312
+uv --project=backend run ruff check --extend-select I --fix --exit-zero
+uv --project=backend run ruff format --target-version py312
 
 # Frontend pre-commit hook
 npm run --prefix frontend pre-commit
