@@ -36,7 +36,7 @@ echo "Starting containers with new images..."
 docker compose up --build -d --remove-orphans
 
 for i in {1..12}; do
-  if curl -fsS http://localhost:3000/health; then
+  if curl -fsS http://localhost:3001/health; then
     exit 0
   fi
   sleep 5
