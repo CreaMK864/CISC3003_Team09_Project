@@ -12,6 +12,7 @@ services:
       - SUPABASE_URL=http://${DASHBOARD_USERNAME}:${DASHBOARD_PASSWORD}@kong:8000
       - SUPABASE_SERVICE_KEY=${SERVICE_ROLE_KEY}
       - SUPABASE_JWT_SECRET=${JWT_SECRET}
+      - OPENAI_API_BASE=${OPENAI_API_BASE}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
     volumes:
       # Mount source code as volume for development
