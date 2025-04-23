@@ -119,8 +119,8 @@
   - [x] Ensure the full stack (backend, database, frontend) runs within containers.
 
 ## 10. CI/CD Pipeline with GitHub Actions Integration
-- [ ] **GitHub Actions Workflows**
-  - [ ] Create two workflow files:
+- [x] **GitHub Actions Workflows**
+  - [x] Create two workflow files:
     - `.github/workflows/ci.yml` for CI (test/build):
       - Checks out the repository.
       - Sets up a Python environment and installs dependencies.
@@ -131,12 +131,12 @@
       - Builds the Docker image(s) if needed.
       - SSHes into your VPS and runs a deployment script from the repo (e.g., `deploy/deploy.sh`).
       - The deployment script should handle pulling the latest code, rebuilding containers, and restarting services as needed.
-  - [ ] Use GitHub-hosted runners for both workflows.
-- [ ] **Deployment Script**
-  - [ ] Add a versioned deployment script (e.g., `deploy/deploy.sh`) to the repository.
-- [ ] **Validation**
-  - [ ] Verify that each push triggers the CI workflow and that tests pass successfully.
-  - [ ] Verify that a push to the main branch (or release/tag) triggers the CD workflow and deploys to the VPS.
+  - [x] Use GitHub-hosted runners for both workflows.
+- [x] **Deployment Script**
+  - [x] Add a versioned deployment script (e.g., `deploy/deploy.sh`) to the repository.
+- [x] **Validation**
+  - [x] Verify that each push triggers the CI workflow and that tests pass successfully.
+  - [x] Verify that a push to the deploy branch (or release/tag) triggers the CD workflow and deploys to the VPS.
 
 ---
 
