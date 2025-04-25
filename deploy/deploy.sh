@@ -2,9 +2,17 @@
 
 set -e
 
-PROJECT_DIR="/opt/chatbot-project"
+# Allow customizing project directory through environment variable or command line argument
+if [ -n "$1" ]; then
+  PROJECT_DIR="$1"
+elif [ -n "$CHATBOT_PROJECT_DIR" ]; then
+  PROJECT_DIR="$CHATBOT_PROJECT_DIR"
+else
+  PROJECT_DIR="/opt/chatbot-project"
+fi
 
 echo "Starting deployment process..."
+echo "Using project directory: $PROJECT_DIR"
 
 # Create project directory if it doesn't exist
 mkdir -p $PROJECT_DIR
