@@ -175,6 +175,11 @@ button {
   margin-bottom: 15px;
   border-bottom: 1px solid #eee;
   padding-bottom: 10px;
+  padding: 10px;
+}
+
+.history-item:hover {
+  background-color: ghostwhite;
 }
 
 .history-item a {
@@ -212,6 +217,70 @@ button {
   border: 1px solid #ddd;
   border-radius: 4px;
   font-size: 1em;
+}
+
+/* Login and Register page specific styles */
+.form-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex: 1;
+  padding: 20px;
+}
+
+#register-form,
+#login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  max-width: 400px;
+  width: 100%;
+  padding: 20px;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  margin-bottom: 5px;
+  font-weight: bold;
+  color: #333;
+}
+
+.form-group input {
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1em;
+}
+
+#register-form button,
+#login-form button {
+  margin-left: 0;
+  margin-top: 10px;
+}
+
+#register-form p,
+#login-form p {
+  text-align: center;
+  margin-top: 10px;
+  color: #666;
+}
+
+#register-form p a,
+#login-form p a {
+  color: #2196f3;
+  text-decoration: none;
+}
+
+#register-form p a:hover,
+#login-form p a:hover {
+  text-decoration: underline;
 }
 
 /* Mobile responsiveness */
