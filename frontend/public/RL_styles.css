@@ -1,4 +1,5 @@
 @charset "UTF-8";
+
 /* Styling for login and register pages */
 * {
   box-sizing: border-box;
@@ -27,6 +28,11 @@ body {
   background-color: #fff;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.3s ease;
+}
+
+.chat-container:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 .chat-header {
@@ -84,10 +90,17 @@ body {
   border: 1px solid #ddd;
   border-radius: 4px;
   font-size: 1em;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.form-group input:hover {
+  border-color: #2196f3;
+  box-shadow: 0 0 5px rgba(33, 150, 243, 0.3);
 }
 
 .form-group input:focus {
   border-color: #2196f3;
+  box-shadow: 0 0 5px rgba(33, 150, 243, 0.5);
   outline: none;
 }
 
@@ -100,10 +113,13 @@ button {
   border-radius: 4px;
   cursor: pointer;
   font-size: 1em;
+  transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
 }
 
 button:hover {
   background-color: #1976d2;
+  transform: scale(1.02);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 form p {
@@ -115,17 +131,21 @@ form p {
 form p a {
   color: #2196f3;
   text-decoration: none;
+  transition: color 0.3s ease;
 }
 
 form p a:hover {
+  color: #1976d2;
   text-decoration: underline;
 }
 
-/* Mobile responsiveness */
+/* Media Queries for Responsiveness */
+
+/* Tablet screens */
 @media (max-width: 768px) {
   .chat-container {
     margin: 10px;
-    max-width: 100%;
+    max-width: 90%;
   }
 
   .form-container {
@@ -135,5 +155,113 @@ form p a:hover {
   #login-form,
   #register-form {
     padding: 15px;
+    max-width: 350px;
+  }
+
+  .form-group input {
+    font-size: 0.95em;
+    padding: 8px;
+  }
+
+  button {
+    font-size: 0.95em;
+    padding: 8px;
+  }
+
+  .chat-header h2 {
+    font-size: 1.4em;
+  }
+}
+
+/* Mobile screens */
+@media (max-width: 480px) {
+  .chat-container {
+    margin: 5px;
+    max-width: 95%;
+  }
+
+  .form-container {
+    padding: 10px;
+  }
+
+  #login-form,
+  #register-form {
+    padding: 10px;
+    max-width: 300px;
+  }
+
+  .form-group label {
+    font-size: 0.9em;
+  }
+
+  .form-group input {
+    font-size: 0.9em;
+    padding: 7px;
+  }
+
+  button {
+    font-size: 0.9em;
+    padding: 7px;
+  }
+
+  .chat-header {
+    padding: 10px;
+  }
+
+  .chat-header h2 {
+    font-size: 1.2em;
+  }
+
+  form p {
+    font-size: 0.85em;
+  }
+}
+
+/* Extra small devices */
+@media (max-width: 360px) {
+  .chat-container {
+    margin: 2px;
+    max-width: 98%;
+  }
+
+  .form-container {
+    padding: 8px;
+  }
+
+  #login-form,
+  #register-form {
+    padding: 8px;
+    max-width: 280px;
+  }
+
+  .form-group {
+    margin-bottom: 10px;
+  }
+
+  .form-group label {
+    font-size: 0.85em;
+  }
+
+  .form-group input {
+    font-size: 0.85em;
+    padding: 6px;
+  }
+
+  button {
+    font-size: 0.85em;
+    padding: 6px;
+  }
+
+  .chat-header {
+    padding: 8px;
+  }
+
+  .chat-header h2 {
+    font-size: 1.1em;
+  }
+
+  form p {
+    font-size: 0.8em;
+    margin-top: 10px;
   }
 }
