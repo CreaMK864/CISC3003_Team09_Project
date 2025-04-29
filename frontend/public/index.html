@@ -1,75 +1,66 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Chatbot</title>
-    <link rel="icon" href="favicon.ico" />
-    <link rel="stylesheet" href="styles.css" />
-    <!-- Add Tailwind CSS for color block styling -->
-    <link
-      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
-      rel="stylesheet"
-    />
-    <script src="script.js"></script>
-  </head>
-  <body>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Chatbot</title>
+</head>
+<body>
     <div class="container">
-      <div class="sidebar" id="sidebar">
-        <button class="close-btn" id="close-sidebar">×</button>
-        <h2>Chatbot</h2>
-        <nav>
-          <ul>
-            <li><a href="#" class="active">Chat</a></li>
-            <li><a href="history.html">History</a></li>
-            <li><a href="profile.html">Profile</a></li>
-            <li><a href="register.html">Register</a></li>
-            <li><a href="login.html">Login</a></li>
-          </ul>
-        </nav>
-      </div>
-      <div class="chat-container">
-        <div class="chat-header">
-          <button class="hamburger" id="open-sidebar">☰</button>
-          <h2>New Conversation</h2>
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <h2>My Chatbot</h2>
+            <ul>
+                <li><a href="#" class="active">Home</a></li>
+                <li><a href="#">History</a></li>
+                <li><a href="#">Profile</a></li>
+                <li><a href="#">Settings</a></li>
+            </ul>
+            <!-- Auth block -->
+            <div class="auth-block">
+                <h3>Get Started</h3>
+                <p>Sign in to save your conversations</p>
+                <div class="auth-buttons">
+                    <a href="#" class="auth-button">Login</a>
+                    <a href="#" class="auth-button">Register</a>
+                </div>
+            </div>
         </div>
-        <div class="chat-messages" id="chat-messages">
-          <!-- Messages will appear here -->
+
+        <!-- Chat container -->
+        <div class="chat-container">
+            <div class="chat-header">
+                <h2>Default Conversation</h2>
+            </div>
+            <div class="chat-messages">
+                <!-- Error message example -->
+                <div class="error-message">
+                    Failed to load conversations. Using a default conversation.
+                </div>
+                
+                <!-- Messages will appear here -->
+                <div class="message bot-message">
+                    Hello! How can I help you today?
+                </div>
+                <div class="message user-message">
+                    I'd like to know more about your services.
+                </div>
+                <div class="message bot-message">
+                    Sure! We offer a range of AI-powered solutions including chatbots, content generation, and data analysis. What specific area are you interested in?
+                </div>
+            </div>
+            <div class="chat-input">
+                <form id="message-form">
+                    <input type="text" id="message-input" placeholder="Type your message here...">
+                    <button type="submit">Send</button>
+                </form>
+            </div>
         </div>
-        <div class="chat-input">
-          <form id="message-form">
-            <input
-              type="text"
-              id="message-input"
-              placeholder="Type your message here..."
-              autocomplete="off"
-            />
-            <button type="submit">Send</button>
-          </form>
-        </div>
-      </div>
     </div>
-    <!-- Color block with login/register links -->
-    <div
-      class="fixed bottom-4 left-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white p-6 rounded-lg shadow-lg transform hover:scale-105 transition-transform duration-300"
-    >
-      <h3 class="text-lg font-bold mb-2">Still don't have the account?</h3>
-      <p class="text-sm mb-4">Sign up or log in to get better experience!</p>
-      <div class="flex space-x-4">
-        <a
-          href="login.html"
-          class="bg-white text-blue-600 px-4 py-2 rounded hover:bg-gray-100"
-          >Login / Register</a
-        >
-      </div>
-      <!-- Decorative element -->
-      <div
-        class="absolute -top-2 -left-2 w-4 h-4 bg-yellow-400 rounded-full"
-      ></div>
-      <div
-        class="absolute -bottom-2 -right-2 w-4 h-4 bg-pink-400 rounded-full"
-      ></div>
-    </div>
-    <script src="app.js" type="module"></script>
-  </body>
+
+    <!-- Hamburger menu for mobile -->
+    <button class="hamburger">☰</button>
+
+    <script src="script.js"></script>
+</body>
 </html>
