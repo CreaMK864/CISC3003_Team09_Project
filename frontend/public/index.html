@@ -6,6 +6,11 @@
     <title>Chatbot</title>
     <link rel="icon" href="favicon.ico" />
     <link rel="stylesheet" href="styles.css" />
+    <!-- Add Tailwind CSS for color block styling -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
     <script src="script.js"></script>
   </head>
   <body>
@@ -43,6 +48,27 @@
           </form>
         </div>
       </div>
+    </div>
+    <!-- Color block with login/register links -->
+    <div
+      class="fixed bottom-4 left-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white p-6 rounded-lg shadow-lg transform hover:scale-105 transition-transform duration-300"
+    >
+      <h3 class="text-lg font-bold mb-2">Still don't have the account?</h3>
+      <p class="text-sm mb-4">Sign up or log in to get better experience!</p>
+      <div class="flex space-x-4">
+        <a
+          href="login.html"
+          class="bg-white text-blue-600 px-4 py-2 rounded hover:bg-gray-100"
+          >Login / Register</a
+        >
+      </div>
+      <!-- Decorative element -->
+      <div
+        class="absolute -top-2 -left-2 w-4 h-4 bg-yellow-400 rounded-full"
+      ></div>
+      <div
+        class="absolute -bottom-2 -right-2 w-4 h-4 bg-pink-400 rounded-full"
+      ></div>
     </div>
     <script src="app.js" type="module"></script>
   </body>
