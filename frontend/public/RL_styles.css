@@ -77,6 +77,20 @@ body {
   margin-bottom: 15px;
 }
 
+.form-group a {
+  color: rgba(134, 134, 134, 0.975);
+  text-decoration: none;
+  font-size: 13px;
+  padding-top: 0px;
+}
+
+.form-group a:focus,
+.form-group a:hover,
+.form-group a:active {
+  color: rgb(58, 58, 58);
+  text-decoration: underline;
+}
+
 .form-group label {
   display: block;
   margin-bottom: 5px;
@@ -107,6 +121,7 @@ body {
 }
 
 button {
+  margin-top: 20px;
   width: 100%;
   padding: 10px;
   border: none;
