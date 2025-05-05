@@ -25,6 +25,7 @@ export default defineConfig([
         "error",
         { enforceBeforeSelfClose: true },
       ],
+      "@html-eslint/attrs-newline": "off",
     },
   },
   eslintConfigPrettier,
