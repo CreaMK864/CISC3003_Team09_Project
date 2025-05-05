@@ -1,67 +1,73 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>AI Chatbot</title>
-    <link rel="stylesheet" href="styles.css">
-</head>
-<body>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
     <div class="container">
-        <!-- Sidebar -->
-        <div class="sidebar">
-            <h2>My Chatbot</h2>
-            <ul>
-                <li><a href="#" class="active">Home</a></li>
-                <li><a href="history.html">History</a></li>
-                <li><a href="profile.html">Profile</a></li>
-                <li><a href="setting.html">Settings</a></li>
-            </ul>
-            <!-- Auth block -->
-            <div class="auth-block">
-                <h3>Get Started</h3>
-                <p>Sign in to save your conversations</p>
-                <div class="auth-buttons">
-                    <a href="login.html" class="auth-button">Login</a>
-                    <a href="register.html" class="auth-button">Register</a>
-                </div>
-            </div>
+      <!-- Sidebar -->
+      <div class="sidebar">
+        <h2>My Chatbot</h2>
+        <ul>
+          <li><a href="#" class="active">Home</a></li>
+          <li><a href="history.html">History</a></li>
+          <li><a href="profile.html">Profile</a></li>
+          <li><a href="setting.html">Settings</a></li>
+        </ul>
+        <!-- Auth block -->
+        <div class="auth-block">
+          <h3>Get Started</h3>
+          <p>Sign in to save your conversations</p>
+          <div class="auth-buttons">
+            <a href="login.html" class="auth-button">Login</a>
+            <a href="register.html" class="auth-button">Register</a>
+          </div>
         </div>
+      </div>
 
-        <!-- Chat container -->
-        <div class="chat-container">
-            <div class="chat-header">
-                <h2>Default Conversation</h2>
-            </div>
-            <div class="chat-messages">
-                <!-- Error message example -->
-                <div class="error-message">
-                    Failed to load conversations. Using a default conversation.
-                </div>
-                
-                <!-- Messages will appear here -->
-                <div class="message bot-message">
-                    Hello! How can I help you today?
-                </div>
-                <div class="message user-message">
-                    I'd like to know more about your services.
-                </div>
-                <div class="message bot-message">
-                    Sure! We offer a range of AI-powered solutions including chatbots, content generation, and data analysis. What specific area are you interested in?
-                </div>
-            </div>
-            <div class="chat-input">
-                <form id="message-form">
-                    <input type="text" id="message-input" placeholder="Type your message here...">
-                    <button type="submit">Send</button>
-                </form>
-            </div>
+      <!-- Chat container -->
+      <div class="chat-container">
+        <div class="chat-header">
+          <h2>Default Conversation</h2>
         </div>
+        <div class="chat-messages">
+          <!-- Error message example -->
+          <div class="error-message">
+            Failed to load conversations. Using a default conversation.
+          </div>
+
+          <!-- Messages will appear here -->
+          <div class="message bot-message">
+            Hello! How can I help you today?
+          </div>
+          <div class="message user-message">
+            I'd like to know more about your services.
+          </div>
+          <div class="message bot-message">
+            Sure! We offer a range of AI-powered solutions including chatbots,
+            content generation, and data analysis. What specific area are you
+            interested in?
+          </div>
+        </div>
+        <div class="chat-input">
+          <form id="message-form">
+            <input
+              type="text"
+              id="message-input"
+              placeholder="Type your message here..."
+            />
+            <button type="submit">Send</button>
+          </form>
+        </div>
+      </div>
     </div>
 
     <!-- Hamburger menu for mobile -->
     <button class="hamburger">☰</button>
 
-    <script src="script.js">    </script>
-</body>
+    <script src="script.js"></script>
+  </body>
 </html>
