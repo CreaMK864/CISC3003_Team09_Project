@@ -8,7 +8,9 @@ if [ -n "$1" ]; then
 elif [ -n "$CHATBOT_PROJECT_DIR" ]; then
   PROJECT_DIR="$CHATBOT_PROJECT_DIR"
 else
-  PROJECT_DIR="/opt/chatbot-project"
+#  FIXME: hardcoded project directory
+#  PROJECT_DIR="/opt/chatbot-project"
+  PROJECT_DIR="/home/admin/CISC3003_Team09_Project"
 fi
 
 echo "Starting deployment process..."
