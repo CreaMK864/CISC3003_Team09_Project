@@ -41,7 +41,7 @@
       </div>
     </div>
     <script type="module">
-      import { supabase } from "./auth.js";
+      import { resetPassword } from "./auth.js";
 
       // DOM elements
       const resetForm = document.getElementById("reset-form");
@@ -57,18 +57,24 @@
         successMessage.style.display = "none";
 
         try {
-          const { error } = await supabase.auth.resetPasswordForEmail(email, {
-            redirectTo: `${window.location.origin}/update-password.html`,
-          });
+          // Update the user's password
+          const success = await resetPassword(email);
 
-          if (error) throw error;
+          if (success) {
+            successMessage.textContent =
+              "Email founded. Ready to reset your password...";
+            successMessage.style.display = "block";
+            resetForm.reset();
 
-          successMessage.textContent =
-            "Password reset email sent. Please check your inbox.";
-          successMessage.style.display = "block";
-          resetForm.reset();
+            // Redirect to login page after a short delay
+            setTimeout(() => {
+              redirectTo: "change_pw.html";
+            }, 2000);
+          } else {
+            errorMessage.textContent = `Failed to find your email address`;
+            errorMessage.style.display = "block";
+          }
         } catch (error) {
-          console.error("Password reset error:", error.message);
           errorMessage.textContent = `Error: ${error.message}`;
           errorMessage.style.display = "block";
         }
