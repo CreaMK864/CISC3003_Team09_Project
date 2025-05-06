@@ -47,21 +47,27 @@ class User(SQLModel, table=True):
     Attributes:
         id: Primary key identifier for the user
         display_name: User's display name
+        subscription_status: Status of the user's subscription
+        subscription_plan: The plan the user is subscribed to
         profile_picture_url: URL to the user's profile picture
         last_selected_model: The model the user last selected
         created_at: Timestamp when the user was created
         updated_at: Timestamp when the user was last updated
         conversations: Relationship to the user's conversations
+        email: User's email address
     """
 
     id: uuid.UUID | None = Field(default=None, primary_key=True)
     display_name: str = Field(sa_column=Column(Text), default="User")
     profile_picture_url: str | None = Field(sa_column=Column(Text))
-    last_selected_model: str = Field(sa_column=Column(Text, default=DEFAULT_MODEL))
     created_at: datetime.datetime = Field(
         default_factory=lambda: datetime.datetime.now(datetime.UTC),
         sa_column=Column(DateTime(timezone=True), server_default=text("(now() AT TIME ZONE 'UTC')")),
     )
+    email: str = Field(sa_column=Column(Text), unique=True, index=True)
+    # The email field is unique and indexed for faster lookups
+    subscription_status: str = Field(sa_column=Column(Text), default="free")
+    subscription_plan: str = Field(sa_column=Column(Text), default="free")
     updated_at: datetime.datetime = Field(
         default_factory=lambda: datetime.datetime.now(datetime.UTC),
         sa_column=Column(DateTime(timezone=True), server_default=text("(now() AT TIME ZONE 'UTC')")),
@@ -127,6 +133,83 @@ class Message(SQLModel, table=True):
     )
 
     conversation: Conversation = Relationship(back_populates="messages")
+
+
+class model(SQLModel, table=True):
+    """
+    SQLModel representing a model record.
+
+    Attributes:
+        id: Primary key identifier for the model
+        name: Name of the model
+        description: Description of the model
+        created_at: Timestamp when the model was created
+        updated_at: Timestamp when the model was last updated
+    """
+
+    id: int | None = Field(default=None, primary_key=True)
+    name: str = Field(sa_column=Column(Text))
+    description: str = Field(sa_column=Column(Text))
+
+
+class Payment(SQLModel, table=True):
+    """
+    SQLModel representing a payment record.
+
+    Attributes:
+        id: Primary key identifier for the payment
+        user_id: Foreign key to the user who made the payment
+        amount: Amount of the payment
+        method: Payment method used (e.g., credit card, PayPal)
+        status: Status of the payment (e.g., completed, pending, failed)
+        Plan: The plan associated with the payment
+        created_at: Timestamp when the payment was created
+        updated_at: Timestamp when the payment was last updated
+    """
+
+    id: int | None = Field(default=None, primary_key=True)
+    user_id: uuid.UUID = Field(foreign_key="user.id", index=True)
+    amount: float = Field(sa_column=Column(Text))
+    method: str = Field(sa_column=Column(Text))
+    status: str = Field(sa_column=Column(Text))
+    Plan: str = Field(sa_column=Column(Text))
+    created_at: datetime.datetime = Field(
+        default_factory=lambda: datetime.datetime.now(datetime.UTC),
+        sa_column=Column(DateTime(timezone=True), server_default=text("(now() AT TIME ZONE 'UTC')")),
+    )
+    updated_at: datetime.datetime = Field(
+        default_factory=lambda: datetime.datetime.now(datetime.UTC),
+        sa_column=Column(DateTime(timezone=True), server_default=text("(now() AT TIME ZONE 'UTC')")),
+    )
+
+
+class Subscription(SQLModel, table=True):
+    """
+    SQLModel representing a subscription record.
+
+    Attributes:
+        id: Primary key identifier for the subscription
+        user_id: Foreign key to the user who owns the subscription
+        payment_id: Foreign key to the payment record associated with this subscription
+        plan: The plan of the subscription
+        start_date: Start date of the subscription
+        end_date: End date of the subscription
+    """
+
+    id: int | None = Field(default=None, primary_key=True)
+    user_id: uuid.UUID = Field(foreign_key="user.id", index=True)
+    payment_id: int | None = Field(foreign_key="payment.id", index=True)
+    plan: str = Field(sa_column=Column(Text))
+    start_date: datetime.datetime = Field(
+        default_factory=lambda: datetime.datetime.now(datetime.UTC),
+        sa_column=Column(DateTime(timezone=True), server_default=text("(now() AT TIME ZONE 'UTC')")),
+    )
+    end_date: datetime.datetime = Field(
+        default_factory=lambda: datetime.datetime.now(datetime.UTC) + datetime.timedelta(days=30),
+        sa_column=Column(
+            DateTime(timezone=True), server_default=text("(now() AT TIME ZONE 'UTC') + interval '30 days'")
+        ),
+    )
 
 
 async def delete_all_tables():

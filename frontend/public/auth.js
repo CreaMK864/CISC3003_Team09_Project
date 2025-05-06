@@ -18,6 +18,7 @@ async function initializeAuth() {
       data: { session },
     } = await supabase.auth.getSession();
 
+<<<<<<< HEAD
     if (session) {
       currentUser = session.user;
       console.log("User is authenticated:", currentUser.email);
@@ -28,6 +29,29 @@ async function initializeAuth() {
   } catch (error) {
     console.error("Error initializing auth:", error.message);
     throw new Error("Failed to initialize authentication. Please check your network connection.");
+=======
+  if (session) {
+    currentUser = session.user;
+    console.log("User is authenticated:", currentUser.email);
+    return session.user;
+  } else {
+    //showLoginForm();
+    return null;
+  }
+}
+
+/**
+ * Show login form to prompt for credentials
+ * @returns {void}
+ */
+function showLoginForm() {
+  // This is a simplified approach - in a real app, you might want to create a proper login form
+  const email = prompt("Enter your email to sign in:");
+  const password = prompt("Enter your password:");
+
+  if (email && password) {
+    signInWithEmail(email, password);
+>>>>>>> 763051f9e567daa5910c5d016a5a1b91b0eed562
   }
 }
 
@@ -59,6 +83,7 @@ async function signInWithEmail(email, password) {
     return currentUser;
   } catch (error) {
     console.error("Error signing in:", error.message);
+<<<<<<< HEAD
     if (error.message.includes("fetch")) {
       throw new Error("Unable to connect to the authentication server. Please check your network connection and try again.");
     }
@@ -146,6 +171,11 @@ async function resetPassword(email) {
       throw new Error("Unable to connect to the authentication server. Please check your network connection and try again.");
     }
     throw new Error(error.message || "Failed to reset password. Please try again.");
+=======
+    // alert("Login failed: " + error.message);
+    //showLoginForm(); // Show login form again if login fails
+    return null;
+>>>>>>> 763051f9e567daa5910c5d016a5a1b91b0eed562
   }
 }
 
