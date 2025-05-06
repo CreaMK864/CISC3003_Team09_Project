@@ -8,7 +8,7 @@ import { API_BASE_URL } from "./config.js";
 
 // DOM elements
 /** @type {HTMLFormElement} */
-const messageForm = document.getElementById("login-form");
+const messageForm = document.getElementById("message-form");
 /** @type {HTMLInputElement} */
 const messageInput = document.getElementById("message-input");
 /** @type {HTMLDivElement} */
@@ -23,7 +23,7 @@ let currentConversationId = null;
  * Initialize the application
  * @returns {Promise<void>}
  */
-export async function initialize() {
+async function initialize() {
   const user = await initializeAuth();
 
   if (user) {

@@ -53,7 +53,6 @@
     </div>
     <script type="module">
       import { signInWithEmail, initializeAuth } from "./auth.js";
-      import { initialize } from "./app.js";
 
       // DOM elements
       const loginForm = document.getElementById("login-form");
@@ -70,9 +69,8 @@
           const user = await signInWithEmail(email, password);
 
           if (user) {
-            // Initialize app to set up conversation
             await initialize();
-            // Redirect to chat page
+
             window.location.href = "index.html";
           } else {
             errorMessage.textContent =
