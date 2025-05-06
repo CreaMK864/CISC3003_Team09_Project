@@ -126,4 +126,40 @@ async def update_user(
     await session.commit()
     await session.refresh(db_user)
 
-    return db_user 
+    return db_user
+
+
+@router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_user(
+    user_id: uuid.UUID,
+    current_user: UserInfo = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+):
+    """
+    Delete a user's account.
+    Requires authentication with Supabase JWT.
+    Users can only delete their own account.
+
+    Args:
+        user_id: The ID of the user to delete
+        current_user: User information from JWT token
+        session: Database session
+
+    Raises:
+        HTTPException: If the user is not found or if the authenticated user
+                      is trying to delete another user's account
+    """
+    # Verify the authenticated user is deleting their own account
+    if str(user_id) != current_user["id"]:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to delete this user")
+
+    # Get the user from the database
+    db_user = await session.get(User, user_id)
+    if not db_user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+    # Delete the user
+    await session.delete(db_user)
+    await session.commit()
+
+    return None 
