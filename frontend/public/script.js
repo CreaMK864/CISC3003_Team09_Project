@@ -115,7 +115,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Function to send message to API
   async function sendMessageToAPI(message) {
     // API endpoint URL - replace with the actual endpoint
-    const apiUrl = "https://api.saviomak.com/v1/chat"; // Adjust based on actual API endpoint
+    const apiUrl = "https://api.saviomak.com/docs"; // Adjust based on actual API endpoint
 
     // API request parameters
     const requestOptions = {
