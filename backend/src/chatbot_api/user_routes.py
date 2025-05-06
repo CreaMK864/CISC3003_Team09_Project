@@ -5,8 +5,9 @@ This module contains all the endpoints related to user profile management and us
 """
 
 import datetime
-from typing import Any
 import uuid
+from typing import Any
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, field_validator
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -14,7 +15,6 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from chatbot_api.auth import UserInfo, get_current_user
 from chatbot_api.config import AVAILABLE_MODELS, is_valid_model
 from chatbot_api.database import User, get_session
-
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -162,4 +162,4 @@ async def delete_user(
     await session.delete(db_user)
     await session.commit()
 
-    return None 
+    return None
