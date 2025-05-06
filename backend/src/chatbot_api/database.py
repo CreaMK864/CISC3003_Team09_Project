@@ -64,8 +64,6 @@ class User(SQLModel, table=True):
         default_factory=lambda: datetime.datetime.now(datetime.UTC),
         sa_column=Column(DateTime(timezone=True), server_default=text("(now() AT TIME ZONE 'UTC')")),
     )
-    email: str = Field(sa_column=Column(Text), unique=True, index=True)
-    # The email field is unique and indexed for faster lookups
     subscription_status: str = Field(sa_column=Column(Text), default="free")
     subscription_plan: str = Field(sa_column=Column(Text), default="free")
     updated_at: datetime.datetime = Field(
