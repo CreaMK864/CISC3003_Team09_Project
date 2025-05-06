@@ -3,22 +3,37 @@ document.addEventListener("DOMContentLoaded", () => {
   const messageForm = document.getElementById("message-form");
   const messageInput = document.getElementById("message-input");
   const chatMessages = document.querySelector(".chat-messages");
+  const hamburgerButton = document.querySelector(".hamburger");
   const sidebar = document.getElementById("sidebar");
+  const openSidebarBtn = document.getElementById("open-sidebar");
+  const closeSidebarBtn = document.getElementById("close-sidebar");
   const searchInput = document.getElementById("search-input");
   const historyItems = document.querySelectorAll(".history-item");
-  const hamburger = document.querySelector(".hamburger");
+
+  // Toggle sidebar on mobile (hamburger button)
+  if (hamburgerButton && sidebar) {
+    hamburgerButton.addEventListener("click", () => {
+      sidebar.classList.toggle("show");
+    });
+  }
+
+  // Sidebar open/close buttons
+  if (openSidebarBtn && sidebar) {
+    openSidebarBtn.addEventListener("click", () => {
+      sidebar.classList.add("active");
+    });
+  }
+
+  if (closeSidebarBtn && sidebar) {
+    closeSidebarBtn.addEventListener("click", () => {
+      sidebar.classList.remove("active");
+    });
+  }
 
   // Close sidebar when message input is focused
   if (messageInput && sidebar) {
     messageInput.addEventListener("focus", () => {
-      sidebar.classList.remove("show");
-    });
-  }
-
-  // Toggle sidebar on hamburger click
-  if (hamburger && sidebar) {
-    hamburger.addEventListener("click", () => {
-      sidebar.classList.toggle("show");
+      sidebar.classList.remove("active");
     });
   }
 
@@ -100,15 +115,18 @@ document.addEventListener("DOMContentLoaded", () => {
   // Function to send message to API
   async function sendMessageToAPI(message) {
     // API endpoint URL - replace with the actual endpoint
-    const apiUrl = "https://api.saviomak.com/docs"; 
+    const apiUrl = "https://api.saviomak.com/chat";
+
+    // Replace with your actual API key
+    const apiKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVkbHJ2YnpoeHZ5dnVram12a29mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY1MjIxMDQsImV4cCI6MjA2MjA5ODEwNH0.PlxiJPCsvYbGqA2h_jiFDPu8_AvdPQ_C01Qw2AZ9DDo";
 
     // API request parameters
     const requestOptions = {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        // Include API key if required
-        // 'Authorization': 'Bearer YOUR_API_KEY'
+        // Include API key in the Authorization header
+        Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
         message: message,
