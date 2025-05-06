@@ -69,8 +69,6 @@
           const user = await signInWithEmail(email, password);
 
           if (user) {
-            await initialize();
-
             window.location.href = "index.html";
           } else {
             errorMessage.textContent =
@@ -89,7 +87,6 @@
         const user = await initializeAuth();
         if (user) {
           // Initialize app to set up conversation
-          await initialize();
           // Redirect to chat page
           window.location.href = "index.html";
         }
