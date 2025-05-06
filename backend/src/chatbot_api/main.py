@@ -522,6 +522,62 @@ async def get_available_models():
     return {"models": AVAILABLE_MODELS}
 
 
+class ConversationSearchResult(BaseModel):
+    """
+    Response model for conversation search results.
+
+    Attributes:
+        conversation: The conversation object
+        matching_messages: List of messages that match the search query
+    """
+    conversation: Conversation
+    matching_messages: list[Message]
+
+
+@app.get("/conversations/search", response_model=list[ConversationSearchResult])
+async def search_conversations(
+    query: str,
+    current_user: UserInfo = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+):
+    """
+    Search through conversations and messages for the authenticated user.
+    Requires authentication with Supabase JWT.
+
+    Args:
+        query: The search query string
+        current_user: User information from JWT token
+        session: Database session
+
+    Returns:
+        A list of conversations with their matching messages that contain the search query
+    """
+    user_id = uuid.UUID(current_user["id"])
+    
+    # Get all conversations for the user
+    conv_statement = select(Conversation).where(Conversation.user_id == user_id)
+    conversations = (await session.exec(conv_statement)).all()
+    
+    results = []
+    for conversation in conversations:
+        # Search in conversation title
+        title_match = query.lower() in conversation.title.lower()
+        
+        # Search in messages
+        msg_statement = select(Message).where(Message.conversation_id == conversation.id)
+        messages = (await session.exec(msg_statement)).all()
+        matching_messages = [msg for msg in messages if query.lower() in msg.content.lower()]
+        
+        # If either title or messages match, include in results
+        if title_match or matching_messages:
+            results.append(ConversationSearchResult(
+                conversation=conversation,
+                matching_messages=matching_messages
+            ))
+    
+    return results
+
+
 def main():
     """
     Entry point for the application when run directly.
