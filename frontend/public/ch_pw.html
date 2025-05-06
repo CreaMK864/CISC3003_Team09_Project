@@ -1,8 +1,9 @@
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Reset Password</title>
+    <title>Change Password</title>
     <link rel="stylesheet" href="RL_styles.css" />
   </head>
   <body class="auth-page">
@@ -10,22 +11,31 @@
       <div class="chat-container">
         <div class="chat-header">
           <button class="hamburger" id="open-sidebar">☰</button>
-          <h2>Reset Password</h2>
+          <h2>Change Password</h2>
         </div>
         <div class="form-container">
-          <form id="reset-form">
+          <form id="change-password-form">
             <div class="form-group">
-              <label for="email">Email:</label>
+              <label for="password">New Password:</label>
               <input
-                type="email"
-                id="email"
-                name="email"
-                placeholder="Enter your email"
+                type="password"
+                id="password"
+                name="password"
+                placeholder="Enter your new password"
                 required
               />
             </div>
-            <button type="submit">Send Reset Link</button>
-            <p>Remembered your password? <a href="login.html">Login here</a></p>
+            <div class="form-group">
+              <label for="confirm-password">Confirm Password:</label>
+              <input
+                type="password"
+                id="confirm-password"
+                name="confirm-password"
+                placeholder="Confirm your new password"
+                required
+              />
+            </div>
+            <button type="submit">Update Password</button>
             <p
               id="error-message"
               class="error-message"
@@ -40,6 +50,6 @@
         </div>
       </div>
     </div>
-    <script type="module" src="reset.js"></script>
+    <script type="module" src="ch_pw.js"></script>
   </body>
 </html>
