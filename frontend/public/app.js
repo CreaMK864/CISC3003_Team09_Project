@@ -10,9 +10,9 @@ import {
 import { API_BASE_URL } from "./config.js";
 
 // DOM elements for chat page (index.html)
-const messageForm = document.getElementById("message-form");
-const messageInput = document.getElementById("message-input");
-const messagesContainer = document.getElementById("chat-messages");
+let messageForm = document.getElementById("message-form");
+let messageInput = document.getElementById("message-input");
+let messagesContainer = document.getElementById("chat-messages");
 
 // DOM elements for login and register pages (login.html, register.html)
 const loginForm = document.getElementById("login-form");
@@ -37,31 +37,26 @@ let currentConversationId = null;
  * @returns {Promise<void>}
  */
 async function initialize() {
-  try {
-    const user = await initializeAuth();
+  const user = await initializeAuth();
 
-    if (user) {
-      // If user is authenticated
-      if (window.location.pathname.includes("index.html")) {
-        await getOrCreateConversation();
-      } else if (
-        window.location.pathname.includes("login.html") ||
-        window.location.pathname.includes("register.html") ||
-        window.location.pathname.includes("test-auth.html")
-      ) {
-        window.location.href = "index.html";
-      }
-    } else {
-      // If user is not authenticated
-      if (window.location.pathname.includes("index.html")) {
-        window.location.href = "login.html";
-      } else if (window.location.pathname.includes("test-auth.html")) {
-        showTab("login"); // Default to login tab
-      }
+  if (user) {
+    // If user is authenticated
+    if (window.location.pathname.includes("index.html")) {
+      await getOrCreateConversation();
+    } else if (
+      window.location.pathname.includes("login.html") ||
+      window.location.pathname.includes("register.html") ||
+      window.location.pathname.includes("test-auth.html")
+    ) {
+      window.location.href = "index.html";
     }
-  } catch (error) {
-    console.error("Error during initialization:", error);
-    alert("Failed to initialize. Check the console for errors.");
+  } else {
+    // If user is not authenticated
+    if (window.location.pathname.includes("index.html")) {
+      window.location.href = "login.html";
+    } else if (window.location.pathname.includes("test-auth.html")) {
+      showTab("login"); // Default to login tab
+    }
   }
 }
 
@@ -134,21 +129,16 @@ function showMessage(message, isError = false) {
  */
 async function getOrCreateConversation() {
   try {
-    const authToken = await getAuthToken();
-    console.log("Auth Token:", authToken); // Debugging
-
     const response = await fetch(`${API_BASE_URL}/conversations`, {
       method: "GET",
       headers: {
-        Authorization: `Bearer ${authToken}`,
+        Authorization: `Bearer ${await getAuthToken()}`,
       },
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`HTTP error! Status: ${response.status} - ${errorText}`);
       throw new Error(
-        `HTTP error! Status: ${response.status} - ${errorText}`
+        `HTTP error! Status: ${response.status} - ${await response.text()}`
       );
     }
 
@@ -187,12 +177,11 @@ async function getOrCreateConversation() {
  */
 async function createNewConversation() {
   try {
-    const authToken = await getAuthToken();
     const response = await fetch(`${API_BASE_URL}/conversations/`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${authToken}`,
+        Authorization: `Bearer ${await getAuthToken()}`,
       },
       body: JSON.stringify({
         title: "New Conversation",
@@ -201,10 +190,8 @@ async function createNewConversation() {
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`HTTP error! Status: ${response.status} - ${errorText}`);
       throw new Error(
-        `HTTP error! Status: ${response.status} - ${errorText}`
+        `HTTP error! Status: ${response.status} - ${await response.text()}`
       );
     }
 
@@ -213,7 +200,6 @@ async function createNewConversation() {
     document.querySelector(".chat-header h2").textContent = conversation.title;
   } catch (error) {
     console.error("Error creating conversation:", error);
-    displayErrorMessage("Failed to create a new conversation."); // Use displayErrorMessage
     throw error;
   }
 }
@@ -224,11 +210,6 @@ async function createNewConversation() {
  * @param {string} role - The role of the sender ('user' or 'assistant')
  */
 function displayMessage(content, role) {
-  if (!messagesContainer) {
-    console.error("messagesContainer is null.  Cannot display message.");
-    return;
-  }
-
   const messageElement = document.createElement("div");
   messageElement.classList.add("message");
   messageElement.classList.add(
@@ -236,8 +217,12 @@ function displayMessage(content, role) {
   );
   messageElement.textContent = content;
 
-  messagesContainer?.appendChild(messageElement);
-  messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  if (messagesContainer) {
+    messagesContainer?.appendChild(messageElement);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  } else {
+    console.error("messagesContainer is null!");
+  }
 }
 
 /**
@@ -245,16 +230,16 @@ function displayMessage(content, role) {
  * @param {string} content - The error message content
  */
 function displayErrorMessage(content) {
-  if (!messagesContainer) {
-    console.error("messagesContainer is null. The element with ID 'chat-messages' may not exist in the DOM.");
-    return;
-  }
   const messageElement = document.createElement("div");
   messageElement.classList.add("message", "error-message");
   messageElement.textContent = content;
 
-  messagesContainer?.appendChild(messageElement);
-  messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  if (messagesContainer) {
+    messagesContainer?.appendChild(messageElement);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  } else {
+    console.error("messagesContainer is null!");
+  }
 }
 
 /**
@@ -279,14 +264,20 @@ async function sendMessage(content) {
     const botMessageElement = document.createElement("div");
     botMessageElement.classList.add("message", "bot-message");
     botMessageElement.textContent = "";
-    messagesContainer.appendChild(botMessageElement);
 
-    const authToken = await getAuthToken();
+    if (messagesContainer) {
+      messagesContainer.appendChild(botMessageElement);
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    } else {
+      console.error("messagesContainer is null!");
+      return; // Exit the function if messagesContainer is null
+    }
+
     const response = await fetch(`${API_BASE_URL}/chat`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${authToken}`,
+        Authorization: `Bearer ${await getAuthToken()}`,
       },
       body: JSON.stringify({
         conversation_id: getCurrentConversationId(),
@@ -296,10 +287,8 @@ async function sendMessage(content) {
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`HTTP error! Status: ${response.status} - ${errorText}`);
       throw new Error(
-        `HTTP error! Status: ${response.status} - ${errorText}`
+        `HTTP error! Status: ${response.status} - ${await response.text()}`
       );
     }
 
@@ -340,7 +329,11 @@ async function sendMessage(content) {
         botMessageElement.textContent = fullResponse;
       }
 
-      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      if (messagesContainer) {
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      } else {
+        console.error("messagesContainer is null!");
+      }
     });
 
     activeSocket.addEventListener("close", () => {
@@ -369,15 +362,21 @@ function getCurrentConversationId() {
 }
 
 // Handle form submission for chat page (index.html)
-if (messageForm) {
-  messageForm.addEventListener("submit", (event) => {
-    event.preventDefault();
-    const message = messageInput.value.trim();
-    if (message) {
-      sendMessage(message);
-    }
-  });
-}
+document.addEventListener("DOMContentLoaded", () => {
+  messageForm = document.getElementById("message-form");
+  messageInput = document.getElementById("message-input");
+  messagesContainer = document.getElementById("chat-messages");
+
+  if (messageForm) {
+    messageForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const message = messageInput.value.trim();
+      if (message) {
+        sendMessage(message); // Call the sendMessage function from app.js
+      }
+    });
+  }
+});
 
 // Handle login form submission (login.html)
 if (loginForm) {
@@ -465,13 +464,15 @@ if (testLoginForm) {
     }
   });
 
-  testLoginForm.querySelector("button[onclick='signInWithGoogle()']").addEventListener("click", async () => {
-    try {
-      await signInWithGoogle();
-    } catch (error) {
-      showMessage(`Error: ${error.message}`, true);
-    }
-  });
+  testLoginForm
+    .querySelector("button[onclick='signInWithGoogle()']")
+    .addEventListener("click", async () => {
+      try {
+        await signInWithGoogle();
+      } catch (error) {
+        showMessage(`Error: ${error.message}`, true);
+      }
+    });
 }
 
 if (testRegisterForm) {
@@ -481,7 +482,9 @@ if (testRegisterForm) {
     try {
       const user = await signUpWithEmail(email, password);
       if (user) {
-        showMessage("Registration successful! Please check your email for confirmation.");
+        showMessage(
+          "Registration successful! Please check your email for confirmation."
+        );
         setTimeout(() => {
           window.location.href = "index.html";
         }, 1500);
@@ -491,13 +494,15 @@ if (testRegisterForm) {
     }
   });
 
-  testRegisterForm.querySelector("button[onclick='signInWithGoogle()']").addEventListener("click", async () => {
-    try {
-      await signInWithGoogle();
-    } catch (error) {
-      showMessage(`Error: ${error.message}`, true);
-    }
-  });
+  testRegisterForm
+    .querySelector("button[onclick='signInWithGoogle()']")
+    .addEventListener("click", async () => {
+      try {
+        await signInWithGoogle();
+      } catch (error) {
+        showMessage(`Error: ${error.message}`, true);
+      }
+    });
 }
 
 if (testResetForm) {
