@@ -3,37 +3,22 @@ document.addEventListener("DOMContentLoaded", () => {
   const messageForm = document.getElementById("message-form");
   const messageInput = document.getElementById("message-input");
   const chatMessages = document.querySelector(".chat-messages");
-  const hamburgerButton = document.querySelector(".hamburger");
   const sidebar = document.getElementById("sidebar");
-  const openSidebarBtn = document.getElementById("open-sidebar");
-  const closeSidebarBtn = document.getElementById("close-sidebar");
   const searchInput = document.getElementById("search-input");
   const historyItems = document.querySelectorAll(".history-item");
-
-  // Toggle sidebar on mobile (hamburger button)
-  if (hamburgerButton && sidebar) {
-    hamburgerButton.addEventListener("click", () => {
-      sidebar.classList.toggle("show");
-    });
-  }
-
-  // Sidebar open/close buttons
-  if (openSidebarBtn && sidebar) {
-    openSidebarBtn.addEventListener("click", () => {
-      sidebar.classList.add("active");
-    });
-  }
-
-  if (closeSidebarBtn && sidebar) {
-    closeSidebarBtn.addEventListener("click", () => {
-      sidebar.classList.remove("active");
-    });
-  }
+  const hamburger = document.querySelector(".hamburger");
 
   // Close sidebar when message input is focused
   if (messageInput && sidebar) {
     messageInput.addEventListener("focus", () => {
-      sidebar.classList.remove("active");
+      sidebar.classList.remove("show");
+    });
+  }
+
+  // Toggle sidebar on hamburger click
+  if (hamburger && sidebar) {
+    hamburger.addEventListener("click", () => {
+      sidebar.classList.toggle("show");
     });
   }
 
