@@ -1,0 +1,78 @@
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Reset Password</title>
+    <link rel="stylesheet" href="RL_styles.css" />
+  </head>
+  <body class="auth-page">
+    <div class="container">
+      <div class="chat-container">
+        <div class="chat-header">
+          <button class="hamburger" id="open-sidebar">☰</button>
+          <h2>Reset Password</h2>
+        </div>
+        <div class="form-container">
+          <form id="reset-form">
+            <div class="form-group">
+              <label for="email">Email:</label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                placeholder="Enter your email"
+                required
+              />
+            </div>
+            <button type="submit">Send Reset Link</button>
+            <p>Remembered your password? <a href="login.html">Login here</a></p>
+            <p
+              id="error-message"
+              class="error-message"
+              style="display: none; color: red"
+            ></p>
+            <p
+              id="success-message"
+              class="success-message"
+              style="display: none; color: green"
+            ></p>
+          </form>
+        </div>
+      </div>
+    </div>
+    <script type="module">
+      import { supabase } from "./auth.js";
+
+      // DOM elements
+      const resetForm = document.getElementById("reset-form");
+      const errorMessage = document.getElementById("error-message");
+      const successMessage = document.getElementById("success-message");
+
+      // Handle form submission
+      resetForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        const email = document.getElementById("email").value.trim();
+        errorMessage.style.display = "none";
+        successMessage.style.display = "none";
+
+        try {
+          const { error } = await supabase.auth.resetPasswordForEmail(email, {
+            redirectTo: `${window.location.origin}/update-password.html`,
+          });
+
+          if (error) throw error;
+
+          successMessage.textContent =
+            "Password reset email sent. Please check your inbox.";
+          successMessage.style.display = "block";
+          resetForm.reset();
+        } catch (error) {
+          console.error("Password reset error:", error.message);
+          errorMessage.textContent = `Error: ${error.message}`;
+          errorMessage.style.display = "block";
+        }
+      });
+    </script>
+  </body>
+</html>

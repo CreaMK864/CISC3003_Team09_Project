@@ -68,6 +68,7 @@
 
         try {
           const user = await signInWithEmail(email, password);
+
           if (user) {
             // Initialize app to set up conversation
             await initialize();
