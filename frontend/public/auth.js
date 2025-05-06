@@ -67,7 +67,34 @@ async function signInWithEmail(email, password) {
     return null;
   }
 }
+/** * @param {string} password - User's password */
 
+async function changePassword(password) {
+  try {
+    // Update the user's password
+    const { error } = await supabase.auth.updateUser({ password });
+
+    if (error) throw error;
+
+    return true;
+  } catch (error) {
+    console.error("Password update error:", error.message);
+    return null;
+  }
+}
+/** * @param {string} email - User's email */
+async function resetPassword(email) {
+  try {
+    const { error } = await supabase.auth.resetPasswordForEmail(email);
+
+    if (error) throw error;
+
+    return true;
+  } catch (error) {
+    console.error("Sending Reset Email failed:", error.message);
+    return null;
+  }
+}
 /**
  * Get the authentication token from Supabase
  * @returns {Promise<string>} The access token
@@ -107,5 +134,7 @@ export {
   getAuthToken,
   signOut,
   getCurrentUser,
+  changePassword,
+  resetPassword,
   supabase,
 };

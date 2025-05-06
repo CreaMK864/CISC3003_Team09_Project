@@ -1,8 +1,9 @@
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Reset Password</title>
+    <title>Change Password</title>
     <link rel="stylesheet" href="RL_styles.css" />
   </head>
   <body class="auth-page">
@@ -10,22 +11,31 @@
       <div class="chat-container">
         <div class="chat-header">
           <button class="hamburger" id="open-sidebar">☰</button>
-          <h2>Reset Password</h2>
+          <h2>Change Password</h2>
         </div>
         <div class="form-container">
-          <form id="reset-form">
+          <form id="change-password-form">
             <div class="form-group">
-              <label for="email">Email:</label>
+              <label for="password">New Password:</label>
               <input
-                type="email"
-                id="email"
-                name="email"
-                placeholder="Enter your email"
+                type="password"
+                id="password"
+                name="password"
+                placeholder="Enter your new password"
                 required
               />
             </div>
-            <button type="submit">Send Reset Link</button>
-            <p>Remembered your password? <a href="login.html">Login here</a></p>
+            <div class="form-group">
+              <label for="confirm-password">Confirm Password:</label>
+              <input
+                type="password"
+                id="confirm-password"
+                name="confirm-password"
+                placeholder="Confirm your new password"
+                required
+              />
+            </div>
+            <button type="submit">Update Password</button>
             <p
               id="error-message"
               class="error-message"
@@ -44,34 +54,46 @@
       import { supabase } from "./auth.js";
 
       // DOM elements
-      const resetForm = document.getElementById("reset-form");
-      const errorMessage = document.getElementById("error-message");
+      const changePasswordForm = document.getElementById(
+        "change-password-form",
+      );
       const successMessage = document.getElementById("success-message");
+      const errorMessage = document.getElementById("error-message");
 
+      errorMessage.style.display = "none";
       // Handle form submission
-      resetForm.addEventListener("submit", async (event) => {
+      changePasswordForm.addEventListener("submit", async (event) => {
         event.preventDefault();
 
-        const email = document.getElementById("email").value.trim();
-        errorMessage.style.display = "none";
+        const password = document.getElementById("password").value.trim();
+        const confirmPassword = document
+          .getElementById("confirm-password")
+          .value.trim();
         successMessage.style.display = "none";
+
+        // Validate that passwords match
+        if (password !== confirmPassword) {
+          errorMessage.textContent = "Passwords do not match.";
+          errorMessage.style.display = "block";
+          return;
+        }
 
         try {
           // Update the user's password
-          const success = await resetPassword(email);
+          const success = await changePassword(password);
 
           if (success) {
             successMessage.textContent =
-              "Email founded. Ready to reset your password...";
+              "Password updated successfully. Redirecting to login...";
             successMessage.style.display = "block";
-            resetForm.reset();
+            changePasswordForm.reset();
 
             // Redirect to login page after a short delay
             setTimeout(() => {
-              redirectTo: "change_pw.html";
+              window.location.href = "login.html";
             }, 2000);
           } else {
-            errorMessage.textContent = `Failed to find your email address`;
+            errorMessage.textContent = `Cannot update password`;
             errorMessage.style.display = "block";
           }
         } catch (error) {
