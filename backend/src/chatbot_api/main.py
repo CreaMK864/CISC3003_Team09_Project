@@ -422,6 +422,7 @@ class ConversationSearchResult(BaseModel):
         conversation: The conversation object
         matching_messages: List of messages that match the search query
     """
+
     conversation: Conversation
     matching_messages: list[Message]
 
@@ -445,28 +446,25 @@ async def search_conversations(
         A list of conversations with their matching messages that contain the search query
     """
     user_id = uuid.UUID(current_user["id"])
-    
+
     # Get all conversations for the user
     conv_statement = select(Conversation).where(Conversation.user_id == user_id)
     conversations = (await session.exec(conv_statement)).all()
-    
+
     results: list[ConversationSearchResult] = []
     for conversation in conversations:
         # Search in conversation title
         title_match = query.lower() in conversation.title.lower()
-        
+
         # Search in messages
         msg_statement = select(Message).where(Message.conversation_id == conversation.id)
         messages = (await session.exec(msg_statement)).all()
         matching_messages = [msg for msg in messages if query.lower() in msg.content.lower()]
-        
+
         # If either title or messages match, include in results
         if title_match or matching_messages:
-            results.append(ConversationSearchResult(
-                conversation=conversation,
-                matching_messages=matching_messages
-            ))
-    
+            results.append(ConversationSearchResult(conversation=conversation, matching_messages=matching_messages))
+
     return results
 
 

@@ -22,7 +22,7 @@ async function initializeAuth() {
     console.log("User is authenticated:", currentUser.email);
     return session.user;
   } else {
-    showLoginForm();
+    //showLoginForm();
     return null;
   }
 }
@@ -62,8 +62,8 @@ async function signInWithEmail(email, password) {
     return currentUser;
   } catch (error) {
     console.error("Error signing in:", error.message);
-    alert("Login failed: " + error.message);
-    showLoginForm(); // Show login form again if login fails
+    // alert("Login failed: " + error.message);
+    //showLoginForm(); // Show login form again if login fails
     return null;
   }
 }
