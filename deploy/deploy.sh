@@ -41,7 +41,7 @@ docker compose down || true
 
 # Start up containers with newest images
 echo "Starting containers with new images..."
-docker compose up --build -d --remove-orphans
+docker compose --project-directory ./ -f docker/production/docker-compose.yml --env-file docker/production/.env up --build --remove-orphans --detach
 
 for i in {1..12}; do
   if curl -fsS http://localhost:3001/health; then
@@ -53,4 +53,4 @@ echo "HEALTH CHECK FAILED"
 docker compose logs
 exit 1
 
-echo "Deployment completed successfully!" 
+echo "Deployment completed successfully!"

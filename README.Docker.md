@@ -1,10 +1,15 @@
 ### Building and running the application
 
-Start the application by running:
-`docker compose up --build`.
+Start the application by running, you may choose to replace `docker/development/docker-compose.yml` with `docker/production/docker-compose.yml` if you want to run the production version of the application.
 
-The backend will be available at `http://localhost:5000` and the frontend at `http://localhost:3000`.
-Supabase Studio will be available at `http://localhost:8000`.
+```bash
+docker compose --project-directory ./ -f docker/development/docker-compose.yml --env-file docker/development/.env up --build --remove-orphans
+```
+
+Add a `--detach` flag at the end to run it in detached mode.
+
+- For `docker/developement`, see `docker/development/README.md` for which port the application is running on.
+- For `docker/production`, the application will be reverse proxied by Caddy directly inside the container, so you can only access it via the domain name you set up in your Caddyfile.
 
 ### Deploying your application to the cloud
 

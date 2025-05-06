@@ -1,0 +1,7 @@
+api.example.com {
+    reverse_proxy backend
+}
+
+chatbot.example.com {
+    reverse_proxy frontend
+}
