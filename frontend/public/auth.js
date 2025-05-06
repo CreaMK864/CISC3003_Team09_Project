@@ -40,7 +40,31 @@ function showLoginForm() {
     signInWithEmail(email, password);
   }
 }
+/**
+ * Sign in user with email and password
+ * @param {string} email - User's email
+ * @param {string} password - User's password
+ */
+async function signUpWithEmail(email, password) {
+  try {
+    /** @type {import('@supabase/supabase-js').AuthResponse} */
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+    });
 
+    if (error) throw error;
+
+    currentUser = data.user;
+    console.log("Signed up successfully:", currentUser.email);
+    return currentUser;
+  } catch (error) {
+    console.error("Error signing up:", error.message);
+    // alert("Login failed: " + error.message);
+    //showLoginForm(); // Show login form again if login fails
+    return null;
+  }
+}
 /**
  * Sign in user with email and password
  * @param {string} email - User's email
@@ -75,7 +99,7 @@ async function signInWithEmail(email, password) {
 async function signInWithGoogle() {
   try {
     const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
+      provider: "google",
     });
 
     if (error) {
@@ -159,6 +183,7 @@ export {
   showLoginForm,
   signInWithEmail,
   signInWithGoogle,
+  signUpWithEmail,
   getAuthToken,
   signOut,
   getCurrentUser,
