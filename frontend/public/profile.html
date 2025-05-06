@@ -5,22 +5,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>User Profile</title>
     <link rel="icon" href="favicon.ico" />
-    <link rel="stylesheet" href="tt.css" />
+    <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <div class="container">
       <div class="sidebar" id="sidebar">
-        <button class="close-btn" id="close-sidebar">×</button>
-        <h2>Chatbot</h2>
-        <nav>
-          <ul>
-            <li><a href="index.html">Chat</a></li>
-            <li><a href="history.html">History</a></li>
-            <li><a href="profile.html" class="active">Profile</a></li>
-            <li><a href="register.html">Register</a></li>
-            <li><a href="login.html">Login</a></li>
-          </ul>
-        </nav>
+        <h2>My Chatbot</h2>
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="history.html">History</a></li>
+          <li><a href="profile.html" class="active">Profile</a></li>
+          <li><a href="setting.html">Settings</a></li>
+        </ul>
+        <!-- Auth block -->
+        <div class="auth-block">
+          <h3>Get Started</h3>
+          <p>Sign in to save your conversations</p>
+          <div class="auth-buttons">
+            <a href="login.html" class="auth-button">Login</a>
+            <a href="register.html" class="auth-button">Register</a>
+            <a href="test-auth.html" class="auth-test">Register</a>
+          </div>
+        </div>
       </div>
       <div class="chat-container">
         <div class="chat-header">

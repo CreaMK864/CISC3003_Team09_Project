@@ -337,3 +337,67 @@ body {
     margin-left: 0;
   }
 }
+/* History page specific styles */
+.history-list {
+  padding: 20px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.history-list h3 {
+  margin-bottom: 15px;
+  font-size: 1.2em;
+  color: #333;
+}
+
+.history-list ul {
+  list-style: none;
+}
+
+.history-item {
+  margin-bottom: 15px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+  padding: 10px;
+}
+
+.history-item:hover {
+  background-color: ghostwhite;
+}
+
+.history-item a {
+  text-decoration: none;
+  color: #333;
+  display: block;
+}
+
+.history-item h4 {
+  font-size: 1.1em;
+  margin-bottom: 5px;
+  color: #000;
+}
+
+.history-item p {
+  font-size: 0.9em;
+  color: #666;
+  margin-bottom: 5px;
+}
+
+.history-item .timestamp {
+  font-size: 0.85em;
+  color: #999;
+}
+
+/* Search bar styles */
+.search-bar {
+  padding: 10px 20px;
+  border-bottom: 1px solid #ddd;
+}
+
+#search-input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1em;
+}
