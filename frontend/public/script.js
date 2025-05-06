@@ -115,15 +115,18 @@ document.addEventListener("DOMContentLoaded", () => {
   // Function to send message to API
   async function sendMessageToAPI(message) {
     // API endpoint URL - replace with the actual endpoint
-    const apiUrl = "https://api.saviomak.com/docs"; 
+    const apiUrl = "https://api.saviomak.com/chat";
+
+    // Replace with your actual API key
+    const apiKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVkbHJ2YnpoeHZ5dnVram12a29mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY1MjIxMDQsImV4cCI6MjA2MjA5ODEwNH0.PlxiJPCsvYbGqA2h_jiFDPu8_AvdPQ_C01Qw2AZ9DDo";
 
     // API request parameters
     const requestOptions = {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        // Include API key if required
-        // 'Authorization': 'Bearer YOUR_API_KEY'
+        // Include API key in the Authorization header
+        Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
         message: message,
