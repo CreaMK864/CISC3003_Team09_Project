@@ -37,26 +37,31 @@ let currentConversationId = null;
  * @returns {Promise<void>}
  */
 async function initialize() {
-  const user = await initializeAuth();
+  try {
+    const user = await initializeAuth();
 
-  if (user) {
-    // If user is authenticated
-    if (window.location.pathname.includes("index.html")) {
-      await getOrCreateConversation();
-    } else if (
-      window.location.pathname.includes("login.html") ||
-      window.location.pathname.includes("register.html") ||
-      window.location.pathname.includes("test-auth.html")
-    ) {
-      window.location.href = "index.html";
+    if (user) {
+      // If user is authenticated
+      if (window.location.pathname.includes("index.html")) {
+        await getOrCreateConversation();
+      } else if (
+        window.location.pathname.includes("login.html") ||
+        window.location.pathname.includes("register.html") ||
+        window.location.pathname.includes("test-auth.html")
+      ) {
+        window.location.href = "index.html";
+      }
+    } else {
+      // If user is not authenticated
+      if (window.location.pathname.includes("index.html")) {
+        window.location.href = "login.html";
+      } else if (window.location.pathname.includes("test-auth.html")) {
+        showTab("login"); // Default to login tab
+      }
     }
-  } else {
-    // If user is not authenticated
-    if (window.location.pathname.includes("index.html")) {
-      window.location.href = "login.html";
-    } else if (window.location.pathname.includes("test-auth.html")) {
-      showTab("login"); // Default to login tab
-    }
+  } catch (error) {
+    console.error("Error during initialization:", error);
+    alert("Failed to initialize. Check the console for errors.");
   }
 }
 
@@ -129,16 +134,21 @@ function showMessage(message, isError = false) {
  */
 async function getOrCreateConversation() {
   try {
+    const authToken = await getAuthToken();
+    console.log("Auth Token:", authToken); // Debugging
+
     const response = await fetch(`${API_BASE_URL}/conversations`, {
       method: "GET",
       headers: {
-        Authorization: `Bearer ${await getAuthToken()}`,
+        Authorization: `Bearer ${authToken}`,
       },
     });
 
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`HTTP error! Status: ${response.status} - ${errorText}`);
       throw new Error(
-        `HTTP error! Status: ${response.status} - ${await response.text()}`
+        `HTTP error! Status: ${response.status} - ${errorText}`
       );
     }
 
@@ -177,11 +187,12 @@ async function getOrCreateConversation() {
  */
 async function createNewConversation() {
   try {
+    const authToken = await getAuthToken();
     const response = await fetch(`${API_BASE_URL}/conversations/`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${await getAuthToken()}`,
+        Authorization: `Bearer ${authToken}`,
       },
       body: JSON.stringify({
         title: "New Conversation",
@@ -190,8 +201,10 @@ async function createNewConversation() {
     });
 
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`HTTP error! Status: ${response.status} - ${errorText}`);
       throw new Error(
-        `HTTP error! Status: ${response.status} - ${await response.text()}`
+        `HTTP error! Status: ${response.status} - ${errorText}`
       );
     }
 
@@ -200,6 +213,7 @@ async function createNewConversation() {
     document.querySelector(".chat-header h2").textContent = conversation.title;
   } catch (error) {
     console.error("Error creating conversation:", error);
+    displayErrorMessage("Failed to create a new conversation."); // Use displayErrorMessage
     throw error;
   }
 }
@@ -210,6 +224,11 @@ async function createNewConversation() {
  * @param {string} role - The role of the sender ('user' or 'assistant')
  */
 function displayMessage(content, role) {
+  if (!messagesContainer) {
+    console.error("messagesContainer is null.  Cannot display message.");
+    return;
+  }
+
   const messageElement = document.createElement("div");
   messageElement.classList.add("message");
   messageElement.classList.add(
@@ -226,6 +245,10 @@ function displayMessage(content, role) {
  * @param {string} content - The error message content
  */
 function displayErrorMessage(content) {
+  if (!messagesContainer) {
+    console.error("messagesContainer is null. The element with ID 'chat-messages' may not exist in the DOM.");
+    return;
+  }
   const messageElement = document.createElement("div");
   messageElement.classList.add("message", "error-message");
   messageElement.textContent = content;
@@ -258,11 +281,12 @@ async function sendMessage(content) {
     botMessageElement.textContent = "";
     messagesContainer.appendChild(botMessageElement);
 
+    const authToken = await getAuthToken();
     const response = await fetch(`${API_BASE_URL}/chat`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${await getAuthToken()}`,
+        Authorization: `Bearer ${authToken}`,
       },
       body: JSON.stringify({
         conversation_id: getCurrentConversationId(),
@@ -272,8 +296,10 @@ async function sendMessage(content) {
     });
 
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`HTTP error! Status: ${response.status} - ${errorText}`);
       throw new Error(
-        `HTTP error! Status: ${response.status} - ${await response.text()}`
+        `HTTP error! Status: ${response.status} - ${errorText}`
       );
     }
 
