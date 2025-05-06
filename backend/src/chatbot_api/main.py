@@ -262,7 +262,7 @@ async def start_chat(
     message: MessageCreate,
     current_user: UserInfo = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
-):
+) -> dict[str, str]:
     """
     Start a chat session by sending a message and receiving a stream URL.
 
@@ -451,7 +451,7 @@ async def search_conversations(
     conv_statement = select(Conversation).where(Conversation.user_id == user_id)
     conversations = (await session.exec(conv_statement)).all()
 
-    results = []
+    results: list[ConversationSearchResult] = []
     for conversation in conversations:
         # Search in conversation title
         title_match = query.lower() in conversation.title.lower()

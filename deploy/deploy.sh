@@ -51,6 +51,6 @@ for i in {1..12}; do
 done
 echo "HEALTH CHECK FAILED"
 docker compose logs
-exit 1
 
 echo "Deployment completed successfully!"
+exit 1
