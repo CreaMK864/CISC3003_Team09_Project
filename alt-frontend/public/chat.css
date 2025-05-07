@@ -95,7 +95,7 @@
     transition: opacity 0.2s;
 }
 
-.conversation-item:hover .conversation-edit {
+.conversation-item .conversation-edit {
     opacity: 1;
 }
 
