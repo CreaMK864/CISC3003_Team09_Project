@@ -105,7 +105,7 @@ async function searchConversations(query) {
         throw new SignOutError("User is not authenticated");
     }
 
-    const response = await fetch(`${API_BASE_URL}/conversations/search?query=${encodeURIComponent(query)}`, {
+    const response = await fetch(`${API_BASE_URL}/search?query=${encodeURIComponent(query)}`, {
         headers: {
             "Authorization": `Bearer ${session.access_token}`
         }

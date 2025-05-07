@@ -486,7 +486,7 @@ class ConversationSearchResult(BaseModel):
     matching_messages: list[Message]
 
 
-@app.get("/conversations/search", response_model=list[ConversationSearchResult])
+@app.get("/search", response_model=list[ConversationSearchResult])
 async def search_conversations(
     query: str,
     current_user: UserInfo = Depends(get_current_user),
