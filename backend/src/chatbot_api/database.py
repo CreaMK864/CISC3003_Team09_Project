@@ -129,7 +129,7 @@ class Message(SQLModel, table=True):
         default_factory=lambda: datetime.datetime.now(datetime.UTC),
         sa_column=Column(DateTime(timezone=True), server_default=text("(now() AT TIME ZONE 'UTC')")),
     )
-    model: str = Field(sa_column=Column(Text, nullable=True))
+    model: str | None = Field(sa_column=Column(Text, nullable=True))
 
     conversation: Conversation = Relationship(back_populates="messages")
 
