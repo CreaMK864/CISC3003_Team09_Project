@@ -170,31 +170,6 @@ async def verify_conversation_access(
     return conversation
 
 
-@app.get("/conversations/{conversation_id}", response_model=Conversation)
-async def get_conversation(
-    conversation_id: int,
-    current_user: UserInfo = Depends(get_current_user),
-    session: AsyncSession = Depends(get_session),
-):
-    """
-    Get a conversation by its ID.
-    Requires authentication with Supabase JWT.
-
-    Args:
-        conversation_id: The ID of the conversation to retrieve
-        current_user: User information from JWT token
-        session: Database session
-
-    Returns:
-        The conversation object if found
-
-    Raises:
-        HTTPException: If the conversation is not found or doesn't belong to the user
-    """
-    conversation = await verify_conversation_access(conversation_id, current_user, session)
-    return conversation
-
-
 @app.get("/conversations", response_model=list[Conversation])
 async def get_user_conversations(
     current_user: UserInfo = Depends(get_current_user), session: AsyncSession = Depends(get_session)
@@ -245,6 +220,31 @@ async def create_conversation(
     await session.commit()
     await session.refresh(db_conversation)
     return db_conversation
+
+
+@app.get("/conversations/{conversation_id}", response_model=Conversation)
+async def get_conversation(
+    conversation_id: int,
+    current_user: UserInfo = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+):
+    """
+    Get a conversation by its ID.
+    Requires authentication with Supabase JWT.
+
+    Args:
+        conversation_id: The ID of the conversation to retrieve
+        current_user: User information from JWT token
+        session: Database session
+
+    Returns:
+        The conversation object if found
+
+    Raises:
+        HTTPException: If the conversation is not found or doesn't belong to the user
+    """
+    conversation = await verify_conversation_access(conversation_id, current_user, session)
+    return conversation
 
 
 @app.patch("/conversations/{conversation_id}", response_model=Conversation)
