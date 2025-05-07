@@ -111,9 +111,17 @@ async function loadConversation(conversationId) {
     
     // Render messages
     messages.innerHTML = "";
-    conversationMessages.forEach(message => {
-        appendMessage(message.content, message.role);
-    });
+    
+    if (conversationMessages.length === 0) {
+        const emptyState = document.createElement("div");
+        emptyState.className = "empty-state";
+        emptyState.textContent = "Send a message to start the conversation";
+        messages.appendChild(emptyState);
+    } else {
+        conversationMessages.forEach(message => {
+            appendMessage(message.content, message.role);
+        });
+    }
     
     // Update active conversation in list
     document.querySelectorAll(".conversation-item").forEach(item => {
