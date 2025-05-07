@@ -12,6 +12,11 @@
     flex-direction: column;
 }
 
+.dark-mode .sidebar {
+    background: var(--dark-component-bg);
+    border-right-color: var(--dark-border-color);
+}
+
 .sidebar button {
     width: 100%;
 }
@@ -19,6 +24,10 @@
 .sidebar-header {
     padding: 1rem;
     border-bottom: 1px solid var(--border-color);
+}
+
+.dark-mode .sidebar-header {
+    border-bottom-color: var(--dark-border-color);
 }
 
 .search-container {
@@ -29,6 +38,13 @@
 
 .search-container input {
     flex: 1;
+}
+
+.dark-mode input, 
+.dark-mode textarea {
+    background-color: var(--dark-component-bg);
+    color: var(--dark-text-color);
+    border-color: var(--dark-border-color);
 }
 
 .btn.icon {
@@ -57,8 +73,16 @@
     background-color: var(--hover-color);
 }
 
+.dark-mode .conversation-item:hover {
+    background-color: var(--dark-hover-color);
+}
+
 .conversation-item.active {
     background-color: var(--hover-color);
+}
+
+.dark-mode .conversation-item.active {
+    background-color: var(--dark-hover-color);
 }
 
 .conversation-title {
@@ -82,6 +106,13 @@
 .sidebar-footer {
     padding: 1rem;
     border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.dark-mode .sidebar-footer {
+    border-top-color: var(--dark-border-color);
 }
 
 .chat-area {
@@ -89,6 +120,10 @@
     display: flex;
     flex-direction: column;
     background-color: white;
+}
+
+.dark-mode .chat-area {
+    background-color: var(--dark-component-bg);
 }
 
 .messages {
@@ -111,9 +146,18 @@
     margin-left: auto;
 }
 
+.dark-mode .message.user {
+    background-color: var(--dark-message-user-bg);
+}
+
 .message.assistant {
     background-color: var(--hover-color);
     margin-right: auto;
+}
+
+.dark-mode .message.assistant {
+    background-color: var(--dark-message-assistant-bg);
+    color: var(--dark-text-color);
 }
 
 .input-area {
@@ -121,6 +165,10 @@
     border-top: 1px solid var(--border-color);
     display: flex;
     gap: 0.5rem;
+}
+
+.dark-mode .input-area {
+    border-top-color: var(--dark-border-color);
 }
 
 .input-area textarea {
@@ -144,4 +192,21 @@
     padding: 1rem;
     width: 100%;
     max-width: max(80%, 500px);
+}
+
+.dark-mode .empty-state {
+    color: var(--dark-border-color);
+}
+
+/* Dark mode toggle */
+.theme-toggle {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+}
+
+.theme-toggle-icon {
+    margin-right: 0.5rem;
+    font-size: 1.2rem;
 } 

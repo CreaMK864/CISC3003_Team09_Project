@@ -7,6 +7,21 @@
     --border-color: #e2e8f0;
     --hover-color: #f1f5f9;
     --error-color: #ef4444;
+    --text-light-color: #94a3b8;
+    
+    /* Dark mode colors */
+    --dark-background-color: #1e1e2e;
+    --dark-text-color: #e2e8f0;
+    --dark-border-color: #334155;
+    --dark-hover-color: #334155;
+    --dark-component-bg: #1e293b;
+    --dark-message-user-bg: #3b82f6;
+    --dark-message-assistant-bg: #334155;
+}
+
+body.dark-mode {
+    background-color: var(--dark-background-color);
+    color: var(--dark-text-color);
 }
 
 * {

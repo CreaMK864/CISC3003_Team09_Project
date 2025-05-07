@@ -18,12 +18,42 @@ const messages = document.getElementById("messages");
 const messageInput =  /** @type {HTMLInputElement} */ (document.getElementById("messageInput"));
 const sendBtn = document.getElementById("sendBtn");
 const signOutBtn = document.getElementById("signOutBtn");
+const darkModeToggle = document.getElementById("darkModeToggle");
 
 // State
 /** @type {number | null} */
 let currentConversationId = null;
 /** @type {WebSocket | null} */
 let currentWebSocket = null;
+
+// Dark mode functions
+function toggleDarkMode() {
+    document.body.classList.toggle('dark-mode');
+    const isDarkMode = document.body.classList.contains('dark-mode');
+    localStorage.setItem('darkMode', isDarkMode ? 'enabled' : 'disabled');
+    updateDarkModeIcon(isDarkMode);
+}
+
+/**
+ * @param {boolean} isDarkMode
+ */
+function updateDarkModeIcon(isDarkMode) {
+    const toggleIcon = darkModeToggle?.querySelector('.theme-toggle-icon');
+    if (toggleIcon) {
+        toggleIcon.textContent = isDarkMode ? '☀️' : '🌙';
+    }
+}
+
+function initDarkMode() {
+    // Check for saved preference
+    const darkMode = localStorage.getItem('darkMode');
+    if (darkMode === 'enabled') {
+        document.body.classList.add('dark-mode');
+        updateDarkModeIcon(true);
+    } else {
+        updateDarkModeIcon(false);
+    }
+}
 
 // Render conversations
 /**
@@ -251,18 +281,21 @@ async function handleSendMessage() {
 
 // Initialize
 async function initialize() {
-  try {
-    const conversations = await loadConversations();
-    renderConversations(conversations);
-  } catch (error) {
-    if (error instanceof SignOutError) {
-      console.error("User is signed out:", error);
-      window.location.href = "./index.html";
-    } else {
-      console.error("Error loading conversations:", error);
-      throw error;
+    try {
+        // Initialize dark mode
+        initDarkMode();
+        
+        const conversations = await loadConversations();
+        renderConversations(conversations);
+    } catch (error) {
+        if (error instanceof SignOutError) {
+            console.error("User is signed out:", error);
+            window.location.href = "./index.html";
+        } else {
+            console.error("Error loading conversations:", error);
+            throw error;
+        }
     }
-  }
 }
 
 // Event Listeners
@@ -282,6 +315,7 @@ signOutBtn?.addEventListener("click", async () => {
     await signOut();
     window.location.href = "./index.html";
 });
+darkModeToggle?.addEventListener("click", toggleDarkMode);
 
 // Start the app
 initialize();
