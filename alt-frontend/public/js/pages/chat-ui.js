@@ -141,7 +141,8 @@ function appendMessage(content, role) {
 async function handleNewChat() {
     const conversation = await createNewConversation();
     if (conversation) {
-        await loadConversations();
+        const conversations = await loadConversations();
+        renderConversations(conversations);
         await loadConversation(conversation.id);
     }
 }
