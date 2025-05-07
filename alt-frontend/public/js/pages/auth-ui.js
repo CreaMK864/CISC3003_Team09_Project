@@ -15,8 +15,8 @@ const errorMessage = document.getElementById("errorMessage");
 async function initializeAuth() {
     const session = await checkAuth();
     if (session) {
-        // window.location.href = "/chat.html";
         console.log(session)
+        window.location.href = "./chat.html";
     }
 }
 
@@ -32,8 +32,8 @@ signInBtn?.addEventListener("click", async () => {
         if (error) {
             errorMessage.textContent = error.message;
         } else {
-            // window.location.href = "/chat.html";
             console.log("Sign in successful");
+            window.location.href = "./chat.html";
         }
     } else {
         errorMessage.textContent = "Please fill in all fields";

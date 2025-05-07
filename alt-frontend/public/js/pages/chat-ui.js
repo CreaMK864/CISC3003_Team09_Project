@@ -200,7 +200,7 @@ messageInput?.addEventListener("keypress", (e) => {
 });
 signOutBtn?.addEventListener("click", async () => {
     await signOut();
-    window.location.href = "/index.html";
+    window.location.href = "./index.html";
 });
 
 // Start the app
