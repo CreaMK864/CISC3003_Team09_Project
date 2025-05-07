@@ -10,13 +10,11 @@ import {
 
 // DOM Elements
 const newChatBtn = document.getElementById("newChatBtn");
-/** @type {HTMLInputElement} */
-const searchInput = document.getElementById("searchInput");
+const searchInput = /** @type {HTMLInputElement} */ (document.getElementById("searchInput"));
 const searchBtn = document.getElementById("searchBtn");
 const conversationList = document.getElementById("conversationList");
 const messages = document.getElementById("messages");
-/** @type {HTMLInputElement} */
-const messageInput = document.getElementById("messageInput");
+const messageInput =  /** @type {HTMLInputElement} */ (document.getElementById("messageInput"));
 const sendBtn = document.getElementById("sendBtn");
 const signOutBtn = document.getElementById("signOutBtn");
 

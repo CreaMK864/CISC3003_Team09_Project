@@ -1,15 +1,12 @@
 import { checkAuth, signInWithEmail, signUpWithEmail, signInWithGoogle } from "../lib/auth.js";
 
 // DOM Elements
-/** @type {HTMLInputElement} */
-const emailInput = document.getElementById("email");
-/** @type {HTMLInputElement} */
-const passwordInput = document.getElementById("password");
+const emailInput = /** @type {HTMLInputElement} */ (document.getElementById("email"));
+const passwordInput = /** @type {HTMLInputElement} */ (document.getElementById("password"));
 const signInBtn = document.getElementById("signInBtn");
 const signUpBtn = document.getElementById("signUpBtn");
 const googleSignInBtn = document.getElementById("googleSignInBtn");
-/** @type {HTMLDivElement} */
-const errorMessage = document.getElementById("errorMessage");
+const errorMessage = /** @type {HTMLDivElement} */ (document.getElementById("errorMessage"));
 
 // Check if user is already logged in
 async function initializeAuth() {
