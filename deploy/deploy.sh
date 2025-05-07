@@ -46,7 +46,7 @@ echo "Starting containers with new images..."
 docker compose --project-directory ./ -f docker/production/docker-compose.yml --env-file docker/production/.env up --build --remove-orphans --detach
 
 for i in {1..12}; do
-  if curl -fsS http://localhost:3001/health; then
+  if curl -fsS http://localhost:5000/health; then
     exit 0
   fi
   sleep 5
