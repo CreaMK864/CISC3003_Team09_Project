@@ -286,7 +286,9 @@ async def start_chat(
     existing_messages = result.all()
     index = len(existing_messages)
 
-    db_message = Message(conversation_id=message.conversation_id, role=Role.USER, content=message.content, index=index)
+    db_message = Message(
+        conversation_id=message.conversation_id, role=Role.USER, content=message.content, index=index, model=None
+    )
     session.add(db_message)
     await session.commit()
     await session.refresh(db_message)
@@ -349,10 +351,7 @@ async def stream_chat_response(websocket: WebSocket, stream_id: str):
             openai_messages = [{"role": msg.role, "content": msg.content} for msg in all_messages]
 
             assistant_message = Message(
-                conversation_id=conversation_id,
-                role=Role.ASSISTANT,
-                content="",
-                index=len(all_messages),
+                conversation_id=conversation_id, role=Role.ASSISTANT, content="", index=len(all_messages), model=model
             )
             session.add(assistant_message)
             await session.commit()
