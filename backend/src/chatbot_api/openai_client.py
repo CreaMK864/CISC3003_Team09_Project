@@ -19,7 +19,7 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 if OPENAI_API_KEY is None:
     raise ValueError("OPENAI_API_KEY environment variable is not set")
 
-client = AsyncOpenAI(api_key=OPENAI_API_KEY)
+client = AsyncOpenAI(api_key=OPENAI_API_KEY, base_url=OPENAI_API_BASE)
 
 
 def convert_to_openai_messages(messages: list[dict[str, str]]) -> list[ChatCompletionMessageParam]:
