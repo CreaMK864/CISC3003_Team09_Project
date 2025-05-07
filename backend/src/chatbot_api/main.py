@@ -106,6 +106,26 @@ class MessageCreate(BaseModel):
     content: str
 
 
+class ConversationUpdate(BaseModel):
+    """
+    Request model for updating a conversation.
+
+    Attributes:
+        title: New title for the conversation
+        model: New model to use for this conversation
+    """
+
+    title: str | None = None
+    model: str | None = None
+
+    @field_validator("model")
+    @classmethod
+    def validate_model(cls, v: Any) -> str | None:
+        if v is not None and not is_valid_model(v):
+            raise ValueError(f"Invalid model. Available models: {', '.join(AVAILABLE_MODELS)}")
+        return v
+
+
 @app.get("/health")
 async def health_check():
     """
@@ -225,6 +245,46 @@ async def create_conversation(
     await session.commit()
     await session.refresh(db_conversation)
     return db_conversation
+
+
+@app.patch("/conversations/{conversation_id}", response_model=Conversation)
+async def update_conversation(
+    conversation_id: int,
+    update: ConversationUpdate,
+    current_user: UserInfo = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+):
+    """
+    Update a conversation's title or model.
+    Requires authentication with Supabase JWT.
+
+    Args:
+        conversation_id: The ID of the conversation to update
+        update: Update information from request body
+        current_user: User information from JWT token
+        session: Database session
+
+    Returns:
+        The updated conversation object
+
+    Raises:
+        HTTPException: If the conversation is not found or doesn't belong to the user
+    """
+    conversation = await verify_conversation_access(conversation_id, current_user, session)
+
+    # Update fields if provided
+    if update.title is not None:
+        conversation.title = update.title
+    if update.model is not None:
+        conversation.model = update.model
+
+    # Update the timestamp
+    conversation.updated_at = datetime.datetime.now(datetime.UTC)
+
+    session.add(conversation)
+    await session.commit()
+    await session.refresh(conversation)
+    return conversation
 
 
 @app.get("/conversations/{conversation_id}/messages", response_model=list[Message])
