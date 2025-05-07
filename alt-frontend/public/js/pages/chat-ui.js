@@ -154,6 +154,14 @@ async function handleSearch() {
     const query = searchInput.value.trim();
     const conversations = await searchConversations(query);
     renderConversations(conversations);
+    
+    // Add one-time event listener to reset conversations on next input
+    const resetListener = async () => {
+        const allConversations = await loadConversations();
+        renderConversations(allConversations);
+        searchInput.removeEventListener("input", resetListener);
+    };
+    searchInput.addEventListener("input", resetListener);
 }
 
 // Handle send message
