@@ -1,0 +1,43 @@
+{
+  "type": "module",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.4",
+    "http-server": "^14.1.1"
+  },
+  "scripts": {
+    "start": "http-server ./public",
+    "dev": "live-server ./public --port=3000",
+    "lint": "eslint .",
+    "typecheck": "tsc",
+    "format": "prettier --write .",
+    "pre-commit": "lint-staged"
+  },
+  "lint-staged": {
+    "*.css": [
+      "stylelint --fix",
+      "prettier --write"
+    ],
+    "*.{js,jsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "!(*.css|*.js|*.jsx)": [
+      "prettier --write --ignore-unknown"
+    ]
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.25.0",
+    "@html-eslint/eslint-plugin": "^0.39.0",
+    "@html-eslint/parser": "^0.39.0",
+    "eslint": "^9.25.0",
+    "eslint-config-prettier": "^10.1.2",
+    "globals": "^16.0.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.5.1",
+    "live-server": "^1.2.2",
+    "prettier": "^3.5.3",
+    "stylelint": "^16.18.0",
+    "stylelint-prettier": "^5.0.3",
+    "typescript": "^5.8.3"
+  }
+}

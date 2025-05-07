@@ -1,0 +1,81 @@
+/* Common styles */
+:root {
+    --primary-color: #2563eb;
+    --secondary-color: #64748b;
+    --background-color: #f8fafc;
+    --text-color: #1e293b;
+    --border-color: #e2e8f0;
+    --hover-color: #f1f5f9;
+    --error-color: #ef4444;
+    --text-light-color: #94a3b8;
+    
+    /* Dark mode colors */
+    --dark-background-color: #1e1e2e;
+    --dark-text-color: #e2e8f0;
+    --dark-border-color: #334155;
+    --dark-hover-color: #334155;
+    --dark-component-bg: #1e293b;
+    --dark-message-user-bg: #3b82f6;
+    --dark-message-assistant-bg: #334155;
+}
+
+body.dark-mode {
+    background-color: var(--dark-background-color);
+    color: var(--dark-text-color);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    line-height: 1.5;
+}
+
+/* Common form elements */
+input, textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.375rem;
+    font-size: 1rem;
+    font-family: inherit;
+}
+
+/* Common button styles */
+.btn {
+    padding: 0.75rem;
+    border: none;
+    border-radius: 0.375rem;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn.primary {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.btn.secondary {
+    background-color: var(--secondary-color);
+    color: white;
+}
+
+.btn.icon {
+    padding: 0.5rem;
+}
+
+/* Common error message */
+.error-message {
+    color: var(--error-color);
+    text-align: center;
+    margin-top: 1rem;
+    min-height: 1.5rem;
+} 

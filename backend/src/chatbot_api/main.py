@@ -106,6 +106,26 @@ class MessageCreate(BaseModel):
     content: str
 
 
+class ConversationUpdate(BaseModel):
+    """
+    Request model for updating a conversation.
+
+    Attributes:
+        title: New title for the conversation
+        model: New model to use for this conversation
+    """
+
+    title: str | None = None
+    model: str | None = None
+
+    @field_validator("model")
+    @classmethod
+    def validate_model(cls, v: Any) -> str | None:
+        if v is not None and not is_valid_model(v):
+            raise ValueError(f"Invalid model. Available models: {', '.join(AVAILABLE_MODELS)}")
+        return v
+
+
 @app.get("/health")
 async def health_check():
     """
@@ -118,36 +138,6 @@ async def health_check():
 
 
 # Conversation CRUD operations
-@app.post("/conversations/", response_model=Conversation)
-async def create_conversation(
-    conversation: ConversationCreate,
-    current_user: UserInfo = Depends(get_current_user),
-    session: AsyncSession = Depends(get_session),
-):
-    """
-    Create a new conversation.
-    Requires authentication with Supabase JWT.
-
-    Args:
-        conversation: Conversation information from request body
-        current_user: User information from JWT token
-        session: Database session
-
-    Returns:
-        The created conversation object
-
-    Raises:
-        HTTPException: If the model is invalid
-    """
-    user_id = uuid.UUID(current_user["id"])
-
-    db_conversation = Conversation(user_id=user_id, title=conversation.title, model=conversation.model)
-    session.add(db_conversation)
-    await session.commit()
-    await session.refresh(db_conversation)
-    return db_conversation
-
-
 async def verify_conversation_access(
     conversation_id: int,
     current_user: UserInfo,
@@ -180,6 +170,58 @@ async def verify_conversation_access(
     return conversation
 
 
+@app.get("/conversations", response_model=list[Conversation])
+async def get_user_conversations(
+    current_user: UserInfo = Depends(get_current_user), session: AsyncSession = Depends(get_session)
+):
+    """
+    Get all conversations for the authenticated user.
+    Requires authentication with Supabase JWT.
+
+    Args:
+        current_user: User information from JWT token
+        session: Database session
+
+    Returns:
+        A list of conversation objects belonging to the user
+    """
+    user_id = uuid.UUID(current_user["id"])
+    statement = select(Conversation).where(Conversation.user_id == user_id)
+    result = await session.exec(statement)
+    conversations = result.all()
+    return conversations
+
+
+@app.post("/conversations", response_model=Conversation)
+async def create_conversation(
+    conversation: ConversationCreate,
+    current_user: UserInfo = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+):
+    """
+    Create a new conversation.
+    Requires authentication with Supabase JWT.
+
+    Args:
+        conversation: Conversation information from request body
+        current_user: User information from JWT token
+        session: Database session
+
+    Returns:
+        The created conversation object
+
+    Raises:
+        HTTPException: If the model is invalid
+    """
+    user_id = uuid.UUID(current_user["id"])
+
+    db_conversation = Conversation(user_id=user_id, title=conversation.title, model=conversation.model)
+    session.add(db_conversation)
+    await session.commit()
+    await session.refresh(db_conversation)
+    return db_conversation
+
+
 @app.get("/conversations/{conversation_id}", response_model=Conversation)
 async def get_conversation(
     conversation_id: int,
@@ -205,26 +247,44 @@ async def get_conversation(
     return conversation
 
 
-@app.get("/conversations", response_model=list[Conversation])
-async def get_user_conversations(
-    current_user: UserInfo = Depends(get_current_user), session: AsyncSession = Depends(get_session)
+@app.patch("/conversations/{conversation_id}", response_model=Conversation)
+async def update_conversation(
+    conversation_id: int,
+    update: ConversationUpdate,
+    current_user: UserInfo = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
 ):
     """
-    Get all conversations for the authenticated user.
+    Update a conversation's title or model.
     Requires authentication with Supabase JWT.
 
     Args:
+        conversation_id: The ID of the conversation to update
+        update: Update information from request body
         current_user: User information from JWT token
         session: Database session
 
     Returns:
-        A list of conversation objects belonging to the user
+        The updated conversation object
+
+    Raises:
+        HTTPException: If the conversation is not found or doesn't belong to the user
     """
-    user_id = uuid.UUID(current_user["id"])
-    statement = select(Conversation).where(Conversation.user_id == user_id)
-    result = await session.exec(statement)
-    conversations = result.all()
-    return conversations
+    conversation = await verify_conversation_access(conversation_id, current_user, session)
+
+    # Update fields if provided
+    if update.title is not None:
+        conversation.title = update.title
+    if update.model is not None:
+        conversation.model = update.model
+
+    # Update the timestamp
+    conversation.updated_at = datetime.datetime.now(datetime.UTC)
+
+    session.add(conversation)
+    await session.commit()
+    await session.refresh(conversation)
+    return conversation
 
 
 @app.get("/conversations/{conversation_id}/messages", response_model=list[Message])
@@ -286,7 +346,9 @@ async def start_chat(
     existing_messages = result.all()
     index = len(existing_messages)
 
-    db_message = Message(conversation_id=message.conversation_id, role=Role.USER, content=message.content, index=index)
+    db_message = Message(
+        conversation_id=message.conversation_id, role=Role.USER, content=message.content, index=index, model=None
+    )
     session.add(db_message)
     await session.commit()
     await session.refresh(db_message)
@@ -349,10 +411,7 @@ async def stream_chat_response(websocket: WebSocket, stream_id: str):
             openai_messages = [{"role": msg.role, "content": msg.content} for msg in all_messages]
 
             assistant_message = Message(
-                conversation_id=conversation_id,
-                role=Role.ASSISTANT,
-                content="",
-                index=len(all_messages),
+                conversation_id=conversation_id, role=Role.ASSISTANT, content="", index=len(all_messages), model=model
             )
             session.add(assistant_message)
             await session.commit()
@@ -427,7 +486,7 @@ class ConversationSearchResult(BaseModel):
     matching_messages: list[Message]
 
 
-@app.get("/conversations/search", response_model=list[ConversationSearchResult])
+@app.get("/search", response_model=list[ConversationSearchResult])
 async def search_conversations(
     query: str,
     current_user: UserInfo = Depends(get_current_user),
