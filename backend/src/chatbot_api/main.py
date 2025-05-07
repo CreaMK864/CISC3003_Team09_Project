@@ -118,7 +118,7 @@ async def health_check():
 
 
 # Conversation CRUD operations
-@app.post("/conversations/", response_model=Conversation)
+@app.post("/conversations", response_model=Conversation)
 async def create_conversation(
     conversation: ConversationCreate,
     current_user: UserInfo = Depends(get_current_user),

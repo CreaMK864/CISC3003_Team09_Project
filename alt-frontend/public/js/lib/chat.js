@@ -76,7 +76,7 @@ async function createNewConversation() {
         throw new SignOutError("User is not authenticated");
     }
 
-    const response = await fetch(`${API_BASE_URL}/conversations/`, {
+    const response = await fetch(`${API_BASE_URL}/conversations`, {
         method: "POST",
         headers: {
             "Authorization": `Bearer ${session.access_token}`,
