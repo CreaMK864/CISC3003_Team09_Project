@@ -1,11 +1,14 @@
-import { checkAuth, signInWithEmail, signUpWithEmail, signInWithGoogle } from "./auth.js";
+import { checkAuth, signInWithEmail, signUpWithEmail, signInWithGoogle } from "../lib/auth.js";
 
 // DOM Elements
+/** @type {HTMLInputElement} */
 const emailInput = document.getElementById("email");
+/** @type {HTMLInputElement} */
 const passwordInput = document.getElementById("password");
 const signInBtn = document.getElementById("signInBtn");
 const signUpBtn = document.getElementById("signUpBtn");
 const googleSignInBtn = document.getElementById("googleSignInBtn");
+/** @type {HTMLDivElement} */
 const errorMessage = document.getElementById("errorMessage");
 
 // Check if user is already logged in

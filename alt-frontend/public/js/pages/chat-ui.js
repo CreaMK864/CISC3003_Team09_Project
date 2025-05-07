@@ -5,7 +5,7 @@ import {
     searchConversations,
     sendMessage,
     signOut
-} from "./chat.js";
+} from "../lib/chat.js";
 
 // DOM Elements
 const newChatBtn = document.getElementById("newChatBtn");

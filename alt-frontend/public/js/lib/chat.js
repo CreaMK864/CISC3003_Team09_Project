@@ -1,5 +1,5 @@
 import { checkAuth, signOut } from "./auth.js";
-import { API_BASE_URL } from "./config.js";
+import { API_BASE_URL } from "../../config.js";
 
 /**
  * @typedef {Object} Conversation
