@@ -1,18 +1,19 @@
 import {
   initializeAuth,
   signInWithEmail,
-  signUpWithEmail,
   signInWithGoogle,
+  signUpWithEmail,
   resetPassword,
   getAuthToken,
   getCurrentUser,
+  signOut,
 } from "./auth.js";
 import { API_BASE_URL } from "./config.js";
 
 // DOM elements for chat page (index.html)
-const messageForm = document.getElementById("message-form");
-const messageInput = document.getElementById("message-input");
-const messagesContainer = document.getElementById("chat-messages");
+let messageForm = document.getElementById("message-form");
+let messageInput = document.getElementById("message-input");
+let messagesContainer = document.getElementById("chat-messages");
 
 // DOM elements for login and register pages (login.html, register.html)
 const loginForm = document.getElementById("login-form");
@@ -38,9 +39,10 @@ let currentConversationId = null;
  */
 async function initialize() {
   const user = await initializeAuth();
-
+  updateAuthUI(user);
   if (user) {
     // If user is authenticated
+
     if (window.location.pathname.includes("index.html")) {
       await getOrCreateConversation();
     } else if (
@@ -50,16 +52,43 @@ async function initialize() {
     ) {
       window.location.href = "index.html";
     }
-  } else {
-    // If user is not authenticated
-    if (window.location.pathname.includes("index.html")) {
-      window.location.href = "login.html";
-    } else if (window.location.pathname.includes("test-auth.html")) {
-      showTab("login"); // Default to login tab
-    }
   }
 }
+function updateAuthUI(user) {
+  const auth_reg = document.getElementById("auth_reg");
+  const auth_logout = document.getElementById("auth_logout");
+  const userEmail = document.getElementById("user-email");
+  const alert_msg = document.getElementById("alert_msg");
+  const rdylogin = document.querySelector(".rdylogin");
 
+  if (user) {
+    userEmail.textContent = "WELCOME ~ " + user.name;
+
+    auth_logout.style.display = "block";
+    auth_reg.style.display = "none";
+    document.querySelector(".auth-buttons").style.display = "none";
+    rdylogin.style.display = "inline";
+    alert_msg.style.display = "none";
+  } else {
+    userEmail.textContent = "";
+    auth_reg.style.display = "block";
+    auth_logout.style.display = "none";
+    document.querySelector(".auth-buttons").style.display = "flex";
+    rdylogin.style.display = "none";
+    alert_msg.style.display = "flex";
+  }
+}
+document
+  .getElementById("logout-button")
+  ?.addEventListener("click", async () => {
+    try {
+      await signOut();
+      window.location.href = "login.html";
+    } catch (error) {
+      console.error("Logout failed:", error);
+      displayErrorMessage("Failed to sign out. Please try again.");
+    }
+  });
 /**
  * Show a specific tab (for test-auth.html)
  * @param {string} tabName - The name of the tab to show ('login', 'register', 'reset')
@@ -104,21 +133,21 @@ function showMessage(message, isError = false) {
     "bg-green-100",
     "text-green-800",
     "bg-red-100",
-    "text-red-800"
+    "text-red-800",
   );
   if (isError) {
     statusMessage.classList.add(
       "bg-red-100",
       "text-red-800",
       "dark:bg-red-900",
-      "dark:text-red-200"
+      "dark:text-red-200",
     );
   } else {
     statusMessage.classList.add(
       "bg-green-100",
       "text-green-800",
       "dark:bg-green-900",
-      "dark:text-green-200"
+      "dark:text-green-200",
     );
   }
 }
@@ -138,7 +167,7 @@ async function getOrCreateConversation() {
 
     if (!response.ok) {
       throw new Error(
-        `HTTP error! Status: ${response.status} - ${await response.text()}`
+        `HTTP error! Status: ${response.status} - ${await response.text()}`,
       );
     }
 
@@ -154,19 +183,19 @@ async function getOrCreateConversation() {
 
     localStorage.setItem(
       "current_conversation_id",
-      currentConversationId.toString()
+      currentConversationId.toString(),
     );
   } catch (error) {
     console.error("Error getting conversations:", error);
     displayErrorMessage(
-      "Failed to load conversations. Using a default conversation."
+      "Failed to load conversations. Using a default conversation.",
     );
     currentConversationId = 1;
     document.querySelector(".chat-header h2").textContent =
       "Default Conversation";
     localStorage.setItem(
       "current_conversation_id",
-      currentConversationId.toString()
+      currentConversationId.toString(),
     );
   }
 }
@@ -191,7 +220,7 @@ async function createNewConversation() {
 
     if (!response.ok) {
       throw new Error(
-        `HTTP error! Status: ${response.status} - ${await response.text()}`
+        `HTTP error! Status: ${response.status} - ${await response.text()}`,
       );
     }
 
@@ -213,12 +242,16 @@ function displayMessage(content, role) {
   const messageElement = document.createElement("div");
   messageElement.classList.add("message");
   messageElement.classList.add(
-    role === "user" ? "user-message" : "bot-message"
+    role === "user" ? "user-message" : "bot-message",
   );
   messageElement.textContent = content;
 
-  messagesContainer?.appendChild(messageElement);
-  messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  if (messagesContainer) {
+    messagesContainer?.appendChild(messageElement);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  } else {
+    console.error("messagesContainer is null!");
+  }
 }
 
 /**
@@ -230,8 +263,12 @@ function displayErrorMessage(content) {
   messageElement.classList.add("message", "error-message");
   messageElement.textContent = content;
 
-  messagesContainer?.appendChild(messageElement);
-  messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  if (messagesContainer) {
+    messagesContainer?.appendChild(messageElement);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  } else {
+    console.error("messagesContainer is null!");
+  }
 }
 
 /**
@@ -256,7 +293,14 @@ async function sendMessage(content) {
     const botMessageElement = document.createElement("div");
     botMessageElement.classList.add("message", "bot-message");
     botMessageElement.textContent = "";
-    messagesContainer.appendChild(botMessageElement);
+
+    if (messagesContainer) {
+      messagesContainer.appendChild(botMessageElement);
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    } else {
+      console.error("messagesContainer is null!");
+      return; // Exit the function if messagesContainer is null
+    }
 
     const response = await fetch(`${API_BASE_URL}/chat`, {
       method: "POST",
@@ -273,7 +317,7 @@ async function sendMessage(content) {
 
     if (!response.ok) {
       throw new Error(
-        `HTTP error! Status: ${response.status} - ${await response.text()}`
+        `HTTP error! Status: ${response.status} - ${await response.text()}`,
       );
     }
 
@@ -314,7 +358,11 @@ async function sendMessage(content) {
         botMessageElement.textContent = fullResponse;
       }
 
-      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      if (messagesContainer) {
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      } else {
+        console.error("messagesContainer is null!");
+      }
     });
 
     activeSocket.addEventListener("close", () => {
@@ -343,15 +391,21 @@ function getCurrentConversationId() {
 }
 
 // Handle form submission for chat page (index.html)
-if (messageForm) {
-  messageForm.addEventListener("submit", (event) => {
-    event.preventDefault();
-    const message = messageInput.value.trim();
-    if (message) {
-      sendMessage(message);
-    }
-  });
-}
+document.addEventListener("DOMContentLoaded", () => {
+  messageForm = document.getElementById("message-form");
+  messageInput = document.getElementById("message-input");
+  messagesContainer = document.getElementById("chat-messages");
+
+  if (messageForm) {
+    messageForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const message = messageInput.value.trim();
+      if (message) {
+        sendMessage(message); // Call the sendMessage function from app.js
+      }
+    });
+  }
+});
 
 // Handle login form submission (login.html)
 if (loginForm) {
@@ -374,7 +428,6 @@ if (loginForm) {
 if (registerForm) {
   registerForm.addEventListener("submit", async (event) => {
     event.preventDefault();
-    const name = registerForm.querySelector("#name").value;
     const email = registerForm.querySelector("#email").value;
     const password = registerForm.querySelector("#password").value;
     try {
@@ -439,39 +492,47 @@ if (testLoginForm) {
     }
   });
 
-  testLoginForm.querySelector("button[onclick='signInWithGoogle()']").addEventListener("click", async () => {
-    try {
-      await signInWithGoogle();
-    } catch (error) {
-      showMessage(`Error: ${error.message}`, true);
-    }
-  });
+  testLoginForm
+    .querySelector("button[onclick='signInWithGoogle()']")
+    .addEventListener("click", async () => {
+      try {
+        await signInWithGoogle();
+      } catch (error) {
+        showMessage(`Error: ${error.message}`, true);
+      }
+    });
 }
 
 if (testRegisterForm) {
-  testRegisterForm.querySelector("button").addEventListener("click", async () => {
-    const email = document.getElementById("registerEmail").value;
-    const password = document.getElementById("registerPassword").value;
-    try {
-      const user = await signUpWithEmail(email, password);
-      if (user) {
-        showMessage("Registration successful! Please check your email for confirmation.");
-        setTimeout(() => {
-          window.location.href = "index.html";
-        }, 1500);
+  testRegisterForm
+    .querySelector("button")
+    .addEventListener("click", async () => {
+      const email = document.getElementById("registerEmail").value;
+      const password = document.getElementById("registerPassword").value;
+      try {
+        const user = await signUpWithEmail(email, password);
+        if (user) {
+          showMessage(
+            "Registration successful! Please check your email for confirmation.",
+          );
+          setTimeout(() => {
+            window.location.href = "index.html";
+          }, 1500);
+        }
+      } catch (error) {
+        showMessage(`Error: ${error.message}`, true);
       }
-    } catch (error) {
-      showMessage(`Error: ${error.message}`, true);
-    }
-  });
+    });
 
-  testRegisterForm.querySelector("button[onclick='signInWithGoogle()']").addEventListener("click", async () => {
-    try {
-      await signInWithGoogle();
-    } catch (error) {
-      showMessage(`Error: ${error.message}`, true);
-    }
-  });
+  testRegisterForm
+    .querySelector("button[onclick='signInWithGoogle()']")
+    .addEventListener("click", async () => {
+      try {
+        await signInWithGoogle();
+      } catch (error) {
+        showMessage(`Error: ${error.message}`, true);
+      }
+    });
 }
 
 if (testResetForm) {

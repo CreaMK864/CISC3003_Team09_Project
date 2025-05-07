@@ -1,3 +1,5 @@
+import { getAuthToken, getCurrentUser } from "./auth.js";
+
 document.addEventListener("DOMContentLoaded", () => {
   // Get DOM elements
   const messageForm = document.getElementById("message-form");
@@ -46,6 +48,14 @@ document.addEventListener("DOMContentLoaded", () => {
       const userMessage = messageInput.value.trim();
       if (!userMessage) return;
 
+      // Check if user is authenticated
+      const user = getCurrentUser();
+      if (!user) {
+        appendMessage("bot", "Please log in to send messages.");
+        window.location.href = "login.html";
+        return;
+      }
+
       // Clear input field
       messageInput.value = "";
 
@@ -59,7 +69,7 @@ document.addEventListener("DOMContentLoaded", () => {
           '<div class="typing-indicator"><span></span><span></span><span></span></div>',
         );
 
-        // Call the API
+        // Call the API with authenticated token
         const response = await sendMessageToAPI(userMessage);
 
         // Remove loading indicator
@@ -112,39 +122,33 @@ document.addEventListener("DOMContentLoaded", () => {
     return messageElement;
   }
 
-  // Function to send message to API
+  // Function to send message to API with authentication
   async function sendMessageToAPI(message) {
-    // API endpoint URL - replace with the actual endpoint
-    const apiUrl = "https://api.saviomak.com/v1/chat"; // Adjust based on actual API endpoint
+    const apiUrl = "https://api.saviomak.com/chat";
+    const token = await getAuthToken();
 
-    // API request parameters
+    if (!token) {
+      throw new Error("No authentication token available. Please log in.");
+    }
+
     const requestOptions = {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        // Include API key if required
-        // 'Authorization': 'Bearer YOUR_API_KEY'
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({
         message: message,
-        // Add any other parameters required by the API
-        // user_id: 'user123',
-        // conversation_id: 'conv456'
       }),
     };
 
-    // Make the API request
     const response = await fetch(apiUrl, requestOptions);
 
-    // Check if the request was successful
     if (!response.ok) {
       throw new Error(`API request failed with status ${response.status}`);
     }
 
-    // Parse the response JSON
     const data = await response.json();
-
-    // Return the bot's response text - adjust based on API response structure
     return data.response || data.message || JSON.stringify(data);
   }
 

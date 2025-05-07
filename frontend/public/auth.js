@@ -40,7 +40,31 @@ function showLoginForm() {
     signInWithEmail(email, password);
   }
 }
+/**
+ * Sign in user with email and password
+ * @param {string} email - User's email
+ * @param {string} password - User's password
+ */
+async function signUpWithEmail(email, password) {
+  try {
+    /** @type {import('@supabase/supabase-js').AuthResponse} */
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+    });
 
+    if (error) throw error;
+
+    currentUser = data.user;
+    console.log("Signed up successfully:", currentUser.email);
+    return currentUser;
+  } catch (error) {
+    console.error("Error signing up:", error.message);
+    // alert("Login failed: " + error.message);
+    //showLoginForm(); // Show login form again if login fails
+    return null;
+  }
+}
 /**
  * Sign in user with email and password
  * @param {string} email - User's email
@@ -67,6 +91,33 @@ async function signInWithEmail(email, password) {
     return null;
   }
 }
+
+/**
+ * Sign in with Google using Supabase UI
+ * @returns {Promise<any|null>}
+ */
+async function signInWithGoogle() {
+  try {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+    });
+
+    if (error) {
+      console.error("Error signing in with Google:", error.message);
+      return null;
+    }
+
+    // Supabase UI handles the redirect.  After the user authenticates
+    // with Google, they'll be redirected back to your app.  Supabase
+    // will automatically update the session.
+
+    return data; // Or handle the data as needed
+  } catch (error) {
+    console.error("Error signing in with Google:", error.message);
+    return null;
+  }
+}
+
 /** * @param {string} password - User's password */
 
 async function changePassword(password) {
@@ -131,6 +182,8 @@ export {
   initializeAuth,
   showLoginForm,
   signInWithEmail,
+  signInWithGoogle,
+  signUpWithEmail,
   getAuthToken,
   signOut,
   getCurrentUser,
