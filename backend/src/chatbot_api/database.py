@@ -133,7 +133,7 @@ class Message(SQLModel, table=True):
     conversation: Conversation = Relationship(back_populates="messages")
 
 
-class model(SQLModel, table=True):
+class Model(SQLModel, table=True):
     """
     SQLModel representing a model record.
 
