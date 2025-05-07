@@ -23,7 +23,6 @@ const signOutBtn = document.getElementById("signOutBtn");
 let currentConversationId = null;
 /** @type {WebSocket | null} */
 let currentWebSocket = null;
-window.currentConversationId = currentConversationId;
 
 // Render conversations
 /**
