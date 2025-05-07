@@ -4,7 +4,8 @@ import {
     createNewConversation,
     searchConversations,
     sendMessage,
-    signOut
+    signOut,
+    SignOutError,
 } from "../lib/chat.js";
 
 // DOM Elements
@@ -181,8 +182,18 @@ async function handleSendMessage() {
 
 // Initialize
 async function initialize() {
+  try {
     const conversations = await loadConversations();
     renderConversations(conversations);
+  } catch (error) {
+    if (error instanceof SignOutError) {
+      console.error("User is signed out:", error);
+      window.location.href = "./index.html";
+    } else {
+      console.error("Error loading conversations:", error);
+      throw error;
+    }
+  }
 }
 
 // Event Listeners
@@ -204,4 +215,4 @@ signOutBtn?.addEventListener("click", async () => {
 });
 
 // Start the app
-initialize(); 
+initialize();

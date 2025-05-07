@@ -19,6 +19,16 @@ import { API_BASE_URL } from "../../config.js";
  * @property {string} ws_url - WebSocket URL for streaming
  */
 
+class SignOutError extends Error {
+    /**
+     * @param {string | undefined} message
+     */
+    constructor(message) {
+        super(message);
+        this.name = "SignOutError";
+    }
+}
+
 /**
  * Load user's conversations
  * @returns {Promise<Conversation[]>}
@@ -26,8 +36,7 @@ import { API_BASE_URL } from "../../config.js";
 async function loadConversations() {
     const session = await checkAuth();
     if (!session) {
-        window.location.href = "/index.html";
-        return [];
+        throw new SignOutError("User is not authenticated");
     }
 
     const response = await fetch(`${API_BASE_URL}/conversations`, {
@@ -46,8 +55,7 @@ async function loadConversations() {
 async function loadConversationMessages(conversationId) {
     const session = await checkAuth();
     if (!session) {
-        window.location.href = "/index.html";
-        return [];
+        throw new SignOutError("User is not authenticated");
     }
 
     const response = await fetch(`${API_BASE_URL}/conversations/${conversationId}/messages`, {
@@ -65,8 +73,7 @@ async function loadConversationMessages(conversationId) {
 async function createNewConversation() {
     const session = await checkAuth();
     if (!session) {
-        window.location.href = "/index.html";
-        return null;
+        throw new SignOutError("User is not authenticated");
     }
 
     const response = await fetch(`${API_BASE_URL}/conversations/`, {
@@ -95,8 +102,7 @@ async function searchConversations(query) {
 
     const session = await checkAuth();
     if (!session) {
-        window.location.href = "/index.html";
-        return [];
+        throw new SignOutError("User is not authenticated");
     }
 
     const response = await fetch(`${API_BASE_URL}/conversations/search?query=${encodeURIComponent(query)}`, {
@@ -117,8 +123,7 @@ async function searchConversations(query) {
 async function sendMessage(conversationId, content) {
     const session = await checkAuth();
     if (!session) {
-        window.location.href = "/index.html";
-        return null;
+        throw new SignOutError("User is not authenticated");
     }
 
     const response = await fetch(`${API_BASE_URL}/chat`, {
@@ -165,5 +170,6 @@ export {
     searchConversations,
     sendMessage,
     connectToStream,
-    signOut
+    signOut,
+    SignOutError,
 }; 
