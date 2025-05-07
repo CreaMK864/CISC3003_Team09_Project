@@ -163,6 +163,29 @@ function connectToStream(ws_url, onContent, onError) {
     return ws;
 }
 
+/**
+ * Update a conversation's title or model
+ * @param {number} conversationId - ID of the conversation to update
+ * @param {{ title?: string, model?: string }} update - Update data
+ * @returns {Promise<Conversation>}
+ */
+async function updateConversation(conversationId, update) {
+    const session = await checkAuth();
+    if (!session) {
+        throw new SignOutError("User is not authenticated");
+    }
+
+    const response = await fetch(`${API_BASE_URL}/conversations/${conversationId}`, {
+        method: "PATCH",
+        headers: {
+            "Authorization": `Bearer ${session.access_token}`,
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(update)
+    });
+    return response.json();
+}
+
 export {
     loadConversations,
     loadConversationMessages,
@@ -172,4 +195,5 @@ export {
     connectToStream,
     signOut,
     SignOutError,
+    updateConversation,
 }; 

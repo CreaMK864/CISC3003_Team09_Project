@@ -6,6 +6,7 @@ import {
     sendMessage,
     signOut,
     SignOutError,
+    updateConversation,
 } from "../lib/chat.js";
 
 // DOM Elements
@@ -35,13 +36,67 @@ function renderConversations(conversations) {
     conversations.forEach(conversation => {
         const div = document.createElement("div");
         div.className = "conversation-item";
+        div.dataset.id = conversation.id;
         if (conversation.id === currentConversationId) {
             div.classList.add("active");
         }
-        div.textContent = conversation.title;
+
+        const titleSpan = document.createElement("span");
+        titleSpan.className = "conversation-title";
+        titleSpan.textContent = conversation.title;
+        div.appendChild(titleSpan);
+
+        const editBtn = document.createElement("button");
+        editBtn.className = "btn icon conversation-edit";
+        editBtn.textContent = "✏️";
+        editBtn.onclick = (e) => {
+            e.stopPropagation();
+            startEditing(conversation.id, titleSpan);
+        };
+        div.appendChild(editBtn);
+
         div.onclick = () => loadConversation(conversation.id);
         conversationList.appendChild(div);
     });
+}
+
+/**
+ * @param {number} conversationId
+ * @param {HTMLElement} titleElement
+ */
+function startEditing(conversationId, titleElement) {
+    const currentTitle = titleElement.textContent || "";
+    const input = document.createElement("input");
+    input.type = "text";
+    input.value = currentTitle;
+    input.className = "conversation-edit";
+    
+    const handleSubmit = async () => {
+        const newTitle = input.value.trim();
+        if (newTitle && newTitle !== currentTitle) {
+            try {
+                await updateConversation(conversationId, { title: newTitle });
+                titleElement.textContent = newTitle;
+            } catch (error) {
+                console.error("Failed to update conversation title:", error);
+                titleElement.textContent = currentTitle;
+            }
+        } else {
+            titleElement.textContent = currentTitle;
+        }
+        input.remove();
+    };
+
+    input.addEventListener("blur", handleSubmit);
+    input.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") {
+            handleSubmit();
+        }
+    });
+
+    titleElement.textContent = "";
+    titleElement.appendChild(input);
+    input.focus();
 }
 
 // Load conversation
