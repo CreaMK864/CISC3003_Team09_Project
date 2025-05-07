@@ -118,36 +118,6 @@ async def health_check():
 
 
 # Conversation CRUD operations
-@app.post("/conversations", response_model=Conversation)
-async def create_conversation(
-    conversation: ConversationCreate,
-    current_user: UserInfo = Depends(get_current_user),
-    session: AsyncSession = Depends(get_session),
-):
-    """
-    Create a new conversation.
-    Requires authentication with Supabase JWT.
-
-    Args:
-        conversation: Conversation information from request body
-        current_user: User information from JWT token
-        session: Database session
-
-    Returns:
-        The created conversation object
-
-    Raises:
-        HTTPException: If the model is invalid
-    """
-    user_id = uuid.UUID(current_user["id"])
-
-    db_conversation = Conversation(user_id=user_id, title=conversation.title, model=conversation.model)
-    session.add(db_conversation)
-    await session.commit()
-    await session.refresh(db_conversation)
-    return db_conversation
-
-
 async def verify_conversation_access(
     conversation_id: int,
     current_user: UserInfo,
@@ -225,6 +195,36 @@ async def get_user_conversations(
     result = await session.exec(statement)
     conversations = result.all()
     return conversations
+
+
+@app.post("/conversations", response_model=Conversation)
+async def create_conversation(
+    conversation: ConversationCreate,
+    current_user: UserInfo = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+):
+    """
+    Create a new conversation.
+    Requires authentication with Supabase JWT.
+
+    Args:
+        conversation: Conversation information from request body
+        current_user: User information from JWT token
+        session: Database session
+
+    Returns:
+        The created conversation object
+
+    Raises:
+        HTTPException: If the model is invalid
+    """
+    user_id = uuid.UUID(current_user["id"])
+
+    db_conversation = Conversation(user_id=user_id, title=conversation.title, model=conversation.model)
+    session.add(db_conversation)
+    await session.commit()
+    await session.refresh(db_conversation)
+    return db_conversation
 
 
 @app.get("/conversations/{conversation_id}/messages", response_model=list[Message])
