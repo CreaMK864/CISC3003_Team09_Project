@@ -1,0 +1,207 @@
+import {
+    loadConversations,
+    loadConversationMessages,
+    createNewConversation,
+    searchConversations,
+    sendMessage,
+    signOut
+} from "./chat.js";
+
+// DOM Elements
+const newChatBtn = document.getElementById("newChatBtn");
+/** @type {HTMLInputElement} */
+const searchInput = document.getElementById("searchInput");
+const searchBtn = document.getElementById("searchBtn");
+const conversationList = document.getElementById("conversationList");
+const messages = document.getElementById("messages");
+/** @type {HTMLInputElement} */
+const messageInput = document.getElementById("messageInput");
+const sendBtn = document.getElementById("sendBtn");
+const signOutBtn = document.getElementById("signOutBtn");
+
+// State
+/** @type {number | null} */
+let currentConversationId = null;
+/** @type {WebSocket | null} */
+let currentWebSocket = null;
+window.currentConversationId = currentConversationId;
+
+// Render conversations
+/**
+ * @param {any[]} conversations
+ */
+function renderConversations(conversations) {
+    if (!conversationList) return;
+    
+    conversationList.innerHTML = "";
+    conversations.forEach(conversation => {
+        const div = document.createElement("div");
+        div.className = "conversation-item";
+        if (conversation.id === currentConversationId) {
+            div.classList.add("active");
+        }
+        div.textContent = conversation.title;
+        div.onclick = () => loadConversation(conversation.id);
+        conversationList.appendChild(div);
+    });
+}
+
+// Load conversation
+/**
+ * @param {number} conversationId
+ */
+async function loadConversation(conversationId) {
+    if (!messages) return;
+    
+    currentConversationId = conversationId;
+    const conversationMessages = await loadConversationMessages(conversationId);
+    
+    // Render messages
+    messages.innerHTML = "";
+    conversationMessages.forEach(message => {
+        appendMessage(message.content, message.role);
+    });
+    
+    // Update active conversation in list
+    document.querySelectorAll(".conversation-item").forEach(item => {
+        item.classList.remove("active");
+    });
+    document.querySelector(`.conversation-item[data-id="${conversationId}"]`)?.classList.add("active");
+}
+
+// Append message to chat
+/**
+ * @param {string | null} content
+ * @param {string} role
+ */
+function appendMessage(content, role) {
+    if (!messages) return;
+    
+    const div = document.createElement("div");
+    div.className = `message ${role}`;
+    div.textContent = content;
+    messages.appendChild(div);
+    messages.scrollTop = messages.scrollHeight;
+}
+
+// Handle new chat
+async function handleNewChat() {
+    const conversation = await createNewConversation();
+    if (conversation) {
+        await loadConversations();
+        await loadConversation(conversation.id);
+    }
+}
+
+// Handle search
+async function handleSearch() {
+    if (!searchInput) return;
+    
+    const query = searchInput.value.trim();
+    const conversations = await searchConversations(query);
+    renderConversations(conversations);
+}
+
+// Handle send message
+async function handleSendMessage() {
+    if (!messageInput || !currentConversationId) return;
+    
+    const content = messageInput.value.trim();
+    if (!content) return;
+
+    // Close existing WebSocket if any
+    if (currentWebSocket) {
+        currentWebSocket.close();
+        currentWebSocket = null;
+    }
+
+    // Append user message
+    appendMessage(content, "user");
+    messageInput.value = "";
+
+    // Send message and get stream ID
+    const response = await sendMessage(currentConversationId, content);
+    if (!response) return;
+
+    // Create bot message container
+    const botMessageDiv = document.createElement("div");
+    botMessageDiv.className = "message assistant current";
+    messages?.appendChild(botMessageDiv);
+
+    let fullResponse = "";
+    // Connect to WebSocket using ws_url
+    currentWebSocket = new WebSocket(response.ws_url);
+    currentWebSocket.addEventListener("message", (event) => {
+      try {
+        const jsonData = JSON.parse(event.data);
+
+        if (jsonData.error) {
+          console.error("Error from server:", jsonData.error);
+          botMessageDiv.textContent = `Error: ${jsonData.error}`;
+          return;
+        }
+
+        if (jsonData.event === "chat_ended") {
+          console.log("Chat response complete");
+          return;
+        }
+
+        fullResponse += JSON.stringify(jsonData);
+        botMessageDiv.textContent = fullResponse;
+      } catch {
+        fullResponse += event.data;
+        botMessageDiv.textContent = fullResponse;
+      }
+
+      if (messages) {
+        messages.scrollTop = messages.scrollHeight;
+      } else {
+        console.error("messagesContainer is null!");
+      }
+    });
+
+    currentWebSocket.addEventListener("close", () => {
+      console.log("Disconnected from WebSocket");
+    });
+
+    currentWebSocket.addEventListener("error", (event) => {
+      console.error("WebSocket error:", event);
+      botMessageDiv.textContent =
+        "Error: Failed to connect to response stream";
+    });
+
+    messageInput.value = "";
+
+    // Clean up WebSocket on close
+    currentWebSocket.onclose = () => {
+        currentWebSocket = null;
+        botMessageDiv.classList.remove("current");
+    };
+}
+
+// Initialize
+async function initialize() {
+    const conversations = await loadConversations();
+    renderConversations(conversations);
+}
+
+// Event Listeners
+newChatBtn?.addEventListener("click", handleNewChat);
+searchBtn?.addEventListener("click", handleSearch);
+searchInput?.addEventListener("keypress", (e) => {
+    if (e.key === "Enter") handleSearch();
+});
+sendBtn?.addEventListener("click", handleSendMessage);
+messageInput?.addEventListener("keypress", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        handleSendMessage();
+    }
+});
+signOutBtn?.addEventListener("click", async () => {
+    await signOut();
+    window.location.href = "/index.html";
+});
+
+// Start the app
+initialize(); 
