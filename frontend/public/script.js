@@ -69,7 +69,7 @@ document.addEventListener("DOMContentLoaded", () => {
           '<div class="typing-indicator"><span></span><span></span><span></span></div>',
         );
 
-        // Call the API with authenticated token
+        // Call the API to send the message
         const response = await sendMessageToAPI(userMessage);
 
         // Remove loading indicator
@@ -122,9 +122,30 @@ document.addEventListener("DOMContentLoaded", () => {
     return messageElement;
   }
 
+  // Function to get the conversation ID
+  async function getConversationId() {
+    const apiUrl = "https://api.saviomak.com/conversations/1"; // Replace with the actual endpoint
+    const token = await getAuthToken();
+
+    const response = await fetch(apiUrl, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch conversation ID.");
+    }
+
+    const conversation = await response.json();
+    return conversation.id; // Return the conversation ID
+  }
+
   // Function to send message to API with authentication
   async function sendMessageToAPI(message) {
-    const apiUrl = "https://api.saviomak.com/chat";
+    const conversationId = await getConversationId(); // Ensure this ID is valid
+    const apiUrl = "https://api.saviomak.com/chat"; // This should be the correct endpoint for sending messages
     const token = await getAuthToken();
 
     if (!token) {
@@ -138,25 +159,57 @@ document.addEventListener("DOMContentLoaded", () => {
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({
-        message: message,
+        conversation_id: conversationId,
+        content: message,
+        model: "gpt-3.5-turbo", // Replace with the actual model name
       }),
     };
 
     const response = await fetch(apiUrl, requestOptions);
 
     if (!response.ok) {
-      throw new Error(`API request failed with status ${response.status}`);
+      throw new Error("Failed to send message.");
     }
 
-    const data = await response.json();
-    return data.response || data.message || JSON.stringify(data);
+    const result = await response.json();
+    return result.response || result.message || JSON.stringify(result);
+  }
+
+  // Function to get messages for a specific conversation
+  async function getMessagesForConversation(conversationId) {
+    const apiUrl = `https://api.saviomak.com/conversations/${conversationId}/messages`;
+    const token = await getAuthToken();
+
+    const response = await fetch(apiUrl, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch messages for the conversation.");
+    }
+
+    const messages = await response.json();
+    return messages; // Return the list of messages
+  }
+
+  // Load initial messages when the page loads
+  async function loadInitialMessages() {
+    try {
+      const conversationId = await getConversationId();
+      const messages = await getMessagesForConversation(conversationId);
+      messages.forEach(message => {
+        appendMessage(message.role, message.content); // Assuming `role` can be 'user' or 'bot'
+      });
+    } catch (error) {
+      console.error("Error loading messages:", error);
+    }
   }
 
   // Initialize the chat with a welcome message if not already present
   if (chatMessages) {
-    const initialMessages = document.querySelectorAll(".bot-message");
-    if (initialMessages.length === 0) {
-      appendMessage("bot", "Hello! How can I help you today?");
-    }
+    loadInitialMessages();
   }
 });
