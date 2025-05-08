@@ -285,3 +285,12 @@ form p a:hover {
     margin-top: 10px;
   }
 }
+
+.error-message {
+  display: none;
+  color: red;
+}
+.success-message {
+  display: none;
+  color: green;
+}

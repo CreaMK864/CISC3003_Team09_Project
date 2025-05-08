@@ -15,21 +15,12 @@ resetForm.addEventListener("submit", async (event) => {
 
   try {
     // Update the user's password
-    const success = await resetPassword(email);
-
-    if (success) {
+    const status = await resetPassword(email);
+    if (status) {
       successMessage.textContent =
-        "Email founded. Ready to reset your password...";
+        "The resetting Email has sent. Please check your email";
       successMessage.style.display = "block";
       resetForm.reset();
-
-      // Redirect to login page after a short delay
-      setTimeout(() => {
-        window.location.href = "ch_pw.html";
-      }, 2000);
-    } else {
-      errorMessage.textContent = `Failed to find your email address`;
-      errorMessage.style.display = "block";
     }
   } catch (error) {
     errorMessage.textContent = `Error: ${error.message}`;

@@ -38,16 +38,18 @@ let currentConversationId = null;
  * @param {string} theme - The theme to apply ('light' or 'dark')
  */
 function applyTheme(theme) {
-  if (theme === 'dark') {
-    document.documentElement.classList.add('dark-theme');
-    document.body.classList.add('dark-theme');
+  if (theme === "dark") {
+    document.documentElement.classList.add("dark-theme");
+    document.body.classList.add("dark-theme");
   } else {
-    document.documentElement.classList.remove('dark-theme');
-    document.body.classList.remove('dark-theme');
+    document.documentElement.classList.remove("dark-theme");
+    document.body.classList.remove("dark-theme");
   }
 
   // Dispatch a custom event to notify other scripts about theme change
-  const themeChangeEvent = new CustomEvent('themeChanged', { detail: { theme } });
+  const themeChangeEvent = new CustomEvent("themeChanged", {
+    detail: { theme },
+  });
   document.dispatchEvent(themeChangeEvent);
 }
 
@@ -70,19 +72,43 @@ async function initialize() {
     }
   }
   // Apply saved theme on page load
-  const savedTheme = localStorage.getItem('theme') || 'light';
+  const savedTheme = localStorage.getItem("theme") || "light";
   applyTheme(savedTheme);
 
   // Listen for changes in system color scheme preferences
-  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
-    if (!localStorage.getItem('theme')) { // Only auto-switch if user hasn't explicitly set a preference
-      const newTheme = event.matches ? 'dark' : 'light';
-      applyTheme(newTheme);
+  window
+    .matchMedia("(prefers-color-scheme: dark)")
+    .addEventListener("change", (event) => {
+      if (!localStorage.getItem("theme")) {
+        // Only auto-switch if user hasn't explicitly set a preference
+        const newTheme = event.matches ? "dark" : "light";
+        applyTheme(newTheme);
+      }
+    });
+}
+/**
+ * Apply the selected theme to the document
+ * @param {string} uid - The theme to apply ('light' or 'dark')
+ */
+export async function get_username(uid) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/users/${uid}`);
+    if (!response.ok) {
+      throw new Error("Network response was not ok");
     }
-  });
+    const data = await response.json();
+    return data["display_name"];
+  } catch (error) {
+    console.error("There was a problem with the fetch operation:", error);
+  }
 }
 
-function updateAuthUI(user) {
+/**
+ * Apply the selected theme to the document
+ * @param {any} user
+ */
+
+async function updateAuthUI(user) {
   const auth_reg = document.getElementById("auth_reg");
   const auth_logout = document.getElementById("auth_logout");
   const userEmail = document.getElementById("user-email");
@@ -90,7 +116,7 @@ function updateAuthUI(user) {
   const rdylogin = document.querySelector(".rdylogin");
 
   if (user) {
-    userEmail.textContent = "WELCOME ~ " + user.name;
+    userEmail.textContent = "WELCOME ~ " + user.email;
     auth_logout.style.display = "block";
     auth_reg.style.display = "none";
     document.querySelector(".auth-buttons").style.display = "none";
@@ -439,7 +465,7 @@ document.addEventListener("DOMContentLoaded", () => {
     profileForm.addEventListener("submit", (event) => {
       event.preventDefault();
       const selectedTheme = themeSelect.value;
-      localStorage.setItem('theme', selectedTheme);
+      localStorage.setItem("theme", selectedTheme);
       applyTheme(selectedTheme);
     });
   }
@@ -448,9 +474,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const themeToggleBtn = document.getElementById("theme-toggle");
   if (themeToggleBtn) {
     themeToggleBtn.addEventListener("click", () => {
-      const currentTheme = localStorage.getItem('theme') || 'light';
-      const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-      localStorage.setItem('theme', newTheme);
+      const currentTheme = localStorage.getItem("theme") || "light";
+      const newTheme = currentTheme === "light" ? "dark" : "light";
+      localStorage.setItem("theme", newTheme);
       applyTheme(newTheme);
     });
   }
@@ -602,8 +628,8 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // Listen for storage events to sync theme across tabs/pages
-window.addEventListener('storage', (event) => {
-  if (event.key === 'theme') {
-    applyTheme(event.newValue || 'light');
+window.addEventListener("storage", (event) => {
+  if (event.key === "theme") {
+    applyTheme(event.newValue || "light");
   }
 });

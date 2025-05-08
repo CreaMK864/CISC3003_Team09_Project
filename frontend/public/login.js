@@ -1,11 +1,12 @@
-import { signInWithEmail, initializeAuth } from "./auth.js";
+import { signInWithEmail, signInWithGoogle, initializeAuth } from "./auth.js";
 
 // DOM elements
-const loginForm = document.getElementById("login-form");
+const loginBtn = document.getElementById("loginBtn");
 const errorMessage = document.getElementById("error-message");
+const googleSignInBtn = document.getElementById("googleSignInBtn");
 
 // Handle form submission
-loginForm.addEventListener("submit", async (event) => {
+loginBtn.addEventListener("click", async (event) => {
   event.preventDefault();
 
   const email = document.getElementById("email").value.trim();
@@ -26,7 +27,12 @@ loginForm.addEventListener("submit", async (event) => {
     errorMessage.style.display = "block";
   }
 });
-
+googleSignInBtn.addEventListener("click", async () => {
+  const { error } = await signInWithGoogle();
+  if (error) {
+    errorMessage.textContent = error.message;
+  }
+});
 // Check if user is already authenticated
 document.addEventListener("DOMContentLoaded", async () => {
   const user = await initializeAuth();

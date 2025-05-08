@@ -9,8 +9,15 @@ let currentUser = null;
 
 /**
  * Check if user is already authenticated and initialize the app
- * @returns {Promise<import("@supabase/supabase-js").User | null>}
+ * @returns {Promise<import('@supabase/supabase-js').Session | null>}
  */
+async function checkAuth() {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  return session;
+}
+
 async function initializeAuth() {
   // Get session from local storage
   const {
@@ -123,11 +130,10 @@ async function signInWithGoogle() {
 async function changePassword(password) {
   try {
     // Update the user's password
-    const { error } = await supabase.auth.updateUser({ password });
+    const { data, error } = await supabase.auth.updateUser({ password });
 
     if (error) throw error;
-
-    return true;
+    return data;
   } catch (error) {
     console.error("Password update error:", error.message);
     return null;
@@ -136,13 +142,16 @@ async function changePassword(password) {
 /** * @param {string} email - User's email */
 async function resetPassword(email) {
   try {
-    const { error } = await supabase.auth.resetPasswordForEmail(email);
+    const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: "http://127.0.0.1:3000/ch_PW.html",
+    });
 
     if (error) throw error;
 
-    return true;
+    return data;
   } catch (error) {
     console.error("Sending Reset Email failed:", error.message);
+
     return null;
   }
 }
@@ -189,5 +198,6 @@ export {
   getCurrentUser,
   changePassword,
   resetPassword,
+  checkAuth,
   supabase,
 };

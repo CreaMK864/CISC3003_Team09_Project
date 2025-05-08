@@ -505,3 +505,20 @@ body {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
 }
+.error-message {
+  display: none;
+  color: red;
+}
+.success-message {
+  display: none;
+  color: green;
+  margin-bottom: 10px;
+}
+
+.save-btn:disabled {
+  cursor: not-allowed;
+}
+
+.rdylogin {
+  display: none;
+}

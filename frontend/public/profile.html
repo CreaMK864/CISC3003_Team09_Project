@@ -54,18 +54,23 @@
             <form id="profile-form">
               <div class="form-group">
                 <label for="name">Name:</label>
-                <input type="text" id="name" name="name" value="John Doe" />
+                <input type="text" id="profile_name" name="name" value="" />
               </div>
               <div class="form-group">
                 <label for="email">Email:</label>
                 <input
                   type="email"
-                  id="email"
+                  id="profile_email"
                   name="email"
-                  value="john.doe@example.com"
+                  value=""
+                  readonly
                 />
               </div>
-              <button type="submit" class="save-btn">Save Changes</button>
+              <p id="success-message" class="success-message">55</p>
+
+              <button id="profile_btn" type="submit" class="save-btn">
+                Save Changes
+              </button>
             </form>
           </div>
         </div>
@@ -73,5 +78,6 @@
     </div>
     <script type="module" src="script.js"></script>
     <script type="module" src="app.js"></script>
+    <script type="module" src="profile.js"></script>
   </body>
 </html>
