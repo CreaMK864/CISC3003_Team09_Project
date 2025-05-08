@@ -344,7 +344,8 @@ async function sendMessage(content) {
 
     const botMessageElement = document.createElement("div");
     botMessageElement.classList.add("message", "bot-message");
-    botMessageElement.textContent = "";
+	messages?.appendChild(botMessageElement);
+	botMessageElement.textContent = "";
 
     if (messagesContainer) {
       messagesContainer.appendChild(botMessageElement);
@@ -367,26 +368,18 @@ async function sendMessage(content) {
       }),
     });
 
-    if (!response.ok) {
-      throw new Error(
-        `HTTP error! Status: ${response.status} - ${await response.text()}`,
-      );
-    }
-
     const data = await response.json();
-    const wsUrl = data.ws_url;
+    const ws_url = await data.ws_url;
 
     if (activeSocket && activeSocket.readyState === WebSocket.OPEN) {
       activeSocket.close();
     }
 
-    activeSocket = new WebSocket(wsUrl);
+    activeSocket = new WebSocket(ws_url);
 
     let fullResponse = "";
 
-    activeSocket.addEventListener("open", () => {
-      console.log("Connected to WebSocket for streaming response");
-    });
+
 
     activeSocket.addEventListener("message", (event) => {
       try {
