@@ -12,6 +12,33 @@ document.addEventListener("DOMContentLoaded", () => {
   const searchInput = document.getElementById("search-input");
   const historyItems = document.querySelectorAll(".history-item");
 
+  // Apply theme based on localStorage
+  function applyTheme(theme) {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark-theme');
+      document.body.classList.add('dark-theme');
+    } else {
+      document.documentElement.classList.remove('dark-theme');
+      document.body.classList.remove('dark-theme');
+    }
+  }
+
+  // Apply saved theme on page load
+  const savedTheme = localStorage.getItem('theme') || 'light';
+  applyTheme(savedTheme);
+
+  // Listen for theme changes from other scripts
+  document.addEventListener('themeChanged', (e) => {
+    applyTheme(e.detail.theme);
+  });
+
+  // Listen for storage events to sync theme across tabs/pages
+  window.addEventListener('storage', (event) => {
+    if (event.key === 'theme') {
+      applyTheme(event.newValue || 'light');
+    }
+  });
+
   // Toggle sidebar on mobile (hamburger button)
   if (hamburgerButton && sidebar) {
     hamburgerButton.addEventListener("click", () => {

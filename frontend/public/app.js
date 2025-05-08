@@ -34,6 +34,24 @@ let activeSocket = null;
 let currentConversationId = null;
 
 /**
+ * Apply the selected theme to the document
+ * @param {string} theme - The theme to apply ('light' or 'dark')
+ */
+function applyTheme(theme) {
+  if (theme === 'dark') {
+    document.documentElement.classList.add('dark-theme');
+    document.body.classList.add('dark-theme');
+  } else {
+    document.documentElement.classList.remove('dark-theme');
+    document.body.classList.remove('dark-theme');
+  }
+
+  // Dispatch a custom event to notify other scripts about theme change
+  const themeChangeEvent = new CustomEvent('themeChanged', { detail: { theme } });
+  document.dispatchEvent(themeChangeEvent);
+}
+
+/**
  * Initialize the application
  * @returns {Promise<void>}
  */
@@ -41,8 +59,6 @@ async function initialize() {
   const user = await initializeAuth();
   updateAuthUI(user);
   if (user) {
-    // If user is authenticated
-
     if (window.location.pathname.includes("index.html")) {
       await getOrCreateConversation();
     } else if (
@@ -53,7 +69,19 @@ async function initialize() {
       window.location.href = "index.html";
     }
   }
+  // Apply saved theme on page load
+  const savedTheme = localStorage.getItem('theme') || 'light';
+  applyTheme(savedTheme);
+
+  // Listen for changes in system color scheme preferences
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+    if (!localStorage.getItem('theme')) { // Only auto-switch if user hasn't explicitly set a preference
+      const newTheme = event.matches ? 'dark' : 'light';
+      applyTheme(newTheme);
+    }
+  });
 }
+
 function updateAuthUI(user) {
   const auth_reg = document.getElementById("auth_reg");
   const auth_logout = document.getElementById("auth_logout");
@@ -63,7 +91,6 @@ function updateAuthUI(user) {
 
   if (user) {
     userEmail.textContent = "WELCOME ~ " + user.name;
-
     auth_logout.style.display = "block";
     auth_reg.style.display = "none";
     document.querySelector(".auth-buttons").style.display = "none";
@@ -78,6 +105,7 @@ function updateAuthUI(user) {
     alert_msg.style.display = "flex";
   }
 }
+
 document
   .getElementById("logout-button")
   ?.addEventListener("click", async () => {
@@ -89,6 +117,7 @@ document
       displayErrorMessage("Failed to sign out. Please try again.");
     }
   });
+
 /**
  * Show a specific tab (for test-auth.html)
  * @param {string} tabName - The name of the tab to show ('login', 'register', 'reset')
@@ -96,17 +125,14 @@ document
 function showTab(tabName) {
   if (!testLoginForm || !testRegisterForm || !testResetForm) return;
 
-  // Hide all forms
   testLoginForm.classList.add("hidden");
   testRegisterForm.classList.add("hidden");
   testResetForm.classList.add("hidden");
 
-  // Reset active tab styles
   loginTab?.classList.remove("tab-active");
   registerTab?.classList.remove("tab-active");
   resetTab?.classList.remove("tab-active");
 
-  // Show selected form and activate tab
   if (tabName === "login") {
     testLoginForm.classList.remove("hidden");
     loginTab?.classList.add("tab-active");
@@ -299,7 +325,7 @@ async function sendMessage(content) {
       messagesContainer.scrollTop = messagesContainer.scrollHeight;
     } else {
       console.error("messagesContainer is null!");
-      return; // Exit the function if messagesContainer is null
+      return;
     }
 
     const response = await fetch(`${API_BASE_URL}/chat`, {
@@ -401,8 +427,31 @@ document.addEventListener("DOMContentLoaded", () => {
       event.preventDefault();
       const message = messageInput.value.trim();
       if (message) {
-        sendMessage(message); // Call the sendMessage function from app.js
+        sendMessage(message);
       }
+    });
+  }
+
+  // Handle theme selection in settings page
+  const profileForm = document.getElementById("profile-form");
+  const themeSelect = document.getElementById("theme-select");
+  if (profileForm && themeSelect) {
+    profileForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const selectedTheme = themeSelect.value;
+      localStorage.setItem('theme', selectedTheme);
+      applyTheme(selectedTheme);
+    });
+  }
+
+  // Add a theme toggle button if it exists
+  const themeToggleBtn = document.getElementById("theme-toggle");
+  if (themeToggleBtn) {
+    themeToggleBtn.addEventListener("click", () => {
+      const currentTheme = localStorage.getItem('theme') || 'light';
+      const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+      localStorage.setItem('theme', newTheme);
+      applyTheme(newTheme);
     });
   }
 });
@@ -550,4 +599,11 @@ if (testResetForm) {
 // Initialize the app when the page loads
 document.addEventListener("DOMContentLoaded", () => {
   initialize();
+});
+
+// Listen for storage events to sync theme across tabs/pages
+window.addEventListener('storage', (event) => {
+  if (event.key === 'theme') {
+    applyTheme(event.newValue || 'light');
+  }
 });
