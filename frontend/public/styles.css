@@ -391,7 +391,7 @@ body {
   background-color: var(--input-bg);
   color: var(--input-text);
 }
-/* 用户信息样式 */
+
 .user-info {
   margin-bottom: 30px;
 }
@@ -438,8 +438,9 @@ body {
   margin-top: 10%;
 }
 
+/* Profile Form Styles */
 .profile-card {
-  background: var(--profile-card-bg);
+  background-color: var(--message-bg-bot);
   padding: 2rem;
   border-radius: 15px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -465,31 +466,38 @@ body {
 .form-group label {
   display: block;
   margin-bottom: 0.5rem;
-  color: #666;
+  color: --var(--profile-card-bg);
   font-weight: 500;
+  transition: transform 0.3s ease;
 }
 
-.form-group input,
-.form-group select {
+.form-group label:hover {
+  transform: translateX(5px);
+}
+
+.form-group input {
   width: 100%;
   padding: 12px;
-  border: 2px solid var(--input-border);
+  border: 2px solid #374151;
   border-radius: 8px;
   font-size: 16px;
-  transition: border-color 0.3s ease;
-  background-color: var(--input-bg);
+  transition:
+    border-color 0.3s ease,
+    box-shadow 0.3s ease;
+  background-color: var(--profile-card-bg);
   color: var(--input-text);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.form-group input:focus,
-.form-group select:focus {
-  border-color: var(--button-bg);
+.form-group input:focus {
+  border-color: #10b981;
   outline: none;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
 }
 
 .save-btn {
-  background: linear-gradient(135deg, var(--button-bg), #1976d2);
-  color: var(--button-text);
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
   padding: 12px 30px;
   border: none;
   border-radius: 8px;
@@ -499,20 +507,33 @@ body {
   transition:
     transform 0.3s ease,
     box-shadow 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.save-btn::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  transition: left 0.5s ease;
+}
+
+.save-btn:hover::before {
+  left: 100%;
 }
 
 .save-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
-}
-.error-message {
-  display: none;
-  color: red;
-}
-.success-message {
-  display: none;
-  color: green;
-  margin-bottom: 10px;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
 }
 
 .save-btn:disabled {
