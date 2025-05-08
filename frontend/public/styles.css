@@ -494,7 +494,10 @@ body {
   outline: none;
   box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
 }
-
+.form-group a {
+  text-decoration: none;
+  color: var(--button-bg);
+}
 .save-btn {
   background: linear-gradient(135deg, #10b981, #059669);
   color: white;
