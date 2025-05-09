@@ -64,7 +64,7 @@ class User(SQLModel, table=True):
     subscription_status: str = Field(sa_column=Column(Text), default="free")
     subscription_plan: str = Field(sa_column=Column(Text), default="free")
     last_selected_model: str = Field(sa_column=Column(Text), default=DEFAULT_MODEL)
-    last_selected_model_id: int | None = Field(foreign_key="model.id", sa_column=Column(Text), nullable=True)
+    last_selected_model_id: int | None = Field(foreign_key="model.id")
     theme: str = Field(sa_column=Column(Text), default="light")
     conversations: list["Conversation"] = Relationship(back_populates="user")
     created_at: datetime.datetime = Field(
@@ -75,7 +75,6 @@ class User(SQLModel, table=True):
         default_factory=lambda: datetime.datetime.now(datetime.UTC),
         sa_column=Column(DateTime(timezone=True), server_default=text("(now() AT TIME ZONE 'UTC')")),
     )
-
 
 
 class Conversation(SQLModel, table=True):
@@ -98,7 +97,7 @@ class Conversation(SQLModel, table=True):
     user_id: uuid.UUID = Field(foreign_key="user.id", index=True)
     title: str = Field(sa_column=Column(Text, default="New Conversation"))
     model: str = Field(sa_column=Column(Text, default=DEFAULT_MODEL))
-    model_id: int | None = Field(foreign_key="model.id", sa_column=Column(Text), nullable=True)
+    model_id: int | None = Field(foreign_key="model.id")
     created_at: datetime.datetime = Field(
         default_factory=lambda: datetime.datetime.now(datetime.UTC),
         sa_column=Column(DateTime(timezone=True), server_default=text("(now() AT TIME ZONE 'UTC')")),
@@ -138,7 +137,7 @@ class Message(SQLModel, table=True):
         sa_column=Column(DateTime(timezone=True), server_default=text("(now() AT TIME ZONE 'UTC')")),
     )
     model: str | None = Field(sa_column=Column(Text, nullable=True))
-    model_id: int | None = Field(foreign_key="model.id", sa_column=Column(Text), nullable=True)
+    model_id: int | None = Field(foreign_key="model.id")
 
     conversation: Conversation = Relationship(back_populates="messages")
 
