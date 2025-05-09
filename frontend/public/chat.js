@@ -23,7 +23,7 @@ async function sendMessage(conversationId, content) {
             conversation_id: conversationId,
             role: "user",
             content,
-            model: "gpt-4.1-nano" // Added model parameter
+            model: "gpt-4.1-nano"
         })
     });
 
@@ -61,18 +61,37 @@ function connectToStream(ws_url, onContent, onError) {
 
     ws.onmessage = (event) => {
         const rawData = event.data;
-        console.log("Raw WebSocket message:", rawData); // Log raw message for debugging
+        console.log("Raw WebSocket message:", rawData);
 
         if (isValidJSON(rawData)) {
             try {
                 const data = JSON.parse(rawData);
-                console.log("Parsed JSON data:", data); // Log parsed JSON for debugging
+                console.log("Parsed JSON data:", data);
 
                 if (data.error) {
-                    console.error("Server error received:", data.error); // Log specific error
+                    console.error("Server error received:", data.error);
                     onError(data.error);
                 } else if (data.content) {
-                    onContent(data.content);
+                    // Handle structured or plain content
+                    if (data.type) {
+                        // Structured response with type
+                        switch (data.type) {
+                            case "text":
+                                onContent(`<p>${data.content}</p>`);
+                                break;
+                            case "code":
+                                onContent(`<pre><code>${data.content}</code></pre>`);
+                                break;
+                            case "formula":
+                                onContent(`<span class="formula">${data.content}</span>`);
+                                break;
+                            default:
+                                onContent(data.content);
+                        }
+                    } else {
+                        // Fallback for plain text
+                        onContent(data.content);
+                    }
                 } else if (data.event === "chat_ended") {
                     ws.close();
                 } else if (typeof data === "string") {
@@ -80,7 +99,6 @@ function connectToStream(ws_url, onContent, onError) {
                 } else if (data.message) {
                     onContent(data.message);
                 } else if (typeof data === "number") {
-                    // Ignore numeric messages (e.g., conversation IDs)
                     console.log("Ignoring numeric message:", data);
                     return;
                 } else {
@@ -90,9 +108,7 @@ function connectToStream(ws_url, onContent, onError) {
                 onError(`Failed to parse JSON message: ${error.message}`);
             }
         } else {
-            // Handle non-JSON messages
             if (rawData.trim() === "." || rawData.trim() === "") {
-                // Ignore single periods or empty messages
                 return;
             }
             onContent(rawData);

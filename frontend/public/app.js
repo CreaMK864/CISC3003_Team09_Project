@@ -31,6 +31,9 @@ const testRegisterForm = document.getElementById("registerForm");
 const testResetForm = document.getElementById("resetForm");
 const statusMessage = document.getElementById("statusMessage");
 
+// New button for creating a new chat
+const createNewChatButton = document.getElementById("create-new-chat");
+
 let activeSocket = null;
 let currentConversationId = null;
 
@@ -47,7 +50,6 @@ function applyTheme(theme) {
     document.body.classList.remove("dark-theme");
   }
 
-  // Dispatch a custom event to notify other scripts about theme change
   const themeChangeEvent = new CustomEvent("themeChanged", {
     detail: { theme },
   });
@@ -72,16 +74,13 @@ async function initialize() {
       window.location.href = "index.html";
     }
   }
-  // Apply saved theme on page load
   const savedTheme = localStorage.getItem("theme") || "light";
   applyTheme(savedTheme);
 
-  // Listen for changes in system color scheme preferences
   window
     .matchMedia("(prefers-color-scheme: dark)")
     .addEventListener("change", (event) => {
       if (!localStorage.getItem("theme")) {
-        // Only auto-switch if user hasn't explicitly set a preference
         const newTheme = event.matches ? "dark" : "light";
         applyTheme(newTheme);
       }
@@ -132,18 +131,6 @@ async function updateAuthUI(user) {
     alert_msg.style.display = "flex";
   }
 }
-
-document
-  .getElementById("logout-button")
-  ?.addEventListener("click", async () => {
-    try {
-      await signOut();
-      window.location.href = "login.html";
-    } catch (error) {
-      console.error("Logout failed:", error);
-      displayErrorMessage("Failed to sign out. Please try again.");
-    }
-  });
 
 /**
  * Show a specific tab (for test-auth.html)
@@ -287,6 +274,43 @@ async function createNewConversation() {
 }
 
 /**
+ * Create a new chat and reset the chat area
+ * @returns {Promise<void>}
+ */
+async function createNewChat() {
+  try {
+    // Create a new conversation
+    await createNewConversation();
+
+    // Update localStorage
+    localStorage.setItem(
+      "current_conversation_id",
+      currentConversationId.toString(),
+    );
+
+    // Clear the chat messages area
+    if (messagesContainer) {
+      messagesContainer.innerHTML = "";
+      // Optionally add a welcome message
+      const welcomeMessage = document.createElement("div");
+      welcomeMessage.classList.add("message", "bot-message");
+      welcomeMessage.textContent = "Hello! How can I help you today?";
+      messagesContainer.appendChild(welcomeMessage);
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    // Close any active WebSocket connection
+    if (activeSocket) {
+      activeSocket.close();
+      activeSocket = null;
+    }
+  } catch (error) {
+    console.error("Error creating new chat:", error);
+    displayErrorMessage("Failed to create a new chat. Please try again.");
+  }
+}
+
+/**
  * Display a message in the chat UI
  * @param {string} content - The message content
  * @param {string} role - The role of the sender ('user' or 'assistant')
@@ -333,7 +357,7 @@ function getCurrentConversationId() {
   return currentConversationId;
 }
 
-// Handle form submission for chat page (index.html)
+// Event Listeners
 document.addEventListener("DOMContentLoaded", () => {
   messageForm = document.getElementById("message-form");
   messageInput = document.getElementById("message-input");
@@ -355,32 +379,26 @@ document.addEventListener("DOMContentLoaded", () => {
         await getOrCreateConversation();
       }
 
-      // Append user message
       displayMessage(content, "user");
       messageInput.value = "";
 
       try {
-        // Send message and get stream response
         const response = await sendMessage(currentConversationId, content);
         if (!response || !response.ws_url) {
           displayErrorMessage("Error: No WebSocket URL received");
           return;
         }
 
-        // Close existing WebSocket if any
         if (activeSocket) {
           activeSocket.close();
           activeSocket = null;
         }
 
-        // Create bot message container
         const botMessageElement = displayMessage("", "assistant");
 
-        // Connect to WebSocket
         activeSocket = connectToStream(
           response.ws_url,
           (content) => {
-            // Update bot message with streamed content
             botMessageElement.textContent += content;
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
           },
@@ -395,7 +413,13 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Handle theme selection in settings page
+  // Handle Create New Chat button click
+  if (createNewChatButton) {
+    createNewChatButton.addEventListener("click", async () => {
+      await createNewChat();
+    });
+  }
+
   const profileForm = document.getElementById("profile-form");
   const themeSelect = document.getElementById("theme-select");
   if (profileForm && themeSelect) {
@@ -407,7 +431,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Add a theme toggle button if it exists
   const themeToggleBtn = document.getElementById("theme-toggle");
   if (themeToggleBtn) {
     themeToggleBtn.addEventListener("click", () => {
@@ -417,9 +440,20 @@ document.addEventListener("DOMContentLoaded", () => {
       applyTheme(newTheme);
     });
   }
+
+  document
+    .getElementById("logout-button")
+    ?.addEventListener("click", async () => {
+      try {
+        await signOut();
+        window.location.href = "login.html";
+      } catch (error) {
+        console.error("Logout failed:", error);
+        displayErrorMessage("Failed to sign out. Please try again.");
+      }
+    });
 });
 
-// Handle login form submission (login.html)
 if (loginForm) {
   loginForm.addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -436,7 +470,6 @@ if (loginForm) {
   });
 }
 
-// Handle register form submission (register.html)
 if (registerForm) {
   registerForm.addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -453,7 +486,6 @@ if (registerForm) {
   });
 }
 
-// Handle Google login (login.html)
 if (googleLoginButton) {
   googleLoginButton.addEventListener("click", async () => {
     try {
@@ -464,7 +496,6 @@ if (googleLoginButton) {
   });
 }
 
-// Handle Google register (register.html)
 if (googleRegisterButton) {
   googleRegisterButton.addEventListener("click", async () => {
     try {
@@ -475,7 +506,6 @@ if (googleRegisterButton) {
   });
 }
 
-// Handle tab clicks for test-auth.html
 if (loginTab) {
   loginTab.addEventListener("click", () => showTab("login"));
 }
@@ -486,7 +516,6 @@ if (resetTab) {
   resetTab.addEventListener("click", () => showTab("reset"));
 }
 
-// Handle form submissions for test-auth.html
 if (testLoginForm) {
   testLoginForm.querySelector("button").addEventListener("click", async () => {
     const email = document.getElementById("loginEmail").value;
@@ -559,12 +588,10 @@ if (testResetForm) {
   });
 }
 
-// Initialize the app when the page loads
 document.addEventListener("DOMContentLoaded", () => {
   initialize();
 });
 
-// Listen for storage events to sync theme across tabs/pages
 window.addEventListener("storage", (event) => {
   if (event.key === "theme") {
     applyTheme(event.newValue || "light");
