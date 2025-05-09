@@ -1,4 +1,5 @@
 import { getAuthToken, getCurrentUser } from "./auth.js";
+import { sendMessage, connectToStream } from "./chat.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   // Get DOM elements
@@ -11,6 +12,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const closeSidebarBtn = document.getElementById("close-sidebar");
   const searchInput = document.getElementById("search-input");
   const historyItems = document.querySelectorAll(".history-item");
+
+  let activeSocket = null;
 
   // Apply theme based on localStorage
   function applyTheme(theme) {
@@ -66,14 +69,69 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // Function to append a message to the chat
+  function appendMessage(sender, content) {
+    const messageElement = document.createElement("div");
+    messageElement.className = `message ${sender}-message`;
+    messageElement.innerHTML = content;
+    chatMessages.appendChild(messageElement);
+
+    // Scroll to the bottom of the chat
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+
+    return messageElement;
+  }
+
+  // Function to get the conversation ID
+  async function getConversationId() {
+    const apiUrl = "https://api.saviomak.com/conversations";
+    const token = await getAuthToken();
+
+    const response = await fetch(apiUrl, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch conversations: ${response.status} - ${await response.text()}`);
+    }
+
+    const conversations = await response.json();
+    if (conversations.length > 0) {
+      return conversations[0].id;
+    } else {
+      // Create a new conversation if none exist
+      const createResponse = await fetch(apiUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          title: "New Conversation",
+          model: "gpt-4.1-nano",
+        }),
+      });
+
+      if (!createResponse.ok) {
+        throw new Error(`Failed to create conversation: ${createResponse.status} - ${await createResponse.text()}`);
+      }
+
+      const conversation = await createResponse.json();
+      return conversation.id;
+    }
+  }
+
   // Handle form submission
   if (messageForm) {
     messageForm.addEventListener("submit", async (event) => {
       event.preventDefault();
 
       // Get user message
-      const userMessage = messageInput.value.trim();
-      if (!userMessage) return;
+      const content = messageInput.value.trim();
+      if (!content) return;
 
       // Check if user is authenticated
       const user = getCurrentUser();
@@ -87,7 +145,7 @@ document.addEventListener("DOMContentLoaded", () => {
       messageInput.value = "";
 
       // Display user message in the chat
-      appendMessage("user", userMessage);
+      appendMessage("user", content);
 
       try {
         // Show loading indicator
@@ -96,24 +154,46 @@ document.addEventListener("DOMContentLoaded", () => {
           '<div class="typing-indicator"><span></span><span></span><span></span></div>',
         );
 
-        // Call the API to send the message
-        const response = await sendMessageToAPI(userMessage);
+        // Get conversation ID
+        const conversationId = await getConversationId();
+
+        // Send message and get stream response
+        const response = await sendMessage(conversationId, content);
+        if (!response || !response.ws_url) {
+          chatMessages.removeChild(loadingIndicator);
+          appendMessage("bot", "Error: No WebSocket URL received");
+          return;
+        }
 
         // Remove loading indicator
         chatMessages.removeChild(loadingIndicator);
 
-        // Display bot response
-        appendMessage("bot", response);
+        // Create bot message container
+        const botMessageElement = appendMessage("bot", "");
 
-        // Scroll to the bottom of the chat
-        chatMessages.scrollTop = chatMessages.scrollHeight;
+        // Close existing WebSocket if any
+        if (activeSocket) {
+          activeSocket.close();
+          activeSocket = null;
+        }
+
+        // Connect to WebSocket
+        activeSocket = connectToStream(
+          response.ws_url,
+          (content) => {
+            // Update bot message with streamed content
+            botMessageElement.innerHTML += content;
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+          },
+          (error) => {
+            botMessageElement.innerHTML = `Error: ${error}`;
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+          }
+        );
       } catch (error) {
         // Handle errors
         console.error("Error:", error);
-        appendMessage(
-          "bot",
-          "Sorry, there was an error processing your request. Please try again.",
-        );
+        appendMessage("bot", `Error: ${error.message}`);
       }
     });
   }
@@ -136,72 +216,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Function to append a message to the chat
-  function appendMessage(sender, content) {
-    const messageElement = document.createElement("div");
-    messageElement.className = `message ${sender}-message`;
-    messageElement.innerHTML = content;
-    chatMessages.appendChild(messageElement);
-
-    // Scroll to the bottom of the chat
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-
-    return messageElement;
-  }
-
-  // Function to get the conversation ID
-  async function getConversationId() {
-    const apiUrl = "https://api.saviomak.com/conversations/1"; // Replace with the actual endpoint
-    const token = await getAuthToken();
-
-    const response = await fetch(apiUrl, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error("Failed to fetch conversation ID.");
-    }
-
-    const conversation = await response.json();
-    return conversation.id; // Return the conversation ID
-  }
-
-  // Function to send message to API with authentication
-  async function sendMessageToAPI(message) {
-    const conversationId = await getConversationId(); // Ensure this ID is valid
-    const apiUrl = "https://api.saviomak.com/chat"; // This should be the correct endpoint for sending messages
-    const token = await getAuthToken();
-
-    if (!token) {
-      throw new Error("No authentication token available. Please log in.");
-    }
-
-    const requestOptions = {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        conversation_id: conversationId,
-        content: message,
-        model: "gpt-4.1-nano", // Replace with the actual model name
-      }),
-    };
-
-    const response = await fetch(apiUrl, requestOptions);
-
-    if (!response.ok) {
-      throw new Error("Failed to send message.");
-    }
-
-    const result = await response.json();
-    return result.response || result.message || JSON.stringify(result);
-  }
-
   // Function to get messages for a specific conversation
   async function getMessagesForConversation(conversationId) {
     const apiUrl = `https://api.saviomak.com/conversations/${conversationId}/messages`;
@@ -215,11 +229,11 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     if (!response.ok) {
-      throw new Error("Failed to fetch messages for the conversation.");
+      throw new Error(`Failed to fetch messages: ${response.status} - ${await response.text()}`);
     }
 
     const messages = await response.json();
-    return messages; // Return the list of messages
+    return messages;
   }
 
   // Load initial messages when the page loads
@@ -228,10 +242,11 @@ document.addEventListener("DOMContentLoaded", () => {
       const conversationId = await getConversationId();
       const messages = await getMessagesForConversation(conversationId);
       messages.forEach(message => {
-        appendMessage(message.role, message.content); // Assuming `role` can be 'user' or 'bot'
+        appendMessage(message.role === "user" ? "user" : "bot", message.content);
       });
     } catch (error) {
       console.error("Error loading messages:", error);
+      appendMessage("bot", `Error loading messages: ${error.message}`);
     }
   }
 

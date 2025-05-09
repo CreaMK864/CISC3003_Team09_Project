@@ -9,6 +9,7 @@ import {
   signOut,
 } from "./auth.js";
 import { API_BASE_URL } from "./config.js";
+import { sendMessage, connectToStream } from "./chat.js";
 
 // DOM elements for chat page (index.html)
 let messageForm = document.getElementById("message-form");
@@ -86,9 +87,10 @@ async function initialize() {
       }
     });
 }
+
 /**
- * Apply the selected theme to the document
- * @param {string} uid - The theme to apply ('light' or 'dark')
+ * Get username from user ID
+ * @param {string} uid - User ID
  */
 export async function get_username(uid) {
   try {
@@ -104,10 +106,9 @@ export async function get_username(uid) {
 }
 
 /**
- * Apply the selected theme to the document
+ * Update authentication UI based on user state
  * @param {any} user
  */
-
 async function updateAuthUI(user) {
   const auth_reg = document.getElementById("auth_reg");
   const auth_logout = document.getElementById("auth_logout");
@@ -299,11 +300,12 @@ function displayMessage(content, role) {
   messageElement.textContent = content;
 
   if (messagesContainer) {
-    messagesContainer?.appendChild(messageElement);
+    messagesContainer.appendChild(messageElement);
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
   } else {
     console.error("messagesContainer is null!");
   }
+  return messageElement;
 }
 
 /**
@@ -316,114 +318,10 @@ function displayErrorMessage(content) {
   messageElement.textContent = content;
 
   if (messagesContainer) {
-    messagesContainer?.appendChild(messageElement);
+    messagesContainer.appendChild(messageElement);
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
   } else {
     console.error("messagesContainer is null!");
-  }
-}
-
-/**
- * Send a message to the API and handle the streamed response
- * @param {string} content - The message content
- * @returns {Promise<void>}
- */
-async function sendMessage(content) {
-  try {
-    if (!getCurrentUser()) {
-      displayErrorMessage("You need to be logged in to send messages.");
-      window.location.href = "login.html";
-      return;
-    }
-
-    if (!currentConversationId) {
-      await getOrCreateConversation();
-    }
-
-    displayMessage(content, "user");
-
-    const botMessageElement = document.createElement("div");
-    botMessageElement.classList.add("message", "bot-message");
-	messages?.appendChild(botMessageElement);
-	botMessageElement.textContent = "";
-
-    if (messagesContainer) {
-      messagesContainer.appendChild(botMessageElement);
-      messagesContainer.scrollTop = messagesContainer.scrollHeight;
-    } else {
-      console.error("messagesContainer is null!");
-      return;
-    }
-
-    const response = await fetch(`${API_BASE_URL}/chat`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${await getAuthToken()}`,
-      },
-      body: JSON.stringify({
-        conversation_id: getCurrentConversationId(),
-        role: "user",
-        content: content,
-      }),
-    });
-
-    const data = await response.json();
-    const ws_url = await data.ws_url;
-
-    if (activeSocket && activeSocket.readyState === WebSocket.OPEN) {
-      activeSocket.close();
-    }
-
-    activeSocket = new WebSocket(ws_url);
-
-    let fullResponse = "";
-
-
-
-    activeSocket.addEventListener("message", (event) => {
-      try {
-        const jsonData = JSON.parse(event.data);
-
-        if (jsonData.error) {
-          console.error("Error from server:", jsonData.error);
-          botMessageElement.textContent = `Error: ${jsonData.error}`;
-          return;
-        }
-
-        if (jsonData.event === "chat_ended") {
-          console.log("Chat response complete");
-          return;
-        }
-
-        fullResponse += JSON.stringify(jsonData);
-        botMessageElement.textContent = fullResponse;
-      } catch {
-        fullResponse += event.data;
-        botMessageElement.textContent = fullResponse;
-      }
-
-      if (messagesContainer) {
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
-      } else {
-        console.error("messagesContainer is null!");
-      }
-    });
-
-    activeSocket.addEventListener("close", () => {
-      console.log("Disconnected from WebSocket");
-    });
-
-    activeSocket.addEventListener("error", (event) => {
-      console.error("WebSocket error:", event);
-      botMessageElement.textContent =
-        "Error: Failed to connect to response stream";
-    });
-
-    messageInput.value = "";
-  } catch (error) {
-    console.error("Error sending message:", error);
-    displayErrorMessage("Failed to send message: " + error.message);
   }
 }
 
@@ -442,11 +340,57 @@ document.addEventListener("DOMContentLoaded", () => {
   messagesContainer = document.getElementById("chat-messages");
 
   if (messageForm) {
-    messageForm.addEventListener("submit", (event) => {
+    messageForm.addEventListener("submit", async (event) => {
       event.preventDefault();
-      const message = messageInput.value.trim();
-      if (message) {
-        sendMessage(message);
+      const content = messageInput.value.trim();
+      if (!content) return;
+
+      if (!getCurrentUser()) {
+        displayErrorMessage("You need to be logged in to send messages.");
+        window.location.href = "login.html";
+        return;
+      }
+
+      if (!currentConversationId) {
+        await getOrCreateConversation();
+      }
+
+      // Append user message
+      displayMessage(content, "user");
+      messageInput.value = "";
+
+      try {
+        // Send message and get stream response
+        const response = await sendMessage(currentConversationId, content);
+        if (!response || !response.ws_url) {
+          displayErrorMessage("Error: No WebSocket URL received");
+          return;
+        }
+
+        // Close existing WebSocket if any
+        if (activeSocket) {
+          activeSocket.close();
+          activeSocket = null;
+        }
+
+        // Create bot message container
+        const botMessageElement = displayMessage("", "assistant");
+
+        // Connect to WebSocket
+        activeSocket = connectToStream(
+          response.ws_url,
+          (content) => {
+            // Update bot message with streamed content
+            botMessageElement.textContent += content;
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+          },
+          (error) => {
+            botMessageElement.textContent = `Error: ${error}`;
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+          }
+        );
+      } catch (error) {
+        displayErrorMessage(`Error: ${error.message}`);
       }
     });
   }
