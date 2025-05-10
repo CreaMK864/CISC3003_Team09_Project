@@ -3,76 +3,227 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>AI Chatbot</title>
+    <title>Easy Chatbot - Welcome to our chatbot website!</title>
     <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="welcome.css" />
   </head>
   <body>
-    <div class="container">
-      <!-- Sidebar -->
-      <div class="sidebar" id="sidebar">
-        <div class="user-info">
-          <h2>My Chatbot</h2>
-          <div id="user-email" class="user-email"></div>
+    <div class="landing-container">
+      <!-- Navigation -->
+      <nav class="landing-nav">
+        <div class="logo">My Chatbot</div>
+        <div class="nav-links">
+          <a href="#FeAtures">Features</a>
+          <a href="#Projectpurpose">About this project</a>
+          <a href="#AboutUs">Our Team</a>
+          <a href="https://github.com" target="_blank">GitHub</a>
         </div>
-        <ul>
-          <li><a href="index.html" class="active">Home</a></li>
-          <li><a href="history.html">History</a></li>
-          <li><a href="profile.html">Profile</a></li>
-        </ul>
+        <div class="auth-links">
+          <a href="login.html" class="login-button">Login</a>
+          <a href="register.html" class="open-app-button">Register</a>
+        </div>
+      </nav>
 
-        <!-- Auth block -->
-        <div class="auth-block" id="auth_reg">
-          <h3>Get Started</h3>
-          <p>Sign in to save your conversations</p>
-          <div class="auth-buttons">
-            <a href="login.html" class="auth-button">Login</a>
-            <a href="register.html" class="auth-button">Register</a>
-            <a href="test-auth.html" class="auth-test">Register</a>
+      <!-- Hero Section -->
+      <section class="hero">
+        <div class="bg-shape bg-shape-1"></div>
+        <div class="bg-shape bg-shape-2"></div>
+        <div class="hero-content">
+          <h1>Easy Chatbot - Welcome to our chatbot website!</h1>
+          <p>
+            Including real-time chat, persistent conversation history, and model
+            selection.
+          </p>
+          <div class="hero-buttons">
+            <a href="login.html" class="download-button">
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M19 9L12 16L5 9"
+                  stroke="#2196f3"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+              Start Chatting
+            </a>
+            <a href="#features" class="browser-button"> See Features </a>
           </div>
+          <img
+            src="https://murf.ai/resources/media/posts/117/26876779_Conversation-between-chat-bot-on-screen-of-phone-and-customer.jpg"
+            alt="Chat interface preview"
+            class="hero-image"
+          />
         </div>
-        <!-- Auth block -->
-        <div class="auth-block" id="auth_logout">
-          <div class="logout-section">
-            <button id="logout-button" class="auth-button">Sign Out</button>
-          </div>
-        </div>
-      </div>
+      </section>
 
-      <!-- Chat container -->
-      <div class="chat-container">
-        <div class="chat-header">
-          <h2>Default Conversation</h2>
-        </div>
-        <div class="chat-messages">
-          <!-- Messages will appear here -->
-          <div class="message bot-message">
-            Hello! How can I help you today?
+      <!-- Features Section -->
+      <section id="features" class="features">
+        <div class="feature-section">
+          <div id="AboutUs" class="feature-content">
+            <h2>OUR MEMBERS</h2>
+            <h2>- DC227551 Mak Weng Hou</h2>
+            <h2>- DC207583 Lei Ka Chon</h2>
+            <h2>- DC227476 Kuan Hou In</h2>
+            <h2>- DC226952 Chong Chi Hoi</h2>
           </div>
-          <div class="message user-message">
-            I'd like to know more about your services.
-          </div>
-          <div class="message bot-message">
-            Sure! We offer a range of AI-powered solutions including chatbots,
-            content generation, and data analysis. What specific area are you
-            interested in?
-          </div>
-        </div>
-        <div class="chat-input">
-          <form id="message-form">
-            <input
-              type="text"
-              id="message-input"
-              placeholder="Type your message here..."
+          <div class="feature-image">
+            <img
+              src="https://edurank.org/assets/img/uni-logos/university-of-macau-logo.png"
+              alt="Chat customization"
             />
-            <button type="submit">Send</button>
-          </form>
+          </div>
         </div>
-      </div>
+
+        <div class="feature-section">
+          <div id="Projectpurpose" class="feature-content">
+            <h2>SEAMLESS COMMUNICATION ANYWHERE</h2>
+            <p>
+              The purpose of this project is to create a user-friendly chatbot
+              website for general users, power users, and evaluators, enabling
+              real-time conversations, personalized experiences, and robust
+              functionality.
+            </p>
+            <p>
+              Whether you're planning an event, sharing ideas, or just hanging
+              out, our platform makes group communication effortless.
+            </p>
+          </div>
+          <div class="feature-image">
+            <img
+              src="https://thumbs.dreamstime.com/z/omnichannel-concept-centralized-chatbot-facilitates-seamless-communication-omnichannel-concept-centralized-chatbot-facilitates-297160069.jpg"
+              alt="Seamless communication"
+            />
+          </div>
+        </div>
+
+        <div class="feature-section">
+          <div id="FeAtures" class="feature-content">
+            <h2>AI-POWERED CONVERSATION ASSISTANT</h2>
+            <p>
+              Our intelligent chatbot helps answer questions, provide
+              recommendations, and make your conversations more productive.
+            </p>
+            <p>
+              To find key information, our AI assistant is there when you need
+              it most.
+            </p>
+          </div>
+          <div class="feature-image">
+            <img
+              src="https://murf.ai/resources/media/posts/117/26876779_Conversation-between-chat-bot-on-screen-of-phone-and-customer.jpg"
+              alt="AI assistant"
+            />
+          </div>
+        </div>
+      </section>
+
+      <!-- CTA Section -->
+      <section id="about" class="cta-section">
+        <div class="cta-content">
+          <h2>
+            TIME TO HAVE A CHAT! <br />
+            CLICK HERE
+          </h2>
+          <p>Time to join us with "My Chatbot"</p>
+          <a href="login.html" class="download-button">Start Chatting Now</a>
+        </div>
+      </section>
+
+      <!-- Footer -->
+      <footer class="landing-footer">
+        <div class="footer-grid">
+          <div class="footer-column">
+            <h3>Product</h3>
+            <ul>
+              <li><a href="register.html">Chat</a></li>
+              <li><a href="#FeAtures">Features</a></li>
+              <li><a href="#Projectpurpose">About</a></li>
+              <li><a href="#">Feedback</a></li>
+            </ul>
+          </div>
+          <div class="footer-column">
+            <h3>Company</h3>
+            <ul>
+              <li><a href="#AboutUs">About Us</a></li>
+              <li><a href="#AboutUs">Our Team</a></li>
+              <li><a href="#">Careers</a></li>
+              <li><a href="#">Contact</a></li>
+            </ul>
+          </div>
+          <div class="footer-column">
+            <h3>Resources</h3>
+            <ul>
+              <li><a href="#">Help Center</a></li>
+              <li><a href="#">Terms of Service</a></li>
+              <li><a href="#">Privacy Policy</a></li>
+              <li><a href="#">Community Guidelines</a></li>
+            </ul>
+          </div>
+          <div class="footer-column">
+            <h3>Connect</h3>
+            <ul>
+              <li><a href="https://twitter.com" target="_blank">Twitter</a></li>
+              <li><a href="https://github.com" target="_blank">GitHub</a></li>
+              <li>
+                <a href="https://linkedin.com" target="_blank">LinkedIn</a>
+              </li>
+              <li>
+                <a href="https://instagram.com" target="_blank">Instagram</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="footer-bottom">
+          <div class="footer-logo">My Chatbot</div>
+          <div class="language-selector">
+            <span>English (US)</span>
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M6 9L12 15L18 9"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </div>
+          <a href="login.html" class="footer-button">Open Chat</a>
+        </div>
+      </footer>
     </div>
 
-    <!-- Hamburger menu for mobile -->
-    <button class="hamburger">☰</button>
-    <script type="module" src="script.js"></script>
-    <script type="module" src="app.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
+          anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+
+            const targetId = this.getAttribute("href");
+            if (targetId === "#") return;
+
+            const targetElement = document.querySelector(targetId);
+            if (targetElement) {
+              targetElement.scrollIntoView({
+                behavior: "smooth",
+              });
+            }
+          });
+        });
+      });
+    </script>
   </body>
 </html>

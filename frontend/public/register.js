@@ -40,6 +40,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (user) {
     // Initialize app to set up conversation
     // Redirect to chat page
-    window.location.href = "index.html";
+    window.location.href = "home.html";
   }
 });

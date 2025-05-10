@@ -11,7 +11,7 @@ import {
 import { API_BASE_URL } from "./config.js";
 import { sendMessage, connectToStream } from "./chat.js";
 
-// DOM elements for chat page (index.html)
+// DOM elements for chat page (home.html)
 let messageForm = document.getElementById("message-form");
 let messageInput = document.getElementById("message-input");
 let messagesContainer = document.getElementById("chat-messages");
@@ -64,14 +64,14 @@ async function initialize() {
   const user = await initializeAuth();
   updateAuthUI(user);
   if (user) {
-    if (window.location.pathname.includes("index.html")) {
+    if (window.location.pathname.includes("home.html")) {
       await getOrCreateConversation();
     } else if (
       window.location.pathname.includes("login.html") ||
       window.location.pathname.includes("register.html") ||
       window.location.pathname.includes("test-auth.html")
     ) {
-      window.location.href = "index.html";
+      window.location.href = "home.html";
     }
   }
   const savedTheme = localStorage.getItem("theme") || "light";
@@ -454,7 +454,7 @@ if (loginForm) {
     try {
       const user = await signInWithEmail(email, password);
       if (user) {
-        window.location.href = "index.html";
+        window.location.href = "home.html";
       }
     } catch (error) {
       alert("Login failed: " + error.message);
@@ -470,7 +470,7 @@ if (registerForm) {
     try {
       const user = await signUpWithEmail(email, password);
       if (user) {
-        window.location.href = "index.html";
+        window.location.href = "home.html";
       }
     } catch (error) {
       alert("Sign up failed: " + error.message);
@@ -517,7 +517,7 @@ if (testLoginForm) {
       if (user) {
         showMessage("Login successful!");
         setTimeout(() => {
-          window.location.href = "index.html";
+          window.location.href = "home.html";
         }, 1500);
       }
     } catch (error) {
@@ -549,7 +549,7 @@ if (testRegisterForm) {
             "Registration successful! Please check your email for confirmation.",
           );
           setTimeout(() => {
-            window.location.href = "index.html";
+            window.location.href = "home.html";
           }, 1500);
         }
       } catch (error) {

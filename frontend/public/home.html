@@ -3,20 +3,23 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Chat History</title>
-    <link rel="icon" href="favicon.ico" />
+    <title>AI Chatbot</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <div class="container">
+      <!-- Sidebar -->
       <div class="sidebar" id="sidebar">
-        <h2>My Chatbot</h2>
-        <div id="user-email" class="user-email"></div>
+        <div class="user-info">
+          <h2>My Chatbot</h2>
+          <div id="user-email" class="user-email"></div>
+        </div>
         <ul>
-          <li><a href="home.html">Home</a></li>
-          <li><a href="history.html" class="active">History</a></li>
+          <li><a href="home.html" class="active">Home</a></li>
+          <li><a href="history.html">History</a></li>
           <li><a href="profile.html">Profile</a></li>
         </ul>
+
         <!-- Auth block -->
         <div class="auth-block" id="auth_reg">
           <h3>Get Started</h3>
@@ -34,31 +37,40 @@
           </div>
         </div>
       </div>
+
+      <!-- Chat container -->
       <div class="chat-container">
         <div class="chat-header">
-          <h2>Chat History</h2>
+          <h2>Default Conversation</h2>
         </div>
-        <div class="search-bar">
-          <input
-            type="text"
-            id="search-input"
-            placeholder="Search conversations..."
-          />
-        </div>
-        <div id="alert_msg">
-          <div class="alert_msg">
-            <a href="login.html" class="auth-button"
-              >Please Login to view the record</a
-            >
+        <div class="chat-messages">
+          <!-- Messages will appear here -->
+          <div class="message bot-message">
+            Hello! How can I help you today?
+          </div>
+          <div class="message user-message">
+            I'd like to know more about your services.
+          </div>
+          <div class="message bot-message">
+            Sure! We offer a range of AI-powered solutions including chatbots,
+            content generation, and data analysis. What specific area are you
+            interested in?
           </div>
         </div>
-
-        <div class="history-list rdylogin">
-          <h3>Recent Conversations</h3>
-          <ul id="history-items"></ul>
+        <div class="chat-input">
+          <form id="message-form">
+            <input
+              type="text"
+              id="message-input"
+              placeholder="Type your message here..."
+            />
+            <button type="submit">Send</button>
+          </form>
         </div>
       </div>
     </div>
+
+    <!-- Hamburger menu for mobile -->
     <button class="hamburger">☰</button>
     <script type="module" src="script.js"></script>
     <script type="module" src="app.js"></script>

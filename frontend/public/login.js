@@ -20,7 +20,7 @@ loginBtn.addEventListener("click", async (event) => {
     const user = await signInWithEmail(email, password);
 
     if (user) {
-      window.location.href = "index.html";
+      window.location.href = "home.html";
     } else {
       errorMessage.textContent = "Login failed. Please check your credentials.";
       errorMessage.style.display = "block";
@@ -43,6 +43,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (user) {
     // Initialize app to set up conversation
     // Redirect to chat page
-    window.location.href = "index.html";
+    window.location.href = "home.html";
   }
 });

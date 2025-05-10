@@ -309,7 +309,7 @@ document.addEventListener("DOMContentLoaded", () => {
       li.appendChild(editBtn);
 
       li.onclick = () => {
-        window.location.href = `index.html?conversationId=${conversation.id}`;
+        window.location.href = `home.html?conversationId=${conversation.id}`;
       };
 
       historyItems.appendChild(li);
