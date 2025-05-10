@@ -1,5 +1,6 @@
-import { getAuthToken, getCurrentUser } from "./auth.js";
+import { getAuthToken, getCurrentUser, checkAuth } from "./auth.js";
 import { sendMessage, connectToStream } from "./chat.js";
+import { API_BASE_URL } from "./config.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   const messageForm = document.getElementById("message-form");
@@ -10,10 +11,14 @@ document.addEventListener("DOMContentLoaded", () => {
   const openSidebarBtn = document.getElementById("open-sidebar");
   const closeSidebarBtn = document.getElementById("close-sidebar");
   const searchInput = document.getElementById("search-input");
-  const historyItems = document.querySelectorAll(".history-item");
+  const historyItems = document.getElementById("history-items");
 
   let activeSocket = null;
-
+  async function load_chat() {
+    const conversations = await loadConversations();
+    renderConversations(conversations);
+  }
+  load_chat();
   function applyTheme(theme) {
     if (theme === "dark") {
       document.documentElement.classList.add("dark-theme");
@@ -26,14 +31,17 @@ document.addEventListener("DOMContentLoaded", () => {
   //theme
   const themeSwitch = document.getElementById("theme-switch");
   const currentTheme = localStorage.getItem("theme");
-  if (currentTheme === "dark") {
+  if (themeSwitch && currentTheme === "dark") {
     document.body.classList.add("dark-theme");
     themeSwitch.checked = true;
   }
-  themeSwitch.addEventListener("change", function () {
-    document.body.classList.toggle("dark-theme");
-    localStorage.setItem("theme", this.checked ? "dark" : "light");
-  });
+  if (themeSwitch) {
+    themeSwitch.addEventListener("change", function () {
+      document.body.classList.toggle("dark-theme");
+      localStorage.setItem("theme", this.checked ? "dark" : "light");
+    });
+  }
+
   const savedTheme = localStorage.getItem("theme") || "light";
   applyTheme(savedTheme);
 
@@ -180,7 +188,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  if (searchInput && historyItems.length > 0) {
+  if (searchInput) {
     searchInput.addEventListener("input", () => {
       const searchTerm = searchInput.value.toLowerCase();
       historyItems.forEach((item) => {
@@ -192,6 +200,108 @@ document.addEventListener("DOMContentLoaded", () => {
           item.style.display = "none";
         }
       });
+    });
+  }
+  async function loadConversations() {
+    const session = await checkAuth();
+
+    const response = await fetch(`${API_BASE_URL}/conversations`, {
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+      },
+    });
+    return response.json();
+  }
+
+  /**
+
+/**
+ * Update a conversation's title or model
+ * @param {number} conversationId - ID of the conversation to update
+ * @param {{ title?: string, model?: string }} update - Update data
+ */
+  async function updateConversation(conversationId, update) {
+    const session = await checkAuth();
+
+    const response = await fetch(
+      `${API_BASE_URL}/conversations/${conversationId}`,
+      {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(update),
+      },
+    );
+    return response.json();
+  }
+  /**
+   * @param {number} conversationId
+   * @param {HTMLElement} titleElement
+   */
+  function startEditing(conversationId, titleElement) {
+    const currentTitle = titleElement.textContent || "";
+    const input = document.createElement("input");
+    input.type = "text";
+    input.value = currentTitle;
+    input.className = "conversation-edit";
+
+    const handleSubmit = async () => {
+      const newTitle = input.value.trim();
+      if (newTitle && newTitle !== currentTitle) {
+        try {
+          await updateConversation(conversationId, { title: newTitle });
+          titleElement.textContent = newTitle;
+        } catch (error) {
+          console.error("Failed to update conversation title:", error);
+          titleElement.textContent = currentTitle;
+        }
+      } else {
+        titleElement.textContent = currentTitle;
+      }
+      input.remove();
+    };
+
+    input.addEventListener("blur", handleSubmit);
+    input.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        handleSubmit();
+      }
+    });
+
+    titleElement.textContent = "";
+    titleElement.appendChild(input);
+    input.focus();
+  }
+
+  // Render conversations
+  /**
+   * @param {any[]} conversations
+   */
+  function renderConversations(conversations) {
+    if (!historyItems) return;
+
+    conversations.forEach((conversation) => {
+      const li = document.createElement("li");
+      li.className = "history-item";
+      li.dataset.id = conversation.id;
+
+      const titleSpan = document.createElement("h4");
+      titleSpan.textContent = conversation.title;
+      li.appendChild(titleSpan);
+
+      const editBtn = document.createElement("button");
+      //editBtn.className = "btn icon conversation-edit";
+      editBtn.textContent = "✏️";
+      editBtn.onclick = (e) => {
+        e.stopPropagation();
+        startEditing(conversation.id, titleSpan);
+      };
+      li.appendChild(editBtn);
+
+      // li.onclick = () => loadConversation(conversation.id);
+      historyItems.appendChild(li);
     });
   }
 

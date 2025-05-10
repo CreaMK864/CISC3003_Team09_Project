@@ -2,10 +2,14 @@ import { signInWithEmail, signInWithGoogle, initializeAuth } from "./auth.js";
 
 // DOM elements
 const loginBtn = document.getElementById("loginBtn");
+const loginForm = document.getElementById("login-form");
 const errorMessage = document.getElementById("error-message");
 const googleSignInBtn = document.getElementById("googleSignInBtn");
 
 // Handle form submission
+loginForm?.addEventListener("submit", async () => {
+  event?.preventDefault();
+});
 loginBtn.addEventListener("click", async (event) => {
   event.preventDefault();
 
