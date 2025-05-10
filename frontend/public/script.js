@@ -8,18 +8,21 @@ document.addEventListener("DOMContentLoaded", () => {
   const chatMessages = document.querySelector(".chat-messages");
   const hamburgerButton = document.querySelector(".hamburger");
   const sidebar = document.getElementById("sidebar");
-  const openSidebarBtn = document.getElementById("open-sidebar");
-  const closeSidebarBtn = document.getElementById("close-sidebar");
   const searchInput = document.getElementById("search-input");
   const historyItems = document.getElementById("history-items");
-
+  const themeSwitch = document.getElementById("theme-switch");
+  const currentTheme = localStorage.getItem("theme");
+  const savedTheme = localStorage.getItem("theme") || "light";
   let activeSocket = null;
+  let currentAbortController = null;
+
+  load_chat();
+  applyTheme(savedTheme);
 
   async function load_chat() {
     const conversations = await loadConversations();
     renderConversations(conversations);
   }
-  load_chat();
 
   function applyTheme(theme) {
     if (theme === "dark") {
@@ -31,21 +34,17 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  const themeSwitch = document.getElementById("theme-switch");
-  const currentTheme = localStorage.getItem("theme");
   if (themeSwitch && currentTheme === "dark") {
     document.body.classList.add("dark-theme");
     themeSwitch.checked = true;
   }
+
   if (themeSwitch) {
     themeSwitch.addEventListener("change", function () {
       document.body.classList.toggle("dark-theme");
       localStorage.setItem("theme", this.checked ? "dark" : "light");
     });
   }
-
-  const savedTheme = localStorage.getItem("theme") || "light";
-  applyTheme(savedTheme);
 
   document.addEventListener("themeChanged", (e) => {
     applyTheme(e.detail.theme);
@@ -60,24 +59,6 @@ document.addEventListener("DOMContentLoaded", () => {
   if (hamburgerButton && sidebar) {
     hamburgerButton.addEventListener("click", () => {
       sidebar.classList.toggle("show");
-    });
-  }
-
-  if (openSidebarBtn && sidebar) {
-    openSidebarBtn.addEventListener("click", () => {
-      sidebar.classList.add("active");
-    });
-  }
-
-  if (closeSidebarBtn && sidebar) {
-    closeSidebarBtn.addEventListener("click", () => {
-      sidebar.classList.remove("active");
-    });
-  }
-
-  if (messageInput && sidebar) {
-    messageInput.addEventListener("focus", () => {
-      sidebar.classList.remove("active");
     });
   }
 
@@ -101,7 +82,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (!response.ok) {
       throw new Error(
-        `Failed to fetch conversations: ${response.status} - ${await response.text()}`
+        `Failed to fetch conversations: ${response.status} - ${await response.text()}`,
       );
     }
 
@@ -123,7 +104,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (!createResponse.ok) {
         throw new Error(
-          `Failed to create conversation: ${createResponse.status} - ${await createResponse.text()}`
+          `Failed to create conversation: ${createResponse.status} - ${await createResponse.text()}`,
         );
       }
 
@@ -152,7 +133,7 @@ document.addEventListener("DOMContentLoaded", () => {
       try {
         const loadingIndicator = appendMessage(
           "bot",
-          '<div class="typing-indicator"><span></span><span></span><span></span></div>'
+          '<div class="typing-indicator"><span></span><span></span><span></span></div>',
         );
 
         const conversationId = await getConversationId();
@@ -180,7 +161,7 @@ document.addEventListener("DOMContentLoaded", () => {
           (error) => {
             botMessageElement.innerHTML = `Error: ${error}`;
             chatMessages.scrollTop = chatMessages.scrollHeight;
-          }
+          },
         );
       } catch (error) {
         console.error("Error:", error);
@@ -189,21 +170,57 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  if (searchInput) {
-    searchInput.addEventListener("input", () => {
-      const searchTerm = searchInput.value.toLowerCase();
-      Array.from(historyItems.children).forEach((item) => {
-        const title = item.querySelector("h4").textContent.toLowerCase();
-        const summary = item.querySelector("p")?.textContent.toLowerCase() || "";
-        if (title.includes(searchTerm) || summary.includes(searchTerm)) {
-          item.style.display = "block";
-        } else {
-          item.style.display = "none";
-        }
-      });
-    });
-  }
+  searchInput?.addEventListener("input", () => {
+    if (searchInput.ariaValueMax?.trim() === "") {
+      load_chat();
+      return;
+    }
+    while (historyItems?.firstChild) {
+      historyItems.removeChild(historyItems.firstChild);
+    }
+    handleSearch();
+  });
 
+  async function handleSearch() {
+    if (!searchInput) return;
+    if (currentAbortController) {
+      currentAbortController.abort();
+    }
+    const query = searchInput.value.trim();
+    currentAbortController = new AbortController();
+    try {
+      const conversations = await searchConversations(
+        query,
+        currentAbortController.signal,
+      );
+      renderConversations(conversations);
+    } catch (error) {
+      if (error.name !== "AbortError") {
+        console.log("Search error:", error);
+      }
+    }
+  }
+  async function searchConversations(query, signal) {
+    if (!query) {
+      return loadConversations();
+    }
+
+    const session = await checkAuth();
+
+    const response = await fetch(
+      `${API_BASE_URL}/search?query=${encodeURIComponent(query)}`,
+      {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        signal,
+      },
+    );
+    const results = await response.json();
+    return results.map(
+      (/** @type {{ conversation: Conversation }} */ r) => r.conversation,
+    );
+  }
   async function loadConversations() {
     const session = await checkAuth();
 
@@ -227,7 +244,7 @@ document.addEventListener("DOMContentLoaded", () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(update),
-      }
+      },
     );
     return response.json();
   }
@@ -281,7 +298,10 @@ document.addEventListener("DOMContentLoaded", () => {
       li.appendChild(titleSpan);
 
       const editBtn = document.createElement("button");
-      editBtn.textContent = "✏️";
+      editBtn.innerHTML =
+        '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>';
+      editBtn.className = "edit-btn";
+      editBtn.title = "Edit title";
       editBtn.onclick = (e) => {
         e.stopPropagation();
         startEditing(conversation.id, titleSpan);
@@ -307,7 +327,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (!response.ok) {
       throw new Error(
-        `Failed to fetch messages: ${response.status} - ${await response.text()}`
+        `Failed to fetch messages: ${response.status} - ${await response.text()}`,
       );
     }
 
@@ -325,7 +345,7 @@ document.addEventListener("DOMContentLoaded", () => {
         messages.forEach((message) => {
           appendMessage(
             message.role === "user" ? "user" : "bot",
-            message.content
+            message.content,
           );
         });
       } catch (error) {
@@ -336,12 +356,14 @@ document.addEventListener("DOMContentLoaded", () => {
       // Fallback to default behavior if no conversationId is provided
       const defaultConversationId = await getConversationId();
       try {
-        const messages = await getMessagesForConversation(defaultConversationId);
+        const messages = await getMessagesForConversation(
+          defaultConversationId,
+        );
         chatMessages.innerHTML = ""; // Clear existing messages
         messages.forEach((message) => {
           appendMessage(
             message.role === "user" ? "user" : "bot",
-            message.content
+            message.content,
           );
         });
       } catch (error) {
@@ -370,7 +392,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (!response.ok) {
       throw new Error(
-        `Failed to fetch conversations: ${response.status} - ${await response.text()}`
+        `Failed to fetch conversations: ${response.status} - ${await response.text()}`,
       );
     }
 
@@ -392,7 +414,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (!createResponse.ok) {
         throw new Error(
-          `Failed to create conversation: ${createResponse.status} - ${await createResponse.text()}`
+          `Failed to create conversation: ${createResponse.status} - ${await createResponse.text()}`,
         );
       }
 

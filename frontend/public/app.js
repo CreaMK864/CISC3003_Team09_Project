@@ -349,14 +349,6 @@ function displayErrorMessage(content) {
   }
 }
 
-/**
- * Get the current conversation ID
- * @returns {number|null} The current conversation ID
- */
-function getCurrentConversationId() {
-  return currentConversationId;
-}
-
 // Event Listeners
 document.addEventListener("DOMContentLoaded", () => {
   messageForm = document.getElementById("message-form");
@@ -405,7 +397,7 @@ document.addEventListener("DOMContentLoaded", () => {
           (error) => {
             botMessageElement.textContent = `Error: ${error}`;
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
-          }
+          },
         );
       } catch (error) {
         displayErrorMessage(`Error: ${error.message}`);
