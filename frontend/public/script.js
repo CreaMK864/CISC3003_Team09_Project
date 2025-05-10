@@ -14,11 +14,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const historyItems = document.getElementById("history-items");
 
   let activeSocket = null;
+
   async function load_chat() {
     const conversations = await loadConversations();
     renderConversations(conversations);
   }
   load_chat();
+
   function applyTheme(theme) {
     if (theme === "dark") {
       document.documentElement.classList.add("dark-theme");
@@ -28,7 +30,7 @@ document.addEventListener("DOMContentLoaded", () => {
       document.body.classList.remove("dark-theme");
     }
   }
-  //theme
+
   const themeSwitch = document.getElementById("theme-switch");
   const currentTheme = localStorage.getItem("theme");
   if (themeSwitch && currentTheme === "dark") {
@@ -82,14 +84,14 @@ document.addEventListener("DOMContentLoaded", () => {
   function appendMessage(sender, content) {
     const messageElement = document.createElement("div");
     messageElement.className = `message ${sender}-message`;
-    messageElement.innerHTML = content; // Use innerHTML to render HTML tags
+    messageElement.innerHTML = content;
     chatMessages.appendChild(messageElement);
     chatMessages.scrollTop = chatMessages.scrollHeight;
     return messageElement;
   }
 
   async function getConversationId() {
-    const apiUrl = "https://api.saviomak.com/conversations";
+    const apiUrl = `${API_BASE_URL}/conversations`;
     const token = await getAuthToken();
 
     const response = await fetch(apiUrl, {
@@ -99,7 +101,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (!response.ok) {
       throw new Error(
-        `Failed to fetch conversations: ${response.status} - ${await response.text()}`,
+        `Failed to fetch conversations: ${response.status} - ${await response.text()}`
       );
     }
 
@@ -121,7 +123,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (!createResponse.ok) {
         throw new Error(
-          `Failed to create conversation: ${createResponse.status} - ${await createResponse.text()}`,
+          `Failed to create conversation: ${createResponse.status} - ${await createResponse.text()}`
         );
       }
 
@@ -150,7 +152,7 @@ document.addEventListener("DOMContentLoaded", () => {
       try {
         const loadingIndicator = appendMessage(
           "bot",
-          '<div class="typing-indicator"><span></span><span></span><span></span></div>',
+          '<div class="typing-indicator"><span></span><span></span><span></span></div>'
         );
 
         const conversationId = await getConversationId();
@@ -172,14 +174,13 @@ document.addEventListener("DOMContentLoaded", () => {
         activeSocket = connectToStream(
           response.ws_url,
           (content) => {
-            // Append formatted content
             botMessageElement.innerHTML += content;
             chatMessages.scrollTop = chatMessages.scrollHeight;
           },
           (error) => {
             botMessageElement.innerHTML = `Error: ${error}`;
             chatMessages.scrollTop = chatMessages.scrollHeight;
-          },
+          }
         );
       } catch (error) {
         console.error("Error:", error);
@@ -191,9 +192,9 @@ document.addEventListener("DOMContentLoaded", () => {
   if (searchInput) {
     searchInput.addEventListener("input", () => {
       const searchTerm = searchInput.value.toLowerCase();
-      historyItems.forEach((item) => {
+      Array.from(historyItems.children).forEach((item) => {
         const title = item.querySelector("h4").textContent.toLowerCase();
-        const summary = item.querySelector("p").textContent.toLowerCase();
+        const summary = item.querySelector("p")?.textContent.toLowerCase() || "";
         if (title.includes(searchTerm) || summary.includes(searchTerm)) {
           item.style.display = "block";
         } else {
@@ -202,6 +203,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     });
   }
+
   async function loadConversations() {
     const session = await checkAuth();
 
@@ -213,13 +215,6 @@ document.addEventListener("DOMContentLoaded", () => {
     return response.json();
   }
 
-  /**
-
-/**
- * Update a conversation's title or model
- * @param {number} conversationId - ID of the conversation to update
- * @param {{ title?: string, model?: string }} update - Update data
- */
   async function updateConversation(conversationId, update) {
     const session = await checkAuth();
 
@@ -232,14 +227,11 @@ document.addEventListener("DOMContentLoaded", () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(update),
-      },
+      }
     );
     return response.json();
   }
-  /**
-   * @param {number} conversationId
-   * @param {HTMLElement} titleElement
-   */
+
   function startEditing(conversationId, titleElement) {
     const currentTitle = titleElement.textContent || "";
     const input = document.createElement("input");
@@ -275,13 +267,10 @@ document.addEventListener("DOMContentLoaded", () => {
     input.focus();
   }
 
-  // Render conversations
-  /**
-   * @param {any[]} conversations
-   */
   function renderConversations(conversations) {
     if (!historyItems) return;
 
+    historyItems.innerHTML = "";
     conversations.forEach((conversation) => {
       const li = document.createElement("li");
       li.className = "history-item";
@@ -292,7 +281,6 @@ document.addEventListener("DOMContentLoaded", () => {
       li.appendChild(titleSpan);
 
       const editBtn = document.createElement("button");
-      //editBtn.className = "btn icon conversation-edit";
       editBtn.textContent = "✏️";
       editBtn.onclick = (e) => {
         e.stopPropagation();
@@ -300,13 +288,16 @@ document.addEventListener("DOMContentLoaded", () => {
       };
       li.appendChild(editBtn);
 
-      // li.onclick = () => loadConversation(conversation.id);
+      li.onclick = () => {
+        window.location.href = `index.html?conversationId=${conversation.id}`;
+      };
+
       historyItems.appendChild(li);
     });
   }
 
   async function getMessagesForConversation(conversationId) {
-    const apiUrl = `https://api.saviomak.com/conversations/${conversationId}/messages`;
+    const apiUrl = `${API_BASE_URL}/conversations/${conversationId}/messages`;
     const token = await getAuthToken();
 
     const response = await fetch(apiUrl, {
@@ -316,7 +307,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (!response.ok) {
       throw new Error(
-        `Failed to fetch messages: ${response.status} - ${await response.text()}`,
+        `Failed to fetch messages: ${response.status} - ${await response.text()}`
       );
     }
 
@@ -325,22 +316,88 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   async function loadInitialMessages() {
-    try {
-      const conversationId = await getConversationId();
-      const messages = await getMessagesForConversation(conversationId);
-      messages.forEach((message) => {
-        appendMessage(
-          message.role === "user" ? "user" : "bot",
-          message.content,
-        );
-      });
-    } catch (error) {
-      console.error("Error loading messages:", error);
-      appendMessage("bot", `Error loading messages: ${error.message}`);
+    const urlParams = new URLSearchParams(window.location.search);
+    const conversationId = urlParams.get("conversationId");
+    if (conversationId) {
+      try {
+        const messages = await getMessagesForConversation(conversationId);
+        chatMessages.innerHTML = ""; // Clear existing messages
+        messages.forEach((message) => {
+          appendMessage(
+            message.role === "user" ? "user" : "bot",
+            message.content
+          );
+        });
+      } catch (error) {
+        console.error("Error loading messages:", error);
+        appendMessage("bot", `Error loading messages: ${error.message}`);
+      }
+    } else {
+      // Fallback to default behavior if no conversationId is provided
+      const defaultConversationId = await getConversationId();
+      try {
+        const messages = await getMessagesForConversation(defaultConversationId);
+        chatMessages.innerHTML = ""; // Clear existing messages
+        messages.forEach((message) => {
+          appendMessage(
+            message.role === "user" ? "user" : "bot",
+            message.content
+          );
+        });
+      } catch (error) {
+        console.error("Error loading default messages:", error);
+        appendMessage("bot", `Error loading messages: ${error.message}`);
+      }
     }
   }
 
   if (chatMessages) {
     loadInitialMessages();
   }
+
+  // Update getConversationId to respect URL parameter if present
+  window.getConversationId = async () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const conversationId = urlParams.get("conversationId");
+    if (conversationId) return parseInt(conversationId, 10);
+    const apiUrl = `${API_BASE_URL}/conversations`;
+    const token = await getAuthToken();
+
+    const response = await fetch(apiUrl, {
+      method: "GET",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (!response.ok) {
+      throw new Error(
+        `Failed to fetch conversations: ${response.status} - ${await response.text()}`
+      );
+    }
+
+    const conversations = await response.json();
+    if (conversations.length > 0) {
+      return conversations[0].id;
+    } else {
+      const createResponse = await fetch(apiUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          title: "New Conversation",
+          model: "gpt-4.1-nano",
+        }),
+      });
+
+      if (!createResponse.ok) {
+        throw new Error(
+          `Failed to create conversation: ${createResponse.status} - ${await createResponse.text()}`
+        );
+      }
+
+      const conversation = await createResponse.json();
+      return conversation.id;
+    }
+  };
 });
