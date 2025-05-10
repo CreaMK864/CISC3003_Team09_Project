@@ -15,25 +15,35 @@ document.addEventListener("DOMContentLoaded", () => {
   let activeSocket = null;
 
   function applyTheme(theme) {
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark-theme');
-      document.body.classList.add('dark-theme');
+    if (theme === "dark") {
+      document.documentElement.classList.add("dark-theme");
+      document.body.classList.add("dark-theme");
     } else {
-      document.documentElement.classList.remove('dark-theme');
-      document.body.classList.remove('dark-theme');
+      document.documentElement.classList.remove("dark-theme");
+      document.body.classList.remove("dark-theme");
     }
   }
-
-  const savedTheme = localStorage.getItem('theme') || 'light';
+  //theme
+  const themeSwitch = document.getElementById("theme-switch");
+  const currentTheme = localStorage.getItem("theme");
+  if (currentTheme === "dark") {
+    document.body.classList.add("dark-theme");
+    themeSwitch.checked = true;
+  }
+  themeSwitch.addEventListener("change", function () {
+    document.body.classList.toggle("dark-theme");
+    localStorage.setItem("theme", this.checked ? "dark" : "light");
+  });
+  const savedTheme = localStorage.getItem("theme") || "light";
   applyTheme(savedTheme);
 
-  document.addEventListener('themeChanged', (e) => {
+  document.addEventListener("themeChanged", (e) => {
     applyTheme(e.detail.theme);
   });
 
-  window.addEventListener('storage', (event) => {
-    if (event.key === 'theme') {
-      applyTheme(event.newValue || 'light');
+  window.addEventListener("storage", (event) => {
+    if (event.key === "theme") {
+      applyTheme(event.newValue || "light");
     }
   });
 
@@ -80,7 +90,9 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     if (!response.ok) {
-      throw new Error(`Failed to fetch conversations: ${response.status} - ${await response.text()}`);
+      throw new Error(
+        `Failed to fetch conversations: ${response.status} - ${await response.text()}`,
+      );
     }
 
     const conversations = await response.json();
@@ -93,11 +105,16 @@ document.addEventListener("DOMContentLoaded", () => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ title: "New Conversation", model: "gpt-4.1-nano" }),
+        body: JSON.stringify({
+          title: "New Conversation",
+          model: "gpt-4.1-nano",
+        }),
       });
 
       if (!createResponse.ok) {
-        throw new Error(`Failed to create conversation: ${createResponse.status} - ${await createResponse.text()}`);
+        throw new Error(
+          `Failed to create conversation: ${createResponse.status} - ${await createResponse.text()}`,
+        );
       }
 
       const conversation = await createResponse.json();
@@ -154,7 +171,7 @@ document.addEventListener("DOMContentLoaded", () => {
           (error) => {
             botMessageElement.innerHTML = `Error: ${error}`;
             chatMessages.scrollTop = chatMessages.scrollHeight;
-          }
+          },
         );
       } catch (error) {
         console.error("Error:", error);
@@ -188,7 +205,9 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     if (!response.ok) {
-      throw new Error(`Failed to fetch messages: ${response.status} - ${await response.text()}`);
+      throw new Error(
+        `Failed to fetch messages: ${response.status} - ${await response.text()}`,
+      );
     }
 
     const messages = await response.json();
@@ -199,8 +218,11 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const conversationId = await getConversationId();
       const messages = await getMessagesForConversation(conversationId);
-      messages.forEach(message => {
-        appendMessage(message.role === "user" ? "user" : "bot", message.content);
+      messages.forEach((message) => {
+        appendMessage(
+          message.role === "user" ? "user" : "bot",
+          message.content,
+        );
       });
     } catch (error) {
       console.error("Error loading messages:", error);
