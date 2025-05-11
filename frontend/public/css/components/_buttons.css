@@ -20,9 +20,9 @@
   bottom: 0;
   background-color: var(--input-bg);
   transition:
-    background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-    box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  border-radius: 16px;
+    background-color var(--transition-normal),
+    box-shadow var(--transition-normal);
+  border-radius: var(--radius-full);
   border: 1px solid var(--input-border);
 }
 
@@ -31,14 +31,14 @@
   content: "";
   height: 24px;
   width: 24px;
-  left: 4px;
+  left: var(--spacing-xs);
   bottom: 3px;
   background-color: var(--button-bg);
   transition:
-    transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-    background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  border-radius: 50%;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transform var(--transition-normal),
+    background-color var(--transition-normal);
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-sm);
 }
 
 input:checked + .slider {
@@ -51,17 +51,21 @@ input:checked + .slider:before {
 }
 
 .save-btn {
-  background: linear-gradient(135deg, #10b981, #059669);
-  color: white;
-  padding: 12px 30px;
+  background: linear-gradient(
+    135deg,
+    var(--color-primary),
+    var(--color-primary-dark)
+  );
+  color: var(--button-text);
+  padding: var(--spacing-sm) var(--spacing-lg);
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   cursor: pointer;
-  font-size: 16px;
+  font-size: var(--font-size-base);
   width: 100%;
   transition:
-    transform 0.3s ease,
-    box-shadow 0.3s ease;
+    transform var(--transition-normal),
+    box-shadow var(--transition-normal);
   position: relative;
   overflow: hidden;
 }
@@ -79,7 +83,7 @@ input:checked + .slider:before {
     rgba(255, 255, 255, 0.3),
     transparent
   );
-  transition: left 0.5s ease;
+  transition: left var(--transition-normal);
 }
 
 .save-btn:hover::before {
@@ -88,9 +92,10 @@ input:checked + .slider:before {
 
 .save-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  box-shadow: var(--shadow-md);
 }
 
 .save-btn:disabled {
   cursor: not-allowed;
+  opacity: 0.7;
 }

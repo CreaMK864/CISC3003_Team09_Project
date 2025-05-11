@@ -5,13 +5,13 @@
 }
 
 .user-info {
-  margin-bottom: 30px;
+  margin-bottom: var(--spacing-xl);
 }
 
 .user-email {
-  font-size: 0.9em;
+  font-size: var(--font-size-sm);
   opacity: 0.8;
-  margin-top: 5px;
+  margin-top: var(--spacing-xs);
 }
 
 .chat-container {
@@ -19,30 +19,31 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+  transition: margin-left var(--transition-normal);
 }
 
 .chat-header {
-  padding: 20px;
+  padding: var(--spacing-lg);
   background-color: var(--chat-header-bg);
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
 }
 
 .chat-header h2 {
-  font-size: 1.2em;
+  font-size: var(--font-size-lg);
   color: var(--text-color);
 }
 
 .chat-messages {
   flex: 1;
-  padding: 20px;
+  padding: var(--spacing-lg);
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: var(--spacing-md);
 }
 
 .chat-input {
-  padding: 15px;
+  padding: var(--spacing-md);
   border-top: 1px solid var(--input-border);
   background-color: var(--chat-header-bg);
 }

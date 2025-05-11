@@ -1,18 +1,26 @@
 .hamburger {
   display: none;
   position: fixed;
-  top: 15px;
-  left: 15px;
+  top: var(--spacing-md);
+  left: var(--spacing-md);
   background-color: var(--button-bg);
   color: var(--button-text);
   border: none;
   width: 40px;
   height: 40px;
-  border-radius: 50%;
-  font-size: 1.5em;
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xl);
   cursor: pointer;
-  z-index: 100;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  z-index: var(--z-fixed);
+  box-shadow: var(--shadow-md);
+  transition:
+    transform var(--transition-normal),
+    background-color var(--transition-normal);
+}
+
+.hamburger:hover {
+  transform: scale(1.05);
+  background-color: var(--button-hover);
 }
 
 @media (max-width: 768px) {

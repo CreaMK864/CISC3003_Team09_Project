@@ -2,32 +2,43 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 15px;
-  border-radius: 8px;
-  transition: all 0.2s ease;
-  gap: 10px;
+  padding: var(--spacing-md) var(--spacing-md);
+  border-radius: var(--radius-md);
+  transition: all var(--transition-fast);
+  gap: var(--spacing-sm);
+  position: relative;
+  padding-right: 40px;
 }
 
 .history-item:hover {
   background-color: var(--input-border);
-  transform: translateX(5px);
+  transform: translateX(var(--spacing-xs));
 }
 
 .history-item h4 {
   flex: 1;
   margin: 0;
-  font-size: 1em;
+  font-size: var(--font-size-base);
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .history-item button {
-  background: none;
+  position: absolute;
+  right: var(--spacing-md);
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.1);
   border: none;
-  padding: 5px;
+  border-radius: var(--radius-full);
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
   opacity: 0;
-  transition: all 0.2s ease;
+  transition: all var(--transition-fast);
   color: var(--button-bg);
 }
 
@@ -36,47 +47,25 @@
 }
 
 .history-item button:hover {
-  color: var(--button-hover-color, #0c7cd5);
-  transform: scale(1.1);
+  color: var(--button-hover);
+  transform: translateY(-50%) scale(1.1);
+  background: rgba(255, 255, 255, 0.2);
 }
 
 .conversation-edit {
   width: 99%;
-  padding: 8px 12px;
+  padding: var(--spacing-sm) var(--spacing-md);
   border: 2px solid var(--button-bg);
-  border-radius: 8px;
-  font-size: 1em;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-base);
   background-color: var(--input-bg);
   color: var(--input-text);
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all var(--transition-normal);
+  box-shadow: var(--shadow-sm);
 }
 
 .conversation-edit:focus {
   outline: none;
   border-color: var(--button-bg);
-  box-shadow: 0 0 8px rgba(33, 150, 243, 0.3);
-}
-
-.history-item {
-  position: relative;
-  padding-right: 40px;
-}
-
-.history-item button {
-  position: absolute;
-  right: 15px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 50%;
-  width: 28px;
-  height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.history-item button:hover {
-  background: rgba(255, 255, 255, 0.2);
+  box-shadow: var(--shadow-md);
 }
