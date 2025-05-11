@@ -51,31 +51,27 @@ class User(SQLModel, table=True):
         subscription_plan: The plan the user is subscribed to
         profile_picture_url: URL to the user's profile picture
         last_selected_model: The model the user last selected
-        last_selected_model_id: foreign key to the last selected model
         created_at: Timestamp when the user was created
         updated_at: Timestamp when the user was last updated
         conversations: Relationship to the user's conversations
-        theme: User's selected theme(dark or light)
+        email: User's email address
     """
 
     id: uuid.UUID | None = Field(default=None, primary_key=True)
     display_name: str = Field(sa_column=Column(Text), default="User")
     profile_picture_url: str | None = Field(sa_column=Column(Text))
-    subscription_status: str = Field(sa_column=Column(Text), default="free")
-    subscription_plan: str = Field(sa_column=Column(Text), default="free")
-    last_selected_model: str = Field(sa_column=Column(Text), default=DEFAULT_MODEL)
-    last_selected_model_id: int | None = Field(foreign_key="model.id", sa_column=Column(Text), nullable=True)
-    theme: str = Field(sa_column=Column(Text), default="light")
-    conversations: list["Conversation"] = Relationship(back_populates="user")
     created_at: datetime.datetime = Field(
         default_factory=lambda: datetime.datetime.now(datetime.UTC),
         sa_column=Column(DateTime(timezone=True), server_default=text("(now() AT TIME ZONE 'UTC')")),
     )
+    subscription_status: str = Field(sa_column=Column(Text), default="free")
+    subscription_plan: str = Field(sa_column=Column(Text), default="free")
     updated_at: datetime.datetime = Field(
         default_factory=lambda: datetime.datetime.now(datetime.UTC),
         sa_column=Column(DateTime(timezone=True), server_default=text("(now() AT TIME ZONE 'UTC')")),
     )
 
+    conversations: list["Conversation"] = Relationship(back_populates="user")
 
 
 class Conversation(SQLModel, table=True):
@@ -87,7 +83,6 @@ class Conversation(SQLModel, table=True):
         user_id: Foreign key to the user who owns this conversation
         title: Title of the conversation
         model: The language model used for this conversation
-        model_id: Foreign key to the model used in this conversation
         created_at: Timestamp when the conversation was created
         updated_at: Timestamp when the conversation was last updated
         user: Relationship back to the user
@@ -98,7 +93,6 @@ class Conversation(SQLModel, table=True):
     user_id: uuid.UUID = Field(foreign_key="user.id", index=True)
     title: str = Field(sa_column=Column(Text, default="New Conversation"))
     model: str = Field(sa_column=Column(Text, default=DEFAULT_MODEL))
-    model_id: int | None = Field(foreign_key="model.id", sa_column=Column(Text), nullable=True)
     created_at: datetime.datetime = Field(
         default_factory=lambda: datetime.datetime.now(datetime.UTC),
         sa_column=Column(DateTime(timezone=True), server_default=text("(now() AT TIME ZONE 'UTC')")),
@@ -124,8 +118,6 @@ class Message(SQLModel, table=True):
         content: Content of the message
         timestamp: Timestamp when the message was created
         conversation: Relationship back to the conversation
-        model_id: Foreign key to the model used in this message
-        model: The language model used for this message
     """
 
     id: int | None = Field(default=None, primary_key=True)
@@ -138,7 +130,6 @@ class Message(SQLModel, table=True):
         sa_column=Column(DateTime(timezone=True), server_default=text("(now() AT TIME ZONE 'UTC')")),
     )
     model: str | None = Field(sa_column=Column(Text, nullable=True))
-    model_id: int | None = Field(foreign_key="model.id", sa_column=Column(Text), nullable=True)
 
     conversation: Conversation = Relationship(back_populates="messages")
 
