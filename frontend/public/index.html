@@ -14,66 +14,75 @@
     <meta name="author" content="CISC3003-2024-02 Team 09" />
     <link rel="icon" type="image/x-icon" href="favicon.ico" />
     <title>Easy Chatbot - Intelligent AI Assistant</title>
-    <link rel="stylesheet" href="css/styles.css" />
     <link rel="stylesheet" href="css/welcome.css" />
   </head>
   <body>
-    <header class="landing-container">
-      <!-- Navigation -->
-      <nav class="landing-nav" aria-label="Main navigation">
-        <div class="logo">My Chatbot</div>
-        <ul class="nav-links">
-          <li><a href="#features" aria-label="View features">Features</a></li>
-          <li>
-            <a href="#project-purpose" aria-label="Learn about project purpose"
-              >About this project</a
-            >
-          </li>
-          <li><a href="#about-us" aria-label="Meet our team">Our Team</a></li>
-          <li>
-            <a
-              href="https://github.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Visit our GitHub repository"
-              >GitHub</a
-            >
-          </li>
-        </ul>
-        <div class="auth-links">
-          <a
-            href="login.html"
-            class="login-button"
-            aria-label="Login to your account"
-            >Login</a
+    <!-- Navigation -->
+    <nav class="nav" aria-label="Main navigation">
+      <div class="nav__logo">My Chatbot</div>
+      <ul class="nav__links">
+        <li>
+          <a href="#features" class="nav__link" aria-label="View features"
+            >Features</a
           >
+        </li>
+        <li>
           <a
-            href="register.html"
-            class="open-app-button"
-            aria-label="Create new account"
-            >Register</a
+            href="#project-purpose"
+            class="nav__link"
+            aria-label="Learn about project purpose"
+            >About this project</a
           >
-        </div>
-      </nav>
-    </header>
+        </li>
+        <li>
+          <a href="#about-us" class="nav__link" aria-label="Meet our team"
+            >Our Team</a
+          >
+        </li>
+        <li>
+          <a
+            href="https://github.com"
+            class="nav__link"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Visit our GitHub repository"
+            >GitHub</a
+          >
+        </li>
+      </ul>
+      <div class="nav__auth">
+        <a
+          href="login.html"
+          class="nav__auth-button nav__auth-button--login"
+          aria-label="Login to your account"
+          >Login</a
+        >
+        <a
+          href="register.html"
+          class="nav__auth-button nav__auth-button--register"
+          aria-label="Create new account"
+          >Register</a
+        >
+      </div>
+    </nav>
 
     <!-- Hero Section -->
     <main>
       <section class="hero" aria-labelledby="hero-heading">
-        <div class="bg-shape bg-shape-1" aria-hidden="true"></div>
-        <div class="bg-shape bg-shape-2" aria-hidden="true"></div>
-        <div class="hero-content">
-          <h1 id="hero-heading">
+        <div class="bg-shape bg-shape--1" aria-hidden="true"></div>
+        <div class="bg-shape bg-shape--2" aria-hidden="true"></div>
+        <div class="hero__content">
+          <h1 id="hero-heading" class="hero__title">
             Easy Chatbot - Welcome to our chatbot website!
           </h1>
-          <p>
+          <p class="hero__description">
             Including real-time chat, persistent conversation history, and model
             selection.
           </p>
-          <div class="hero-buttons">
+          <div class="hero__buttons">
             <a
               href="login.html"
-              class="download-button"
+              class="hero__button hero__button--primary"
               aria-label="Start chatting now"
             >
               <svg
@@ -96,7 +105,7 @@
             </a>
             <a
               href="#features"
-              class="browser-button"
+              class="hero__button hero__button--secondary"
               aria-label="View features"
               >See Features</a
             >
@@ -104,7 +113,7 @@
           <img
             src="css/C.jpg"
             alt="Preview of our chatbot interface showing a conversation between a user and AI assistant"
-            class="hero-image"
+            class="hero__image"
             loading="lazy"
           />
         </div>
@@ -116,17 +125,17 @@
         class="features"
         aria-labelledby="features-heading"
       >
-        <article id="about-us" class="feature-section">
-          <div class="feature-content">
-            <h2 id="team-heading">Our Team Members</h2>
-            <ul class="team-list">
+        <article id="about-us" class="feature">
+          <div class="feature__content">
+            <h2 id="team-heading" class="feature__title">Our Team Members</h2>
+            <ul class="feature__list">
               <li>DC227551 Mak Weng Hou</li>
               <li>DC207583 Lei Ka Chon</li>
               <li>DC227476 Kuan Hou In</li>
               <li>DC226952 Chong Chi Hoi</li>
             </ul>
           </div>
-          <figure class="feature-image">
+          <figure class="feature__image">
             <img
               src="https://edurank.org/assets/img/uni-logos/university-of-macau-logo.png"
               alt="University of Macau logo"
@@ -135,21 +144,23 @@
           </figure>
         </article>
 
-        <article id="project-purpose" class="feature-section">
-          <div class="feature-content">
-            <h2 id="purpose-heading">Seamless Communication Anywhere</h2>
-            <p>
+        <article id="project-purpose" class="feature feature--reversed">
+          <div class="feature__content">
+            <h2 id="purpose-heading" class="feature__title">
+              Seamless Communication Anywhere
+            </h2>
+            <p class="feature__description">
               The purpose of this project is to create a user-friendly chatbot
               website for general users, power users, and evaluators, enabling
               real-time conversations, personalized experiences, and robust
               functionality.
             </p>
-            <p>
+            <p class="feature__description">
               Whether you're planning an event, sharing ideas, or just hanging
               out, our platform makes group communication effortless.
             </p>
           </div>
-          <figure class="feature-image">
+          <figure class="feature__image">
             <img
               src="css/B.jpg"
               alt="Illustration of seamless communication across multiple channels"
@@ -158,19 +169,21 @@
           </figure>
         </article>
 
-        <article id="ai-features" class="feature-section">
-          <div class="feature-content">
-            <h2 id="ai-heading">AI-Powered Conversation Assistant</h2>
-            <p>
+        <article id="ai-features" class="feature">
+          <div class="feature__content">
+            <h2 id="ai-heading" class="feature__title">
+              AI-Powered Conversation Assistant
+            </h2>
+            <p class="feature__description">
               Our intelligent chatbot helps answer questions, provide
               recommendations, and make your conversations more productive.
             </p>
-            <p>
+            <p class="feature__description">
               To find key information, our AI assistant is there when you need
               it most.
             </p>
           </div>
-          <figure class="feature-image">
+          <figure class="feature__image">
             <img
               src="css/C.jpg"
               alt="AI assistant in action, helping users with their queries"
@@ -181,13 +194,13 @@
       </section>
 
       <!-- CTA Section -->
-      <section id="cta" class="cta-section" aria-labelledby="cta-heading">
-        <div class="cta-content">
-          <h2 id="cta-heading">Time to Have a Chat!</h2>
-          <p>Join us with "My Chatbot" today</p>
+      <section id="cta" class="cta" aria-labelledby="cta-heading">
+        <div class="cta__content">
+          <h2 id="cta-heading" class="cta__title">Time to Have a Chat!</h2>
+          <p class="cta__description">Join us with "My Chatbot" today</p>
           <a
             href="login.html"
-            class="download-button"
+            class="hero__button hero__button--primary"
             aria-label="Start chatting now"
             >Start Chatting Now</a
           >
@@ -196,75 +209,96 @@
     </main>
 
     <!-- Footer -->
-    <footer class="landing-footer">
-      <nav class="footer-grid" aria-label="Footer navigation">
-        <section class="footer-column">
-          <h3>Product</h3>
-          <ul>
-            <li><a href="register.html">Chat</a></li>
-            <li><a href="#features">Features</a></li>
-            <li><a href="#project-purpose">About</a></li>
-            <li><a href="#feedback">Feedback</a></li>
+    <footer class="footer">
+      <nav class="footer__grid" aria-label="Footer navigation">
+        <section class="footer__column">
+          <h3 class="footer__title">Product</h3>
+          <ul class="footer__list">
+            <li class="footer__item">
+              <a href="register.html" class="footer__link">Chat</a>
+            </li>
+            <li class="footer__item">
+              <a href="#features" class="footer__link">Features</a>
+            </li>
+            <li class="footer__item">
+              <a href="#project-purpose" class="footer__link">About</a>
+            </li>
+            <li class="footer__item">
+              <a href="#feedback" class="footer__link">Feedback</a>
+            </li>
           </ul>
         </section>
-        <section class="footer-column">
-          <h3>Company</h3>
-          <ul>
-            <li><a href="#about-us">About Us</a></li>
-            <li><a href="#about-us">Our Team</a></li>
-            <li><a href="#careers">Careers</a></li>
-            <li><a href="#contact">Contact</a></li>
+        <section class="footer__column">
+          <h3 class="footer__title">Company</h3>
+          <ul class="footer__list">
+            <li class="footer__item">
+              <a href="#about-us" class="footer__link">About Us</a>
+            </li>
+            <li class="footer__item">
+              <a href="#about-us" class="footer__link">Our Team</a>
+            </li>
+            <li class="footer__item">
+              <a href="#careers" class="footer__link">Careers</a>
+            </li>
+            <li class="footer__item">
+              <a href="#contact" class="footer__link">Contact</a>
+            </li>
           </ul>
         </section>
-        <section class="footer-column">
-          <h3>Resources</h3>
-          <ul>
-            <li><a href="#help">Help Center</a></li>
-            <li><a href="#terms">Terms of Service</a></li>
-            <li><a href="#privacy">Privacy Policy</a></li>
-            <li><a href="#guidelines">Community Guidelines</a></li>
+        <section class="footer__column">
+          <h3 class="footer__title">Resources</h3>
+          <ul class="footer__list">
+            <li class="footer__item">
+              <a href="#help" class="footer__link">Help Center</a>
+            </li>
+            <li class="footer__item">
+              <a href="#terms" class="footer__link">Terms of Service</a>
+            </li>
+            <li class="footer__item">
+              <a href="#privacy" class="footer__link">Privacy Policy</a>
+            </li>
+            <li class="footer__item">
+              <a href="#guidelines" class="footer__link"
+                >Community Guidelines</a
+              >
+            </li>
           </ul>
         </section>
-        <section class="footer-column">
-          <h3>Connect</h3>
-          <ul>
-            <li>
+        <section class="footer__column">
+          <h3 class="footer__title">Connect</h3>
+          <ul class="footer__list">
+            <li class="footer__item">
               <a
                 href="https://twitter.com"
+                class="footer__link"
                 target="_blank"
                 rel="noopener noreferrer"
                 >Twitter</a
               >
             </li>
-            <li>
+            <li class="footer__item">
               <a
                 href="https://github.com"
+                class="footer__link"
                 target="_blank"
                 rel="noopener noreferrer"
                 >GitHub</a
               >
             </li>
-            <li>
+            <li class="footer__item">
               <a
                 href="https://linkedin.com"
+                class="footer__link"
                 target="_blank"
                 rel="noopener noreferrer"
                 >LinkedIn</a
               >
             </li>
-            <li>
-              <a
-                href="https://instagram.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                >Instagram</a
-              >
-            </li>
           </ul>
         </section>
       </nav>
-      <div class="footer-bottom">
-        <div class="footer-logo">My Chatbot</div>
+      <div class="footer__bottom">
+        <div class="footer__logo">My Chatbot</div>
         <div class="language-selector">
           <span>English (US)</span>
           <svg
@@ -286,10 +320,15 @@
         </div>
         <a
           href="login.html"
-          class="footer-button"
+          class="footer__button"
           aria-label="Open chat application"
           >Open Chat</a
         >
+      </div>
+      <div style="max-width: 1200px; margin: 0 auto; padding: 0 20px">
+        <p style="margin: 0; color: white; text-align: center">
+          © 2025 CISC3003-2024-02 Team 09.
+        </p>
       </div>
     </footer>
 

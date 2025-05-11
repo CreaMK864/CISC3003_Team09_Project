@@ -1,0 +1,16 @@
+.alert_msg {
+  margin-left: 40%;
+  margin-top: 20%;
+  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
+  background-color: var(--error-bg);
+  color: var(--error-text);
+  font-size: var(--font-size-base);
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--transition-normal);
+}
+
+.alert_msg:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}

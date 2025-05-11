@@ -1,9 +1,15 @@
+/**
+ * @fileoverview Main application JavaScript file handling authentication, chat functionality, and UI interactions.
+ * @requires ./auth.js
+ * @requires ./config.js
+ * @requires ./chat.js
+ */
+
 import {
   initializeAuth,
   signInWithEmail,
   signInWithGoogle,
   signUpWithEmail,
-  resetPassword,
   getAuthToken,
   getCurrentUser,
   signOut,
@@ -36,29 +42,6 @@ const googleRegisterButton = /** @type {HTMLButtonElement} */ (
   document.getElementById("google-register")
 );
 
-// DOM elements for test-auth.html
-const loginTab = /** @type {HTMLElement} */ (
-  document.getElementById("loginTab")
-);
-const registerTab = /** @type {HTMLElement} */ (
-  document.getElementById("registerTab")
-);
-const resetTab = /** @type {HTMLElement} */ (
-  document.getElementById("resetTab")
-);
-const testLoginForm = /** @type {HTMLFormElement} */ (
-  document.getElementById("loginForm")
-);
-const testRegisterForm = /** @type {HTMLFormElement} */ (
-  document.getElementById("registerForm")
-);
-const testResetForm = /** @type {HTMLFormElement} */ (
-  document.getElementById("resetForm")
-);
-const statusMessage = /** @type {HTMLElement} */ (
-  document.getElementById("statusMessage")
-);
-
 // New button for creating a new chat
 const createNewChatButton = /** @type {HTMLButtonElement} */ (
   document.getElementById("create-new-chat")
@@ -68,8 +51,13 @@ let activeSocket = /** @type {WebSocket | null} */ (null);
 let currentConversationId = /** @type {number | null} */ (null);
 
 /**
+ * @typedef {import('@supabase/auth-js').User} User
+ */
+
+/**
  * Apply the selected theme to the document
  * @param {string} theme - The theme to apply ('light' or 'dark')
+ * @returns {void}
  */
 function applyTheme(theme) {
   if (theme === "dark") {
@@ -89,6 +77,7 @@ function applyTheme(theme) {
 /**
  * Initialize the application
  * @returns {Promise<void>}
+ * @throws {Error} If initialization fails
  */
 async function initialize() {
   const user = await initializeAuth();
@@ -120,6 +109,8 @@ async function initialize() {
 /**
  * Get username from user ID
  * @param {string} uid - User ID
+ * @returns {Promise<string>} The user's display name
+ * @throws {Error} If the fetch operation fails
  */
 export async function get_username(uid) {
   try {
@@ -131,27 +122,16 @@ export async function get_username(uid) {
     return data["display_name"];
   } catch (error) {
     console.error("There was a problem with the fetch operation:", error);
+    throw error;
   }
 }
 /**
  * Get username from user ID
 
- 
-async function get_title(cid) {
-    try {
-    const response = await fetch(`${API_BASE_URL}/conversations`);
-    if (!response.ok) {
-      throw new Error("Network response was not ok");
-    }
-    const data = await response.json();
-    return data[cid].title;
-  } catch (error) {
-    console.error("There was a problem with the fetch operation:", error);
-  }
-}
 /**
  * Update authentication UI based on user state
- * @param {any} user
+ * @param {User|null} user - The user object from authentication
+ * @returns {Promise<void>}
  */
 async function updateAuthUI(user) {
   const auth_reg = /** @type {HTMLElement} */ (
@@ -191,68 +171,9 @@ async function updateAuthUI(user) {
 }
 
 /**
- * Show a specific tab (for test-auth.html)
- * @param {string} tabName - The name of the tab to show ('login', 'register', 'reset')
- */
-function showTab(tabName) {
-  if (!testLoginForm || !testRegisterForm || !testResetForm) return;
-
-  testLoginForm.classList.add("hidden");
-  testRegisterForm.classList.add("hidden");
-  testResetForm.classList.add("hidden");
-
-  loginTab?.classList.remove("tab-active");
-  registerTab?.classList.remove("tab-active");
-  resetTab?.classList.remove("tab-active");
-
-  if (tabName === "login") {
-    testLoginForm.classList.remove("hidden");
-    loginTab?.classList.add("tab-active");
-  } else if (tabName === "register") {
-    testRegisterForm.classList.remove("hidden");
-    registerTab?.classList.add("tab-active");
-  } else if (tabName === "reset") {
-    testResetForm.classList.remove("hidden");
-    resetTab?.classList.add("tab-active");
-  }
-}
-
-/**
- * Show status message (for test-auth.html)
- * @param {string} message - The message to display
- * @param {boolean} isError - Whether the message is an error
- */
-function showMessage(message, isError = false) {
-  if (!statusMessage) return;
-
-  statusMessage.textContent = message;
-  statusMessage.classList.remove(
-    "hidden",
-    "bg-green-100",
-    "text-green-800",
-    "bg-red-100",
-    "text-red-800",
-  );
-  if (isError) {
-    statusMessage.classList.add(
-      "bg-red-100",
-      "text-red-800",
-      "dark:bg-red-900",
-      "dark:text-red-200",
-    );
-  } else {
-    statusMessage.classList.add(
-      "bg-green-100",
-      "text-green-800",
-      "dark:bg-green-900",
-      "dark:text-green-200",
-    );
-  }
-}
-
-/**
  * Get existing conversations or create a new one
  * @returns {Promise<void>}
+ * @throws {Error} If fetching or creating conversations fails
  */
 async function getOrCreateConversation() {
   try {
@@ -270,16 +191,19 @@ async function getOrCreateConversation() {
     }
 
     const conversations = await response.json();
-    //  const url = new URL(window.location.href);
-    //   const conversationId = url.searchParams.get('conversationId');
+    console.log(conversations);
+    const url = new URL(window.location.href);
+    const conversationId = url.searchParams.get("conversationId");
 
     if (conversations.length > 0) {
       const chatHeader = /** @type {HTMLElement} */ (
         document.querySelector(".chat-header h1")
       );
       if (chatHeader) {
-        chatHeader.textContent = conversations[0].title;
-        // chatHeader.textContent = await get_title(conversationId);
+        const conversation = conversations.find(
+          (conv) => conv.id === +conversationId,
+        );
+        chatHeader.textContent = conversation.title;
       }
     } else {
       await createNewConversation();
@@ -313,6 +237,7 @@ async function getOrCreateConversation() {
 /**
  * Create a new conversation
  * @returns {Promise<void>}
+ * @throws {Error} If conversation creation fails
  */
 async function createNewConversation() {
   try {
@@ -351,6 +276,7 @@ async function createNewConversation() {
 /**
  * Create a new chat and reset the chat area
  * @returns {Promise<void>}
+ * @throws {Error} If chat creation fails
  */
 async function createNewChat() {
   try {
@@ -391,6 +317,7 @@ async function createNewChat() {
  * Display a message in the chat UI
  * @param {string} content - The message content
  * @param {string} role - The role of the sender ('user' or 'assistant')
+ * @returns {HTMLElement} The created message element
  */
 function displayMessage(content, role) {
   const messageElement = document.createElement("div");
@@ -412,6 +339,7 @@ function displayMessage(content, role) {
 /**
  * Display an error message in the chat UI
  * @param {string} content - The error message content
+ * @returns {void}
  */
 function displayErrorMessage(content) {
   const messageElement = document.createElement("div");
@@ -427,6 +355,10 @@ function displayErrorMessage(content) {
 }
 
 // Event Listeners
+/**
+ * @type {Event}
+ * @event DOMContentLoaded
+ */
 document.addEventListener("DOMContentLoaded", () => {
   if (messageForm) {
     messageForm.addEventListener("submit", async (event) => {
@@ -620,152 +552,14 @@ if (googleRegisterButton) {
   });
 }
 
-if (loginTab) {
-  loginTab.addEventListener("click", () => showTab("login"));
-}
-if (registerTab) {
-  registerTab.addEventListener("click", () => showTab("register"));
-}
-if (resetTab) {
-  resetTab.addEventListener("click", () => showTab("reset"));
-}
-
-if (testLoginForm) {
-  const loginButton = /** @type {HTMLButtonElement} */ (
-    testLoginForm.querySelector("button")
-  );
-  if (loginButton) {
-    loginButton.addEventListener("click", async () => {
-      const emailInput = /** @type {HTMLInputElement} */ (
-        document.getElementById("loginEmail")
-      );
-      const passwordInput = /** @type {HTMLInputElement} */ (
-        document.getElementById("loginPassword")
-      );
-      if (!emailInput || !passwordInput) return;
-
-      const email = emailInput.value;
-      const password = passwordInput.value;
-      try {
-        const user = await signInWithEmail(email, password);
-        if (user) {
-          showMessage("Login successful!");
-          setTimeout(() => {
-            window.location.href = "home.html";
-          }, 1500);
-        }
-      } catch (error) {
-        if (error instanceof Error) {
-          showMessage(`Error: ${error.message}`, true);
-        } else {
-          showMessage("An unknown error occurred", true);
-        }
-      }
-    });
-  }
-
-  const googleButton = /** @type {HTMLButtonElement} */ (
-    testLoginForm.querySelector("button[onclick='signInWithGoogle()']")
-  );
-  if (googleButton) {
-    googleButton.addEventListener("click", async () => {
-      try {
-        await signInWithGoogle();
-      } catch (error) {
-        if (error instanceof Error) {
-          showMessage(`Error: ${error.message}`, true);
-        } else {
-          showMessage("An unknown error occurred", true);
-        }
-      }
-    });
-  }
-}
-
-if (testRegisterForm) {
-  const registerButton = /** @type {HTMLButtonElement} */ (
-    testRegisterForm.querySelector("button")
-  );
-  if (registerButton) {
-    registerButton.addEventListener("click", async () => {
-      const emailInput = /** @type {HTMLInputElement} */ (
-        document.getElementById("registerEmail")
-      );
-      const passwordInput = /** @type {HTMLInputElement} */ (
-        document.getElementById("registerPassword")
-      );
-      if (!emailInput || !passwordInput) return;
-
-      const email = emailInput.value;
-      const password = passwordInput.value;
-      try {
-        const user = await signUpWithEmail(email, password);
-        if (user) {
-          showMessage(
-            "Registration successful! Please check your email for confirmation.",
-          );
-          setTimeout(() => {
-            window.location.href = "home.html";
-          }, 1500);
-        }
-      } catch (error) {
-        if (error instanceof Error) {
-          showMessage(`Error: ${error.message}`, true);
-        } else {
-          showMessage("An unknown error occurred", true);
-        }
-      }
-    });
-  }
-
-  const googleButton = /** @type {HTMLButtonElement} */ (
-    testRegisterForm.querySelector("button[onclick='signInWithGoogle()']")
-  );
-  if (googleButton) {
-    googleButton.addEventListener("click", async () => {
-      try {
-        await signInWithGoogle();
-      } catch (error) {
-        if (error instanceof Error) {
-          showMessage(`Error: ${error.message}`, true);
-        } else {
-          showMessage("An unknown error occurred", true);
-        }
-      }
-    });
-  }
-}
-
-if (testResetForm) {
-  const resetButton = /** @type {HTMLButtonElement} */ (
-    testResetForm.querySelector("button")
-  );
-  if (resetButton) {
-    resetButton.addEventListener("click", async () => {
-      const emailInput = /** @type {HTMLInputElement} */ (
-        document.getElementById("resetEmail")
-      );
-      if (!emailInput) return;
-
-      const email = emailInput.value;
-      try {
-        await resetPassword(email);
-        showMessage("Password reset email sent. Please check your inbox.");
-      } catch (error) {
-        if (error instanceof Error) {
-          showMessage(`Error: ${error.message}`, true);
-        } else {
-          showMessage("An unknown error occurred", true);
-        }
-      }
-    });
-  }
-}
-
 document.addEventListener("DOMContentLoaded", () => {
   initialize();
 });
 
+/**
+ * @type {Event}
+ * @event storage
+ */
 window.addEventListener("storage", (event) => {
   if (event.key === "theme") {
     applyTheme(event.newValue || "light");

@@ -10,7 +10,7 @@
     <meta name="author" content="CISC3003-2024-02 Team 09" />
     <link rel="icon" type="image/x-icon" href="favicon.ico" />
     <title>User Profile - Easy Chatbot</title>
-    <link rel="stylesheet" href="css/styles.css" />
+    <link rel="stylesheet" href="css/main.css" />
   </head>
   <body>
     <div class="container">
@@ -51,12 +51,6 @@
               href="register.html"
               class="auth-button"
               aria-label="Create new account"
-              >Register</a
-            >
-            <a
-              href="test-auth.html"
-              class="auth-test"
-              aria-label="Test authentication"
               >Register</a
             >
           </div>
@@ -102,7 +96,7 @@
         </div>
         <section class="profile-content rdylogin">
           <div class="profile-card">
-            <form id="profile-form" novalidate>
+            <form id="profile-form" class="form-card" novalidate>
               <h3>Edit your profile</h3>
               <div class="form-group">
                 <label for="profile_email">Email:</label>
@@ -163,5 +157,6 @@
     <script type="module" src="js/script.js"></script>
     <script type="module" src="js/app.js"></script>
     <script type="module" src="js/profile.js"></script>
+    <script src="js/components/footer.js"></script>
   </body>
 </html>

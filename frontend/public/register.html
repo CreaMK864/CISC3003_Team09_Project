@@ -10,12 +10,12 @@
     <meta name="author" content="CISC3003-2024-02 Team 09" />
     <link rel="icon" type="image/x-icon" href="favicon.ico" />
     <title>Register - Easy Chatbot</title>
-    <link rel="stylesheet" href="css/RL_styles.css" />
+    <link rel="stylesheet" href="css/main.css" />
   </head>
   <body class="auth-page">
-    <main class="container">
-      <section class="chat-container">
-        <header class="chat-header">
+    <main class="auth-container">
+      <section class="auth-box">
+        <header class="auth-header">
           <button
             class="hamburger"
             id="open-sidebar"
@@ -26,8 +26,8 @@
           </button>
           <h1>Create Account</h1>
         </header>
-        <div class="form-container">
-          <form id="register-form" novalidate>
+        <div class="auth-form-container">
+          <form id="register-form" class="form-card" novalidate>
             <div class="form-group">
               <label for="email">Email:</label>
               <input
@@ -77,5 +77,6 @@
       </section>
     </main>
     <script type="module" src="js/register.js"></script>
+    <script src="js/components/footer.js"></script>
   </body>
 </html>

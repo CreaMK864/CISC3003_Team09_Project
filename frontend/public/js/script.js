@@ -1,29 +1,62 @@
+/**
+ * @fileoverview Main chat application functionality
+ * @module script
+ */
+
 import { getAuthToken, getCurrentUser, checkAuth } from "./auth.js";
 import { sendMessage, connectToStream } from "./chat.js";
 import { API_BASE_URL } from "./config.js";
 
+/**
+ * Initialize chat application when DOM is loaded
+ */
 document.addEventListener("DOMContentLoaded", () => {
-  const messageForm = document.getElementById("message-form");
-  const messageInput = document.getElementById("message-input");
+  /** @type {HTMLFormElement|null} */
+  const messageForm = /** @type {HTMLFormElement|null} */ (
+    document.getElementById("message-form")
+  );
+  /** @type {HTMLInputElement|null} */
+  const messageInput = /** @type {HTMLInputElement|null} */ (
+    document.getElementById("message-input")
+  );
+  /** @type {HTMLElement|null} */
   const chatMessages = document.querySelector(".chat-messages");
+  /** @type {HTMLElement|null} */
   const hamburgerButton = document.querySelector(".hamburger");
+  /** @type {HTMLElement|null} */
   const sidebar = document.getElementById("sidebar");
-  const searchInput = document.getElementById("search-input");
+  /** @type {HTMLInputElement|null} */
+  const searchInput = /** @type {HTMLInputElement|null} */ (
+    document.getElementById("search-input")
+  );
+  /** @type {HTMLElement|null} */
   const historyItems = document.getElementById("history-items");
-  const themeSwitch = document.getElementById("theme-switch");
+  /** @type {HTMLInputElement|null} */
+  const themeSwitch = /** @type {HTMLInputElement|null} */ (
+    document.getElementById("theme-switch")
+  );
   const currentTheme = localStorage.getItem("theme");
   const savedTheme = localStorage.getItem("theme") || "light";
+  /** @type {WebSocket|null} */
   let activeSocket = null;
+  /** @type {AbortController|null} */
   let currentAbortController = null;
 
   load_chat();
   applyTheme(savedTheme);
 
+  /**
+   * Load chat history and initialize conversations
+   */
   async function load_chat() {
     const conversations = await loadConversations();
     renderConversations(conversations);
   }
 
+  /**
+   * Apply theme to the document
+   * @param {string} theme - Theme to apply ('light' or 'dark')
+   */
   function applyTheme(theme) {
     if (theme === "dark") {
       document.documentElement.classList.add("dark-theme");
@@ -46,7 +79,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  document.addEventListener("themeChanged", (e) => {
+  document.addEventListener("themeChanged", (/** @type {CustomEvent} */ e) => {
     applyTheme(e.detail.theme);
   });
 
@@ -62,6 +95,12 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  /**
+   * Append a message to the chat
+   * @param {string} sender - Message sender ('user' or 'bot')
+   * @param {string} content - Message content
+   * @returns {HTMLElement} The created message element
+   */
   function appendMessage(sender, content) {
     const messageElement = document.createElement("div");
     messageElement.className = `message ${sender}-message`;
@@ -71,6 +110,11 @@ document.addEventListener("DOMContentLoaded", () => {
     return messageElement;
   }
 
+  /**
+   * Get or create a conversation ID
+   * @returns {Promise<number>} The conversation ID
+   * @throws {Error} If API request fails
+   */
   async function getConversationId() {
     const apiUrl = `${API_BASE_URL}/conversations`;
     const token = await getAuthToken();
@@ -113,7 +157,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  if (messageForm) {
+  if (messageForm && messageInput) {
     messageForm.addEventListener("submit", async (event) => {
       event.preventDefault();
 
@@ -139,12 +183,16 @@ document.addEventListener("DOMContentLoaded", () => {
         const conversationId = await getConversationId();
         const response = await sendMessage(conversationId, content);
         if (!response || !response.ws_url) {
-          chatMessages.removeChild(loadingIndicator);
+          if (chatMessages && loadingIndicator) {
+            chatMessages.removeChild(loadingIndicator);
+          }
           appendMessage("bot", "Error: No WebSocket URL received");
           return;
         }
 
-        chatMessages.removeChild(loadingIndicator);
+        if (chatMessages && loadingIndicator) {
+          chatMessages.removeChild(loadingIndicator);
+        }
         const botMessageElement = appendMessage("bot", "");
 
         if (activeSocket) {
@@ -155,12 +203,20 @@ document.addEventListener("DOMContentLoaded", () => {
         activeSocket = connectToStream(
           response.ws_url,
           (content) => {
-            botMessageElement.innerHTML += content;
-            chatMessages.scrollTop = chatMessages.scrollHeight;
+            if (botMessageElement) {
+              botMessageElement.innerHTML += content;
+              if (chatMessages) {
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+              }
+            }
           },
           (error) => {
-            botMessageElement.innerHTML = `Error: ${error}`;
-            chatMessages.scrollTop = chatMessages.scrollHeight;
+            if (botMessageElement) {
+              botMessageElement.innerHTML = `Error: ${error}`;
+              if (chatMessages) {
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+              }
+            }
           },
         );
       } catch (error) {
@@ -181,6 +237,9 @@ document.addEventListener("DOMContentLoaded", () => {
     handleSearch();
   });
 
+  /**
+   * Handle search input and fetch matching conversations
+   */
   async function handleSearch() {
     if (!searchInput) return;
     if (currentAbortController) {
@@ -200,6 +259,13 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
   }
+
+  /**
+   * Search conversations based on query
+   * @param {string} query - Search query
+   * @param {AbortSignal} signal - Abort signal for cancelling request
+   * @returns {Promise<Array>} Array of matching conversations
+   */
   async function searchConversations(query, signal) {
     if (!query) {
       return loadConversations();
@@ -217,40 +283,60 @@ document.addEventListener("DOMContentLoaded", () => {
       },
     );
     const results = await response.json();
-    return results.map(
-      (/** @type {{ conversation: Conversation }} */ r) => r.conversation,
-    );
+    return results.map((r) => r.conversation);
   }
-  async function loadConversations() {
-    const session = await checkAuth();
 
+  /**
+   * Load all conversations
+   * @returns {Promise<Array<{id: number, title: string, created_at: string}>>} Array of conversations
+   */
+  async function loadConversations() {
+    const token = await getAuthToken();
     const response = await fetch(`${API_BASE_URL}/conversations`, {
-      headers: {
-        Authorization: `Bearer ${session.access_token}`,
-      },
+      headers: { Authorization: `Bearer ${token}` },
     });
+
+    if (!response.ok) {
+      throw new Error(`Failed to load conversations: ${response.status}`);
+    }
+
     return response.json();
   }
 
+  /**
+   * Update conversation details
+   * @param {number} conversationId - ID of conversation to update
+   * @param {Object} update - Update data
+   * @returns {Promise<Object>} Updated conversation
+   */
   async function updateConversation(conversationId, update) {
-    const session = await checkAuth();
-
+    const token = await getAuthToken();
     const response = await fetch(
       `${API_BASE_URL}/conversations/${conversationId}`,
       {
         method: "PATCH",
         headers: {
-          Authorization: `Bearer ${session.access_token}`,
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(update),
       },
     );
+
+    if (!response.ok) {
+      throw new Error(`Update failed: ${response.status}`);
+    }
+
     return response.json();
   }
 
+  /**
+   * Start editing conversation title
+   * @param {number} conversationId - ID of conversation to edit
+   * @param {HTMLElement} titleElement - Title element to edit
+   */
   function startEditing(conversationId, titleElement) {
-    const currentTitle = titleElement.textContent || "";
+    const currentTitle = titleElement.textContent;
     const input = document.createElement("input");
     input.type = "text";
     input.value = currentTitle;
@@ -263,7 +349,7 @@ document.addEventListener("DOMContentLoaded", () => {
           await updateConversation(conversationId, { title: newTitle });
           titleElement.textContent = newTitle;
         } catch (error) {
-          console.error("Failed to update conversation title:", error);
+          console.error("Failed to update title:", error);
           titleElement.textContent = currentTitle;
         }
       } else {
@@ -284,8 +370,12 @@ document.addEventListener("DOMContentLoaded", () => {
     input.focus();
   }
 
+  /**
+   * Render conversations in the sidebar
+   * @param {Array} conversations - Array of conversations to render
+   */
   function renderConversations(conversations) {
-    if (!historyItems) return;
+    if (!historyItems || !chatMessages) return;
 
     historyItems.innerHTML = "";
     conversations.forEach((conversation) => {
@@ -316,28 +406,33 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  /**
+   * Get messages for a specific conversation
+   * @param {number} conversationId - ID of conversation to fetch messages for
+   * @returns {Promise<Array>} Array of messages
+   */
   async function getMessagesForConversation(conversationId) {
-    const apiUrl = `${API_BASE_URL}/conversations/${conversationId}/messages`;
     const token = await getAuthToken();
-
-    const response = await fetch(apiUrl, {
-      method: "GET",
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const response = await fetch(
+      `${API_BASE_URL}/conversations/${conversationId}/messages`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      },
+    );
 
     if (!response.ok) {
-      throw new Error(
-        `Failed to fetch messages: ${response.status} - ${await response.text()}`,
-      );
+      throw new Error(`Failed to load messages: ${response.status}`);
     }
 
-    const messages = await response.json();
-    return messages;
+    return response.json();
   }
 
+  /**
+   * Load initial messages for the current conversation
+   */
   async function loadInitialMessages() {
     const urlParams = new URLSearchParams(window.location.search);
-    const conversationId = urlParams.get("conversationId");
+    const conversationId = parseInt(urlParams.get("conversationId") ?? "", 10);
     if (conversationId) {
       try {
         const messages = await getMessagesForConversation(conversationId);

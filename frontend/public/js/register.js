@@ -1,25 +1,38 @@
+/**
+ * @fileoverview Registration page functionality for new user signup
+ * @module register
+ */
+
 import { signUpWithEmail, initializeAuth } from "./auth.js";
 
 // DOM elements
-const register_form = /** @type {HTMLFormElement} */ (
+/** @type {HTMLFormElement|null} */
+const register_form = /** @type {HTMLFormElement|null} */ (
   document.getElementById("register-form")
 );
 
-// Handle form submission
+/**
+ * Handle registration form submission
+ * @param {Event} event - The form submission event
+ */
 if (register_form) {
   register_form.addEventListener("submit", async (event) => {
     event.preventDefault();
 
-    const emailInput = /** @type {HTMLInputElement} */ (
+    /** @type {HTMLInputElement|null} */
+    const emailInput = /** @type {HTMLInputElement|null} */ (
       document.getElementById("email")
     );
-    const passwordInput = /** @type {HTMLInputElement} */ (
+    /** @type {HTMLInputElement|null} */
+    const passwordInput = /** @type {HTMLInputElement|null} */ (
       document.getElementById("password")
     );
-    const errorMessage = /** @type {HTMLElement} */ (
+    /** @type {HTMLElement|null} */
+    const errorMessage = /** @type {HTMLElement|null} */ (
       document.getElementById("error-message")
     );
-    const successMessage = /** @type {HTMLElement} */ (
+    /** @type {HTMLElement|null} */
+    const successMessage = /** @type {HTMLElement|null} */ (
       document.getElementById("success-message")
     );
 
@@ -57,12 +70,14 @@ if (register_form) {
   });
 }
 
-// Check if user is already authenticated
+/**
+ * Check if user is already authenticated on page load
+ * Redirects to home page if user is already logged in
+ */
 document.addEventListener("DOMContentLoaded", async () => {
   const user = await initializeAuth();
   if (user) {
-    // Initialize app to set up conversation
-    // Redirect to chat page
+    // Redirect to home page if already authenticated
     window.location.href = "home.html";
   }
 });

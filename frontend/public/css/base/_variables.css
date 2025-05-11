@@ -1,0 +1,72 @@
+:root {
+  /* Colors - Primary */
+  --color-primary: #2196f3;
+  --color-primary-light: #64b5f6;
+  --color-primary-dark: #1976d2;
+
+  /* Colors - Background */
+  --background-color: #f5f7fb;
+  --chat-header-bg: white;
+  --input-bg: white;
+  --profile-card-bg: white;
+
+  /* Colors - Text */
+  --text-color: #333;
+  --input-text: #333;
+  --button-text: white;
+  --sidebar-text: white;
+  --message-text-user: white;
+  --message-text-bot: #333;
+
+  /* Colors - UI Elements */
+  --sidebar-bg: var(--color-primary);
+  --message-bg-user: var(--color-primary);
+  --message-bg-bot: #e9e9e9;
+  --button-bg: var(--color-primary);
+  --button-hover: var(--color-primary-dark);
+  --input-border: #ddd;
+
+  /* Colors - States */
+  --error-bg: rgba(255, 0, 0, 0.1);
+  --error-text: #d32f2f;
+
+  /* Spacing */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+
+  /* Typography */
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.25rem;
+  --font-size-xl: 1.5rem;
+  --font-size-2xl: 2rem;
+
+  /* Border Radius */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 1rem;
+  --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-normal: 250ms ease;
+  --transition-slow: 350ms ease;
+
+  /* Z-index */
+  --z-dropdown: 1000;
+  --z-sticky: 1020;
+  --z-fixed: 1030;
+  --z-modal-backdrop: 1040;
+  --z-modal: 1050;
+  --z-popover: 1060;
+  --z-tooltip: 1070;
+}
