@@ -1,3 +1,10 @@
+/**
+ * @fileoverview Main application JavaScript file handling authentication, chat functionality, and UI interactions.
+ * @requires ./auth.js
+ * @requires ./config.js
+ * @requires ./chat.js
+ */
+
 import {
   initializeAuth,
   signInWithEmail,
@@ -68,8 +75,13 @@ let activeSocket = /** @type {WebSocket | null} */ (null);
 let currentConversationId = /** @type {number | null} */ (null);
 
 /**
+ * @typedef {import('@supabase/auth-js').User} User
+ */
+
+/**
  * Apply the selected theme to the document
  * @param {string} theme - The theme to apply ('light' or 'dark')
+ * @returns {void}
  */
 function applyTheme(theme) {
   if (theme === "dark") {
@@ -89,6 +101,7 @@ function applyTheme(theme) {
 /**
  * Initialize the application
  * @returns {Promise<void>}
+ * @throws {Error} If initialization fails
  */
 async function initialize() {
   const user = await initializeAuth();
@@ -120,6 +133,8 @@ async function initialize() {
 /**
  * Get username from user ID
  * @param {string} uid - User ID
+ * @returns {Promise<string>} The user's display name
+ * @throws {Error} If the fetch operation fails
  */
 export async function get_username(uid) {
   try {
@@ -131,12 +146,14 @@ export async function get_username(uid) {
     return data["display_name"];
   } catch (error) {
     console.error("There was a problem with the fetch operation:", error);
+    throw error;
   }
 }
 
 /**
  * Update authentication UI based on user state
- * @param {any} user
+ * @param {User|null} user - The user object from authentication
+ * @returns {Promise<void>}
  */
 async function updateAuthUI(user) {
   const auth_reg = /** @type {HTMLElement} */ (
@@ -178,6 +195,7 @@ async function updateAuthUI(user) {
 /**
  * Show a specific tab (for test-auth.html)
  * @param {string} tabName - The name of the tab to show ('login', 'register', 'reset')
+ * @returns {void}
  */
 function showTab(tabName) {
   if (!testLoginForm || !testRegisterForm || !testResetForm) return;
@@ -200,12 +218,14 @@ function showTab(tabName) {
     testResetForm.classList.remove("hidden");
     resetTab?.classList.add("tab-active");
   }
+  return;
 }
 
 /**
  * Show status message (for test-auth.html)
  * @param {string} message - The message to display
- * @param {boolean} isError - Whether the message is an error
+ * @param {boolean} [isError=false] - Whether the message is an error
+ * @returns {void}
  */
 function showMessage(message, isError = false) {
   if (!statusMessage) return;
@@ -238,6 +258,7 @@ function showMessage(message, isError = false) {
 /**
  * Get existing conversations or create a new one
  * @returns {Promise<void>}
+ * @throws {Error} If fetching or creating conversations fails
  */
 async function getOrCreateConversation() {
   try {
@@ -296,6 +317,7 @@ async function getOrCreateConversation() {
 /**
  * Create a new conversation
  * @returns {Promise<void>}
+ * @throws {Error} If conversation creation fails
  */
 async function createNewConversation() {
   try {
@@ -334,6 +356,7 @@ async function createNewConversation() {
 /**
  * Create a new chat and reset the chat area
  * @returns {Promise<void>}
+ * @throws {Error} If chat creation fails
  */
 async function createNewChat() {
   try {
@@ -374,6 +397,7 @@ async function createNewChat() {
  * Display a message in the chat UI
  * @param {string} content - The message content
  * @param {string} role - The role of the sender ('user' or 'assistant')
+ * @returns {HTMLElement} The created message element
  */
 function displayMessage(content, role) {
   const messageElement = document.createElement("div");
@@ -395,6 +419,7 @@ function displayMessage(content, role) {
 /**
  * Display an error message in the chat UI
  * @param {string} content - The error message content
+ * @returns {void}
  */
 function displayErrorMessage(content) {
   const messageElement = document.createElement("div");
@@ -410,6 +435,10 @@ function displayErrorMessage(content) {
 }
 
 // Event Listeners
+/**
+ * @type {Event}
+ * @event DOMContentLoaded
+ */
 document.addEventListener("DOMContentLoaded", () => {
   if (messageForm) {
     messageForm.addEventListener("submit", async (event) => {
@@ -749,6 +778,10 @@ document.addEventListener("DOMContentLoaded", () => {
   initialize();
 });
 
+/**
+ * @type {Event}
+ * @event storage
+ */
 window.addEventListener("storage", (event) => {
   if (event.key === "theme") {
     applyTheme(event.newValue || "light");

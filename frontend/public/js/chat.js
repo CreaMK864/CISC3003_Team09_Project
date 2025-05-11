@@ -1,11 +1,17 @@
+/**
+ * @fileoverview Chat functionality for handling message sending and WebSocket streaming
+ * @module chat
+ */
+
 import { getAuthToken } from "./auth.js";
 import { API_BASE_URL } from "./config.js";
 
 /**
- * Send a message and get stream response
+ * Send a message to the chat API and get WebSocket URL for streaming response
  * @param {number} conversationId - ID of the conversation
  * @param {string} content - Message content
- * @returns {Promise<{ ws_url: string } | null>}
+ * @returns {Promise<{ ws_url: string } | null>} WebSocket URL for streaming response
+ * @throws {Error} If user is not authenticated or API request fails
  */
 async function sendMessage(conversationId, content) {
   const token = await getAuthToken();
@@ -40,7 +46,7 @@ async function sendMessage(conversationId, content) {
 /**
  * Check if a string is valid JSON
  * @param {string} str - String to check
- * @returns {boolean}
+ * @returns {boolean} True if string is valid JSON, false otherwise
  */
 function isValidJSON(str) {
   try {
@@ -53,14 +59,18 @@ function isValidJSON(str) {
 
 /**
  * Connect to WebSocket for streaming response
- * @param {string} ws_url - WebSocket URL
- * @param {function(string): void} onContent - Callback for content updates
- * @param {function(string): void} onError - Callback for errors
- * @returns {WebSocket}
+ * @param {string} ws_url - WebSocket URL for streaming
+ * @param {function(string): void} onContent - Callback function for content updates
+ * @param {function(string): void} onError - Callback function for error handling
+ * @returns {WebSocket} WebSocket connection instance
  */
 function connectToStream(ws_url, onContent, onError) {
   const ws = new WebSocket(ws_url);
 
+  /**
+   * Handle incoming WebSocket messages
+   * @param {MessageEvent} event - WebSocket message event
+   */
   ws.onmessage = (event) => {
     const rawData = event.data;
     console.log("Raw WebSocket message:", rawData);
@@ -106,8 +116,12 @@ function connectToStream(ws_url, onContent, onError) {
         } else {
           onError(`Unexpected JSON message format: ${JSON.stringify(data)}`);
         }
-      } catch (error) {
-        onError(`Failed to parse JSON message: ${error.message}`);
+      } catch (/** @type {unknown} */ error) {
+        if (error instanceof Error) {
+          onError(`Failed to parse JSON message: ${error.message}`);
+        } else {
+          onError("Failed to parse JSON message: Unknown error");
+        }
       }
     } else {
       if (rawData.trim() === "." || rawData.trim() === "") {
@@ -117,10 +131,16 @@ function connectToStream(ws_url, onContent, onError) {
     }
   };
 
+  /**
+   * Handle WebSocket errors
+   */
   ws.onerror = () => {
     onError("WebSocket connection error");
   };
 
+  /**
+   * Handle WebSocket connection close
+   */
   ws.onclose = () => {
     console.log("WebSocket connection closed");
   };

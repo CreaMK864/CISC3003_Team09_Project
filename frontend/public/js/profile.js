@@ -1,20 +1,34 @@
+/**
+ * @fileoverview Profile page functionality for managing user profile information
+ * @module profile
+ */
+
 import { API_BASE_URL } from "./config.js";
 import { initializeAuth, checkAuth } from "./auth.js";
 import { get_username } from "./app.js";
 
+/**
+ * Initialize profile page and load user data
+ */
 document.addEventListener("DOMContentLoaded", async () => {
   const user = await initializeAuth();
   if (user) {
     update_profile(user);
   }
 });
+
 /**
- * Apply the selected theme to the document
- * @param {string} uid
- * @param {string} newUsername
+ * Update the user's display name
+ * @param {string} uid - The user's unique identifier
+ * @param {string} newUsername - The new username to set
+ * @returns {Promise<Object|null>} The updated user data or null if failed
  */
 async function update_username(uid, newUsername) {
   const session = await checkAuth();
+  if (!session) {
+    console.error("No active session found");
+    return null;
+  }
 
   try {
     const response = await fetch(`${API_BASE_URL}/users/${uid}`, {
@@ -43,25 +57,36 @@ async function update_username(uid, newUsername) {
         "There was a problem with the update operation: Unknown error",
       );
     }
+    return null;
   }
 }
 
+/**
+ * Initialize and handle profile page functionality
+ * @param {import('@supabase/supabase-js').User} user - The current user object
+ */
 async function update_profile(user) {
   const uid = user.id;
   const user_name = await get_username(uid);
-  const profile_name = /** @type {HTMLInputElement} */ (
+
+  /** @type {HTMLInputElement|null} */
+  const profile_name = /** @type {HTMLInputElement|null} */ (
     document.getElementById("profile_name")
   );
-  const profile_form = /** @type {HTMLFormElement} */ (
+  /** @type {HTMLFormElement|null} */
+  const profile_form = /** @type {HTMLFormElement|null} */ (
     document.getElementById("profile-form")
   );
-  const profile_email = /** @type {HTMLInputElement} */ (
+  /** @type {HTMLInputElement|null} */
+  const profile_email = /** @type {HTMLInputElement|null} */ (
     document.getElementById("profile_email")
   );
-  const profile_btn = /** @type {HTMLButtonElement} */ (
+  /** @type {HTMLButtonElement|null} */
+  const profile_btn = /** @type {HTMLButtonElement|null} */ (
     document.getElementById("profile_btn")
   );
-  const success_msg = /** @type {HTMLElement} */ (
+  /** @type {HTMLElement|null} */
+  const success_msg = /** @type {HTMLElement|null} */ (
     document.getElementById("success-message")
   );
 
@@ -74,10 +99,13 @@ async function update_profile(user) {
   )
     return;
 
-  profile_email.value = user.email;
+  profile_email.value = user.email || "";
   profile_name.placeholder = user_name;
   success_msg.style.display = "none";
 
+  /**
+   * Handle username input changes
+   */
   profile_name.addEventListener("input", async () => {
     if (profile_name.value != user_name) {
       profile_btn.disabled = false;
@@ -86,6 +114,10 @@ async function update_profile(user) {
     }
   });
 
+  /**
+   * Handle profile form submission
+   * @param {Event} event - The form submission event
+   */
   profile_form.addEventListener("submit", async (event) => {
     event?.preventDefault();
     if (profile_name.value != user_name) {

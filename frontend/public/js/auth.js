@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Authentication module for handling user authentication with Supabase
+ * @module auth
+ */
+
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from "./config.js";
 
@@ -9,7 +14,7 @@ let currentUser = null;
 
 /**
  * Check if user is already authenticated and initialize the app
- * @returns {Promise<import('@supabase/supabase-js').Session | null>}
+ * @returns {Promise<import('@supabase/supabase-js').Session | null>} The current session if authenticated
  */
 async function checkAuth() {
   const {
@@ -18,6 +23,10 @@ async function checkAuth() {
   return session;
 }
 
+/**
+ * Initialize authentication state and check for existing session
+ * @returns {Promise<import('@supabase/supabase-js').User|null>} The current user if authenticated
+ */
 async function initializeAuth() {
   // Get session from local storage
   const {
@@ -47,10 +56,12 @@ function showLoginForm() {
     signInWithEmail(email, password);
   }
 }
+
 /**
- * Sign in user with email and password
- * @param {string} email - User's email
+ * Sign up a new user with email and password
+ * @param {string} email - User's email address
  * @param {string} password - User's password
+ * @returns {Promise<import('@supabase/supabase-js').User|null>} The newly created user or null if failed
  */
 async function signUpWithEmail(email, password) {
   try {
@@ -72,11 +83,12 @@ async function signUpWithEmail(email, password) {
     return null;
   }
 }
+
 /**
  * Sign in user with email and password
- * @param {string} email - User's email
+ * @param {string} email - User's email address
  * @param {string} password - User's password
- * @returns {Promise<import('@supabase/supabase-js').User|null>}
+ * @returns {Promise<import('@supabase/supabase-js').User|null>} The authenticated user or null if failed
  */
 async function signInWithEmail(email, password) {
   try {
@@ -100,8 +112,8 @@ async function signInWithEmail(email, password) {
 }
 
 /**
- * Sign in with Google using Supabase UI
- * @returns {Promise<any|null>}
+ * Sign in with Google using Supabase OAuth
+ * @returns {Promise<import('@supabase/supabase-js').AuthResponse|null>} The authentication response or null if failed
  */
 async function signInWithGoogle() {
   try {
@@ -128,8 +140,11 @@ async function signInWithGoogle() {
   }
 }
 
-/** * @param {string} password - User's password */
-
+/**
+ * Change the current user's password
+ * @param {string} password - The new password
+ * @returns {Promise<import('@supabase/supabase-js').User|null>} The updated user or null if failed
+ */
 async function changePassword(password) {
   try {
     // Update the user's password
@@ -142,7 +157,12 @@ async function changePassword(password) {
     return null;
   }
 }
-/** * @param {string} email - User's email */
+
+/**
+ * Send a password reset email to the specified address
+ * @param {string} email - The email address to send the reset link to
+ * @returns {Promise<import('@supabase/supabase-js').AuthResponse|null>} The response or null if failed
+ */
 async function resetPassword(email) {
   try {
     const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
@@ -157,9 +177,10 @@ async function resetPassword(email) {
     return null;
   }
 }
+
 /**
- * Get the authentication token from Supabase
- * @returns {Promise<string>} The access token
+ * Get the current authentication token
+ * @returns {Promise<string>} The current access token or empty string if not authenticated
  */
 async function getAuthToken() {
   const {
@@ -182,8 +203,8 @@ async function signOut() {
 }
 
 /**
- * Get the current user
- * @returns {import('@supabase/supabase-js').User|null} The current user
+ * Get the current authenticated user
+ * @returns {import('@supabase/supabase-js').User|null} The current user or null if not authenticated
  */
 function getCurrentUser() {
   return currentUser;

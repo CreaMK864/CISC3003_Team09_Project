@@ -1,29 +1,43 @@
+/**
+ * @fileoverview Change password page functionality
+ * @module ch_pw
+ */
+
 import { changePassword } from "./auth.js";
 
 // DOM elements
-const changePasswordForm = /** @type {HTMLFormElement} */ (
+/** @type {HTMLFormElement|null} */
+const changePasswordForm = /** @type {HTMLFormElement|null} */ (
   document.getElementById("change-password-form")
 );
-const successMessage = /** @type {HTMLElement} */ (
+/** @type {HTMLElement|null} */
+const successMessage = /** @type {HTMLElement|null} */ (
   document.getElementById("success-message")
 );
-const errorMessage = /** @type {HTMLElement} */ (
+/** @type {HTMLElement|null} */
+const errorMessage = /** @type {HTMLElement|null} */ (
   document.getElementById("error-message")
 );
 
+// Hide error message initially
 if (errorMessage) {
   errorMessage.style.display = "none";
 }
 
-// Handle form submission
+/**
+ * Handle password change form submission
+ * Validates passwords match and updates user's password
+ */
 if (changePasswordForm && successMessage && errorMessage) {
   changePasswordForm.addEventListener("submit", async (event) => {
     event.preventDefault();
 
-    const passwordInput = /** @type {HTMLInputElement} */ (
+    /** @type {HTMLInputElement|null} */
+    const passwordInput = /** @type {HTMLInputElement|null} */ (
       document.getElementById("password")
     );
-    const confirmPasswordInput = /** @type {HTMLInputElement} */ (
+    /** @type {HTMLInputElement|null} */
+    const confirmPasswordInput = /** @type {HTMLInputElement|null} */ (
       document.getElementById("confirm-password")
     );
     if (!passwordInput || !confirmPasswordInput) return;
