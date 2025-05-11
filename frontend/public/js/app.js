@@ -280,7 +280,7 @@ async function getOrCreateConversation() {
     if (conversations.length > 0) {
       currentConversationId = conversations[0].id;
       const chatHeader = /** @type {HTMLElement} */ (
-        document.querySelector(".chat-header h2")
+        document.querySelector(".chat-header h1")
       );
       if (chatHeader) {
         chatHeader.textContent = conversations[0].title;
