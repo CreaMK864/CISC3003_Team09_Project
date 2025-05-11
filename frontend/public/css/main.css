@@ -34,109 +34,109 @@ body {
 }
 
 /* Utility classes */
-.text-center {
+.text--center {
   text-align: center;
 }
-.text-left {
+.text--left {
   text-align: left;
 }
-.text-right {
+.text--right {
   text-align: right;
 }
 
-.mt-1 {
+.margin--top-xs {
   margin-top: var(--spacing-xs);
 }
-.mt-2 {
+.margin--top-sm {
   margin-top: var(--spacing-sm);
 }
-.mt-3 {
+.margin--top-md {
   margin-top: var(--spacing-md);
 }
-.mt-4 {
+.margin--top-lg {
   margin-top: var(--spacing-lg);
 }
-.mt-5 {
+.margin--top-xl {
   margin-top: var(--spacing-xl);
 }
 
-.mb-1 {
+.margin--bottom-xs {
   margin-bottom: var(--spacing-xs);
 }
-.mb-2 {
+.margin--bottom-sm {
   margin-bottom: var(--spacing-sm);
 }
-.mb-3 {
+.margin--bottom-md {
   margin-bottom: var(--spacing-md);
 }
-.mb-4 {
+.margin--bottom-lg {
   margin-bottom: var(--spacing-lg);
 }
-.mb-5 {
+.margin--bottom-xl {
   margin-bottom: var(--spacing-xl);
 }
 
-.p-1 {
+.padding--xs {
   padding: var(--spacing-xs);
 }
-.p-2 {
+.padding--sm {
   padding: var(--spacing-sm);
 }
-.p-3 {
+.padding--md {
   padding: var(--spacing-md);
 }
-.p-4 {
+.padding--lg {
   padding: var(--spacing-lg);
 }
-.p-5 {
+.padding--xl {
   padding: var(--spacing-xl);
 }
 
-.text-sm {
+.text--sm {
   font-size: var(--font-size-sm);
 }
-.text-base {
+.text--base {
   font-size: var(--font-size-base);
 }
-.text-lg {
+.text--lg {
   font-size: var(--font-size-lg);
 }
-.text-xl {
+.text--xl {
   font-size: var(--font-size-xl);
 }
-.text-2xl {
+.text--2xl {
   font-size: var(--font-size-2xl);
 }
 
-.rounded-sm {
+.rounded--sm {
   border-radius: var(--radius-sm);
 }
-.rounded-md {
+.rounded--md {
   border-radius: var(--radius-md);
 }
-.rounded-lg {
+.rounded--lg {
   border-radius: var(--radius-lg);
 }
-.rounded-full {
+.rounded--full {
   border-radius: var(--radius-full);
 }
 
-.shadow-sm {
+.shadow--sm {
   box-shadow: var(--shadow-sm);
 }
-.shadow-md {
+.shadow--md {
   box-shadow: var(--shadow-md);
 }
-.shadow-lg {
+.shadow--lg {
   box-shadow: var(--shadow-lg);
 }
 
 .transition {
   transition: all var(--transition-normal);
 }
-.transition-fast {
+.transition--fast {
   transition: all var(--transition-fast);
 }
-.transition-slow {
+.transition--slow {
   transition: all var(--transition-slow);
 }
