@@ -128,19 +128,6 @@ export async function get_username(uid) {
 /**
  * Get username from user ID
 
- 
-async function get_title(cid) {
-    try {
-    const response = await fetch(`${API_BASE_URL}/conversations`);
-    if (!response.ok) {
-      throw new Error("Network response was not ok");
-    }
-    const data = await response.json();
-    return data[cid].title;
-  } catch (error) {
-    console.error("There was a problem with the fetch operation:", error);
-  }
-}
 /**
  * Update authentication UI based on user state
  * @param {User|null} user - The user object from authentication
@@ -204,16 +191,19 @@ async function getOrCreateConversation() {
     }
 
     const conversations = await response.json();
-    //  const url = new URL(window.location.href);
-    //   const conversationId = url.searchParams.get('conversationId');
+    console.log(conversations);
+    const url = new URL(window.location.href);
+    const conversationId = url.searchParams.get("conversationId");
 
     if (conversations.length > 0) {
       const chatHeader = /** @type {HTMLElement} */ (
         document.querySelector(".chat-header h1")
       );
       if (chatHeader) {
-        chatHeader.textContent = conversations[0].title;
-        // chatHeader.textContent = await get_title(conversationId);
+        const conversation = conversations.find(
+          (conv) => conv.id === +conversationId,
+        );
+        chatHeader.textContent = conversation.title;
       }
     } else {
       await createNewConversation();
