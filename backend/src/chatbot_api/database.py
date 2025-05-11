@@ -86,7 +86,6 @@ class User(SQLModel, table=True):
     Attributes:
         id: Primary key identifier for the user
         display_name: User's display name
-        subscription_status: Status of the user's subscription
         plan_id: Foreign key to the user's current plan
         profile_picture_url: URL to the user's profile picture
         last_selected_model: The model the user last selected
@@ -103,7 +102,6 @@ class User(SQLModel, table=True):
         default_factory=lambda: datetime.datetime.now(datetime.UTC),
         sa_column=Column(DateTime(timezone=True), server_default=text("(now() AT TIME ZONE 'UTC')")),
     )
-    subscription_status: str = Field(sa_column=Column(Text), default="free")
     plan_id: int = Field(foreign_key="plan.id", default=1)  # Default to free plan
     updated_at: datetime.datetime = Field(
         default_factory=lambda: datetime.datetime.now(datetime.UTC),
