@@ -174,7 +174,7 @@ async function updateAuthUI(user) {
   );
 
   if (user) {
-    userEmail.textContent = "WELCOME ~ " + user.email;
+    userEmail.textContent = "WELCOME ~ " + (await get_username(user.id));
     auth_logout.style.display = "block";
     auth_reg.style.display = "none";
     authButtons.style.display = "none";
