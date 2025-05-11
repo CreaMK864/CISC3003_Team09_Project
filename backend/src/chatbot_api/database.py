@@ -19,9 +19,10 @@ import os
 import uuid
 from contextlib import asynccontextmanager
 from enum import StrEnum
+from typing import Final
 
 from dotenv import load_dotenv
-from sqlalchemy import Column, DateTime, Text, text, DECIMAL, UniqueConstraint
+from sqlalchemy import DECIMAL, Column, DateTime, Text, UniqueConstraint, text
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlmodel import Field, Relationship, SQLModel
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -40,6 +41,44 @@ class Role(StrEnum):
     ASSISTANT = "assistant"
 
 
+class Plan(SQLModel, table=True):
+    """
+    SQLModel representing a subscription plan.
+
+    Attributes:
+        id: Primary key identifier for the plan
+        name: Name of the plan (free, standard, plus)
+        price: Monthly price of the plan
+        features: JSON string containing plan features
+        created_at: Timestamp when the plan was created
+        updated_at: Timestamp when the plan was last updated
+        users: Relationship to users on this plan
+        payments: Relationship to payments for this plan
+        subscriptions: Relationship to active subscriptions for this plan
+    """
+
+    id: int | None = Field(default=None, primary_key=True)
+    name: str = Field(sa_column=Column(Text, unique=True))
+    price: float = Field(sa_column=Column(DECIMAL(10, 2)))
+    features: str = Field(sa_column=Column(Text))
+    created_at: datetime.datetime = Field(
+        default_factory=lambda: datetime.datetime.now(datetime.UTC),
+        sa_column=Column(DateTime(timezone=True), server_default=text("(now() AT TIME ZONE 'UTC')")),
+    )
+    updated_at: datetime.datetime = Field(
+        default_factory=lambda: datetime.datetime.now(datetime.UTC),
+        sa_column=Column(
+            DateTime(timezone=True),
+            server_default=text("(now() AT TIME ZONE 'UTC')"),
+            onupdate=text("(now() AT TIME ZONE 'UTC')"),
+        ),
+    )
+
+    users: list["User"] = Relationship(back_populates="plan")
+    payments: list["Payment"] = Relationship(back_populates="plan")
+    subscriptions: list["Subscription"] = Relationship(back_populates="plan")
+
+
 class User(SQLModel, table=True):
     """
     SQLModel representing a user in the system.
@@ -48,7 +87,7 @@ class User(SQLModel, table=True):
         id: Primary key identifier for the user
         display_name: User's display name
         subscription_status: Status of the user's subscription
-        subscription_plan: The plan the user is subscribed to
+        plan_id: Foreign key to the user's current plan
         profile_picture_url: URL to the user's profile picture
         last_selected_model: The model the user last selected
         created_at: Timestamp when the user was created
@@ -65,7 +104,7 @@ class User(SQLModel, table=True):
         sa_column=Column(DateTime(timezone=True), server_default=text("(now() AT TIME ZONE 'UTC')")),
     )
     subscription_status: str = Field(sa_column=Column(Text), default="free")
-    subscription_plan: str = Field(sa_column=Column(Text), default="free")
+    plan_id: int = Field(foreign_key="plan.id", default=1)  # Default to free plan
     updated_at: datetime.datetime = Field(
         default_factory=lambda: datetime.datetime.now(datetime.UTC),
         sa_column=Column(DateTime(timezone=True), server_default=text("(now() AT TIME ZONE 'UTC')")),
@@ -73,6 +112,7 @@ class User(SQLModel, table=True):
     theme: str = Field(sa_column=Column(Text), default="light")
 
     conversations: list["Conversation"] = Relationship(back_populates="user")
+    plan: Plan = Relationship(back_populates="users")
 
 
 class Conversation(SQLModel, table=True):
@@ -145,17 +185,17 @@ class Payment(SQLModel, table=True):
         amount: Amount of the payment (stored as DECIMAL for exact precision)
         method: Payment method used (e.g., credit card, PayPal)
         status: Status of the payment (e.g., completed, pending, failed)
-        plan: The plan associated with the payment
+        plan_id: Foreign key to the plan associated with this payment
         created_at: Timestamp when the payment was created
         updated_at: Timestamp when the payment was last updated
     """
 
     id: int | None = Field(default=None, primary_key=True)
     user_id: uuid.UUID = Field(foreign_key="user.id", index=True)
-    amount: float = Field(sa_column=Column(DECIMAL(10, 2), nullable=False))
-    method: str = Field(sa_column=Column(Text, nullable=False))
-    status: str = Field(sa_column=Column(Text, nullable=False, index=True))
-    plan: str = Field(sa_column=Column(Text, nullable=False))
+    amount: float = Field(sa_column=Column(DECIMAL(10, 2)))
+    method: str = Field(sa_column=Column(Text))
+    status: str = Field(sa_column=Column(Text, index=True))
+    plan_id: int = Field(foreign_key="plan.id")
     created_at: datetime.datetime = Field(
         default_factory=lambda: datetime.datetime.now(datetime.UTC),
         sa_column=Column(DateTime(timezone=True), server_default=text("(now() AT TIME ZONE 'UTC')")),
@@ -169,6 +209,8 @@ class Payment(SQLModel, table=True):
         ),
     )
 
+    plan: Plan = Relationship(back_populates="payments")
+
 
 class Subscription(SQLModel, table=True):
     """
@@ -178,15 +220,15 @@ class Subscription(SQLModel, table=True):
         id: Primary key identifier for the subscription
         user_id: Foreign key to the user who owns the subscription
         payment_id: Foreign key to the payment record associated with this subscription
-        plan: The plan of the subscription
+        plan_id: Foreign key to the plan of the subscription
         start_date: Start date of the subscription
         end_date: End date of the subscription
     """
 
     id: int | None = Field(default=None, primary_key=True)
     user_id: uuid.UUID = Field(foreign_key="user.id", index=True)
-    payment_id: int = Field(foreign_key="payment.id", index=True, nullable=False)
-    plan: str = Field(sa_column=Column(Text, nullable=False))
+    payment_id: int = Field(foreign_key="payment.id", index=True)
+    plan_id: int = Field(foreign_key="plan.id")
     start_date: datetime.datetime = Field(
         default_factory=lambda: datetime.datetime.now(datetime.UTC),
         sa_column=Column(DateTime(timezone=True), server_default=text("(now() AT TIME ZONE 'UTC')")),
@@ -200,9 +242,9 @@ class Subscription(SQLModel, table=True):
         ),
     )
 
-    __table_args__ = (
-        UniqueConstraint('user_id', 'end_date', name='uix_user_active_subscription'),
-    )
+    __table_args__ = (UniqueConstraint("user_id", "end_date", name="uix_user_active_subscription"),)
+
+    plan: Plan = Relationship(back_populates="subscriptions")
 
 
 async def delete_all_tables():
@@ -218,6 +260,40 @@ async def delete_all_tables():
             pass
 
 
+async def init_default_plans(session: AsyncSession):
+    """
+    Initialize default subscription plans if they don't exist.
+    """
+    default_plans: Final = [
+        {
+            "id": 1,
+            "name": "free",
+            "price": 0.00,
+            "features": '{"max_conversations": 5, "max_messages_per_conversation": 50, "models": ["gpt-3.5-turbo"]}',
+        },
+        {
+            "id": 2,
+            "name": "standard",
+            "price": 9.99,
+            "features": '{"max_conversations": 20, "max_messages_per_conversation": 200, "models": ["gpt-3.5-turbo", "gpt-4"]}',
+        },
+        {
+            "id": 3,
+            "name": "plus",
+            "price": 19.99,
+            "features": '{"max_conversations": -1, "max_messages_per_conversation": -1, "models": ["gpt-3.5-turbo", "gpt-4", "gpt-4-turbo"]}',
+        },
+    ]
+
+    for plan_data in default_plans:
+        plan = await session.get(Plan, plan_data["id"])
+        if not plan:
+            plan = Plan(**plan_data)  # pyright: ignore
+            session.add(plan)
+
+    await session.commit()
+
+
 async def create_db_and_tables():
     """
     Create all database tables if they don't exist.
@@ -226,7 +302,7 @@ async def create_db_and_tables():
     """
     async with engine.begin() as conn:
         await conn.run_sync(SQLModel.metadata.create_all)
-    
+
     # Needs to be in a separate transaction, otherwise this failing (usually expected) would cause the whole transaction to fail.
     async with engine.begin() as conn:
         # It is very difficult to set user.id to be a foreign key to auth.users.id, so we use SQL directly to do this.
@@ -238,6 +314,10 @@ async def create_db_and_tables():
         except Exception as e:
             if "already exists" not in str(e):
                 raise
+
+    # Initialize default plans
+    async with AsyncSession(engine) as session:
+        await init_default_plans(session)
 
     # TODO: Create a trigger to automatically create a user entry when a new user signs up via Supabase Auth.
 
