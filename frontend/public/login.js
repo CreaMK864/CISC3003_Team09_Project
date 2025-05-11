@@ -7,7 +7,7 @@ const errorMessage = document.getElementById("error-message");
 const googleSignInBtn = document.getElementById("googleSignInBtn");
 
 // Handle form submission
-loginForm?.addEventListener("submit", async () => {
+loginForm?.addEventListener("submit", async (event) => {
   event?.preventDefault();
 });
 loginBtn.addEventListener("click", async (event) => {
