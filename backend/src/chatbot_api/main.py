@@ -20,7 +20,7 @@ from contextlib import asynccontextmanager
 from typing import TypedDict
 
 import uvicorn
-from fastapi import Depends, FastAPI, Request, WebSocket, WebSocketDisconnect, status
+from fastapi import Depends, FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect, status
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from sqlmodel import select
@@ -30,7 +30,16 @@ from chatbot_api.auth import UserInfo, get_current_user
 from chatbot_api.config import AVAILABLE_MODELS
 from chatbot_api.conversation_routes import router as conversation_router
 from chatbot_api.conversation_routes import verify_conversation_access
-from chatbot_api.database import Message, Role, create_db_and_tables, create_session, get_session
+from chatbot_api.database import (
+    Message,
+    Payment,
+    Plan,
+    Role,
+    Subscription,
+    create_db_and_tables,
+    create_session,
+    get_session,
+)
 from chatbot_api.openai_client import stream_chat_completion
 from chatbot_api.user_routes import router as user_router
 
@@ -86,6 +95,36 @@ class MessageCreate(BaseModel):
 
     conversation_id: int
     content: str
+
+
+class SubscribeRequest(BaseModel):
+    """
+    Request model for subscribing to a plan.
+
+    Attributes:
+        plan_id: ID of the plan to subscribe to
+    """
+
+    plan_id: int
+
+
+class SubscribeResponse(BaseModel):
+    """
+    Response model for subscription endpoint.
+
+    Attributes:
+        status: Status of the subscription operation
+        message: Human-readable message about the subscription
+        subscription_id: ID of the created subscription
+        plan_name: Name of the subscribed plan
+        end_date: When the subscription will end
+    """
+
+    status: str
+    message: str
+    subscription_id: int
+    plan_name: str
+    end_date: datetime.datetime
 
 
 @app.get("/health")
@@ -254,6 +293,67 @@ async def get_available_models():
         A list of available model names
     """
     return {"models": AVAILABLE_MODELS}
+
+
+@app.post("/subscribe", response_model=SubscribeResponse)
+async def subscribe(
+    request: SubscribeRequest,
+    current_user: UserInfo = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+) -> SubscribeResponse:
+    """
+    Subscribe to a plan by creating a payment and subscription record.
+    This is a demo endpoint that simulates a Stripe payment flow.
+
+    Args:
+        request: Subscription request containing plan_id
+        current_user: User information from JWT token
+        session: Database session
+
+    Returns:
+        SubscribeResponse containing subscription details
+    """
+    # Get the plan
+    plan = await session.get(Plan, request.plan_id)
+    if not plan:
+        raise HTTPException(status_code=404, detail="Plan not found")
+    assert plan.id is not None, "Plan ID should not be None"
+
+    user_id = uuid.UUID(current_user["id"])
+    # Create a payment record (simulating Stripe payment)
+    payment = Payment(
+        user_id=user_id,
+        amount=plan.price,
+        method="credit_card",  # Simulated payment method
+        status="completed",  # Simulated successful payment
+        plan_id=plan.id,
+    )
+    session.add(payment)
+    await session.commit()
+    await session.refresh(payment)
+    assert payment.id is not None, "Payment ID should not be None"
+
+    # Create a subscription record
+    end_date = datetime.datetime.now(datetime.UTC) + datetime.timedelta(days=30)
+    subscription = Subscription(
+        user_id=user_id,
+        payment_id=payment.id,
+        plan_id=plan.id,
+        start_date=datetime.datetime.now(datetime.UTC),
+        end_date=end_date,
+    )
+    session.add(subscription)
+    await session.commit()
+    await session.refresh(subscription)
+    assert subscription.id is not None, "Subscription ID should not be None"
+
+    return SubscribeResponse(
+        status="success",
+        message=f"Successfully subscribed to {plan.name} plan",
+        subscription_id=subscription.id,
+        plan_name=plan.name,
+        end_date=end_date,
+    )
 
 
 def main():
