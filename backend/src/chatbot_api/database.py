@@ -226,6 +226,9 @@ async def create_db_and_tables():
     """
     async with engine.begin() as conn:
         await conn.run_sync(SQLModel.metadata.create_all)
+    
+    # Needs to be in a separate transaction, otherwise this failing (usually expected) would cause the whole transaction to fail.
+    async with engine.begin() as conn:
         # It is very difficult to set user.id to be a foreign key to auth.users.id, so we use SQL directly to do this.
         # Related discussion: https://github.com/sqlalchemy/alembic/discussions/1144
         try:
