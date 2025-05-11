@@ -1,0 +1,21 @@
+/* Base styles */
+@import "base/_reset.css";
+@import "base/_variables.css";
+
+/* Theme styles */
+@import "themes/_dark.css";
+
+/* Component styles */
+@import "components/_alert.css";
+@import "components/_auth.css";
+@import "components/_buttons.css";
+@import "components/_forms.css";
+@import "components/_hamburger.css";
+@import "components/_history.css";
+@import "components/_messages.css";
+@import "components/_search-bar.css";
+@import "components/_sidebar.css";
+
+/* Layout styles */
+@import "layouts/_chat.css";
+@import "layouts/_history.css";

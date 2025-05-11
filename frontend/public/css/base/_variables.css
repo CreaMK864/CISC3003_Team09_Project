@@ -1,0 +1,20 @@
+:root {
+  --background-color: #f5f7fb;
+  --text-color: #333;
+  --sidebar-bg: #2196f3;
+  --sidebar-text: white;
+  --message-bg-user: #2196f3;
+  --message-text-user: white;
+  --message-bg-bot: #e9e9e9;
+  --message-text-bot: #333;
+  --error-bg: rgba(255, 0, 0, 0.1);
+  --error-text: #d32f2f;
+  --chat-header-bg: white;
+  --input-bg: white;
+  --input-border: #ddd;
+  --input-text: #333;
+  --button-bg: #2196f3;
+  --button-hover: #1976d2;
+  --button-text: white;
+  --profile-card-bg: white;
+}
