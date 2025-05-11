@@ -54,7 +54,6 @@ class User(SQLModel, table=True):
         created_at: Timestamp when the user was created
         updated_at: Timestamp when the user was last updated
         conversations: Relationship to the user's conversations
-        email: User's email address
     """
 
     id: uuid.UUID | None = Field(default=None, primary_key=True)
