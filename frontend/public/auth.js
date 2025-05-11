@@ -107,6 +107,9 @@ async function signInWithGoogle() {
   try {
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "google",
+      options: {
+        redirectTo: `https://edlrvbzhxvyvukjmvkof.supabase.co/auth/v1/callback`,
+      },
     });
 
     if (error) {
@@ -143,7 +146,7 @@ async function changePassword(password) {
 async function resetPassword(email) {
   try {
     const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: "http://127.0.0.1:3000/ch_PW.html",
+      redirectTo: "./ch_pw.html",
     });
 
     if (error) throw error;
@@ -151,7 +154,6 @@ async function resetPassword(email) {
     return data;
   } catch (error) {
     console.error("Sending Reset Email failed:", error.message);
-
     return null;
   }
 }
