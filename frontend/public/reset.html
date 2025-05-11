@@ -3,18 +3,31 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Reset Password</title>
+    <meta
+      name="description"
+      content="Reset your Easy Chatbot password - Secure account recovery"
+    />
+    <meta name="author" content="CISC3003-2024-02 Team 09" />
+    <link rel="icon" type="image/x-icon" href="favicon.ico" />
+    <title>Reset Password - Easy Chatbot</title>
     <link rel="stylesheet" href="css/RL_styles.css" />
   </head>
   <body class="auth-page">
-    <div class="container">
-      <div class="chat-container">
-        <div class="chat-header">
-          <button class="hamburger" id="open-sidebar">☰</button>
-          <h2>Reset Password</h2>
-        </div>
+    <main class="container">
+      <section class="chat-container">
+        <header class="chat-header">
+          <button
+            class="hamburger"
+            id="open-sidebar"
+            aria-label="Open navigation menu"
+            aria-expanded="false"
+          >
+            ☰
+          </button>
+          <h1>Reset Password</h1>
+        </header>
         <div class="form-container">
-          <form id="reset-form">
+          <form id="reset-form" novalidate>
             <div class="form-group">
               <label for="email">Email:</label>
               <input
@@ -23,16 +36,34 @@
                 name="email"
                 placeholder="Enter your email"
                 required
+                autocomplete="email"
               />
             </div>
-            <button type="submit">Send Reset Link</button>
-            <p>Remembered your password? <a href="login.html">Login here</a></p>
-            <p id="error-message" class="error-message"></p>
-            <p id="success-message" class="success-message"></p>
+            <button type="submit" aria-label="Send password reset link">
+              Send Reset Link
+            </button>
+            <p>
+              Remembered your password?
+              <a href="login.html" aria-label="Return to login page"
+                >Login here</a
+              >
+            </p>
+            <p
+              id="error-message"
+              class="error-message"
+              role="alert"
+              aria-live="polite"
+            ></p>
+            <p
+              id="success-message"
+              class="success-message"
+              role="status"
+              aria-live="polite"
+            ></p>
           </form>
         </div>
-      </div>
-    </div>
+      </section>
+    </main>
     <script type="module" src="js/reset.js"></script>
   </body>
 </html>

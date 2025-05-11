@@ -3,18 +3,31 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Change Password</title>
+    <meta
+      name="description"
+      content="Change your Easy Chatbot account password securely"
+    />
+    <meta name="author" content="CISC3003-2024-02 Team 09" />
+    <link rel="icon" type="image/x-icon" href="favicon.ico" />
+    <title>Change Password - Easy Chatbot</title>
     <link rel="stylesheet" href="css/RL_styles.css" />
   </head>
   <body class="auth-page">
-    <div class="container">
-      <div class="chat-container">
-        <div class="chat-header">
-          <button class="hamburger" id="open-sidebar">☰</button>
-          <h2>Change Password</h2>
-        </div>
+    <main class="container">
+      <section class="chat-container">
+        <header class="chat-header">
+          <button
+            class="hamburger"
+            id="open-sidebar"
+            aria-label="Open navigation menu"
+            aria-expanded="false"
+          >
+            ☰
+          </button>
+          <h1>Change Password</h1>
+        </header>
         <div class="form-container">
-          <form id="change-password-form">
+          <form id="change-password-form" novalidate>
             <div class="form-group">
               <label for="password">New Password:</label>
               <input
@@ -23,6 +36,10 @@
                 name="password"
                 placeholder="Enter your new password"
                 required
+                autocomplete="new-password"
+                minlength="8"
+                pattern="^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$"
+                title="Password must be at least 8 characters long and include both letters and numbers"
               />
             </div>
             <div class="form-group">
@@ -33,23 +50,33 @@
                 name="confirm-password"
                 placeholder="Confirm your new password"
                 required
+                autocomplete="new-password"
+                minlength="8"
+                pattern="^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$"
+                title="Password must be at least 8 characters long and include both letters and numbers"
               />
             </div>
-            <button type="submit">Update Password</button>
+            <button type="submit" aria-label="Update password">
+              Update Password
+            </button>
             <p
               id="error-message"
               class="error-message"
               style="display: none; color: red"
+              role="alert"
+              aria-live="polite"
             ></p>
             <p
               id="success-message"
               class="success-message"
               style="display: none; color: green"
+              role="status"
+              aria-live="polite"
             ></p>
           </form>
         </div>
-      </div>
-    </div>
+      </section>
+    </main>
     <script type="module" src="js/ch_pw.js"></script>
   </body>
 </html>

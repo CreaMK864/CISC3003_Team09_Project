@@ -3,74 +3,130 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>AI Chatbot</title>
+    <meta
+      name="description"
+      content="Chat with our AI assistant - Get instant answers and support"
+    />
+    <meta name="author" content="CISC3003-2024-02 Team 09" />
+    <link rel="icon" type="image/x-icon" href="favicon.ico" />
+    <title>Chat - Easy Chatbot</title>
     <link rel="stylesheet" href="css/styles.css" />
   </head>
   <body>
     <div class="container">
       <!-- Sidebar -->
-      <div class="sidebar" id="sidebar">
+      <nav class="sidebar" id="sidebar" aria-label="Main navigation">
         <div class="user-info">
           <h2>My Chatbot</h2>
-          <div id="user-email" class="user-email"></div>
+          <div id="user-email" class="user-email" aria-live="polite"></div>
         </div>
         <ul>
-          <li><a href="home.html" class="active">Home</a></li>
-          <li><a href="history.html">History</a></li>
-          <li><a href="profile.html">Profile</a></li>
+          <li>
+            <a
+              href="home.html"
+              class="active"
+              aria-label="Go to chat"
+              aria-current="page"
+              >Home</a
+            >
+          </li>
+          <li>
+            <a href="history.html" aria-label="View chat history">History</a>
+          </li>
+          <li>
+            <a href="profile.html" aria-label="View profile settings"
+              >Profile</a
+            >
+          </li>
         </ul>
 
-        <!-- Auth block -->
-        <div class="auth-block" id="auth_reg">
+        <!-- Auth block for unauthenticated users -->
+        <section
+          class="auth-block"
+          id="auth_reg"
+          aria-label="Authentication options"
+        >
           <h3>Get Started</h3>
           <p>Sign in to save your conversations</p>
           <div class="auth-buttons">
-            <a href="login.html" class="auth-button">Login</a>
-            <a href="register.html" class="auth-button">Register</a>
+            <a
+              href="login.html"
+              class="auth-button"
+              aria-label="Login to your account"
+              >Login</a
+            >
+            <a
+              href="register.html"
+              class="auth-button"
+              aria-label="Create new account"
+              >Register</a
+            >
           </div>
-        </div>
-        <!-- Auth block -->
-        <div class="auth-block" id="auth_logout">
+        </section>
+        <!-- Auth block for authenticated users -->
+        <section
+          class="auth-block"
+          id="auth_logout"
+          aria-label="Account actions"
+        >
           <div class="logout-section">
-            <button id="logout-button" class="auth-button">Sign Out</button>
+            <button
+              id="logout-button"
+              class="auth-button"
+              aria-label="Sign out of your account"
+            >
+              Sign Out
+            </button>
           </div>
-        </div>
-      </div>
+        </section>
+      </nav>
 
       <!-- Chat container -->
-      <div class="chat-container">
-        <div class="chat-header">
-          <h2>Default Conversation</h2>
-        </div>
-        <div class="chat-messages">
+      <main class="chat-container">
+        <header class="chat-header">
+          <h1>Default Conversation</h1>
+        </header>
+        <section class="chat-messages" aria-label="Chat messages">
           <!-- Messages will appear here -->
-          <div class="message bot-message">
+          <div class="message bot-message" role="article">
             Hello! How can I help you today?
           </div>
-          <div class="message user-message">
+          <div class="message user-message" role="article">
             I'd like to know more about your services.
           </div>
-          <div class="message bot-message">
+          <div class="message bot-message" role="article">
             Sure! We offer a range of AI-powered solutions including chatbots,
             content generation, and data analysis. What specific area are you
             interested in?
           </div>
-        </div>
-        <div class="chat-input">
-          <form id="message-form">
+        </section>
+        <section class="chat-input">
+          <form id="message-form" novalidate>
+            <label for="message-input" class="visually-hidden"
+              >Type your message</label
+            >
             <input
               type="text"
               id="message-input"
+              name="message"
               placeholder="Type your message here..."
+              aria-label="Type your message"
+              required
             />
-            <button type="submit">Send</button>
+            <button type="submit" aria-label="Send message">Send</button>
           </form>
-        </div>
-      </div>
+        </section>
+      </main>
     </div>
 
     <!-- Hamburger menu for mobile -->
-    <button class="hamburger">☰</button>
+    <button
+      class="hamburger"
+      aria-label="Toggle navigation menu"
+      aria-expanded="false"
+    >
+      ☰
+    </button>
     <script type="module" src="js/script.js"></script>
     <script type="module" src="js/app.js"></script>
   </body>

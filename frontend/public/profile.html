@@ -3,87 +3,162 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>User Profile</title>
-    <link rel="icon" href="favicon.ico" />
+    <meta
+      name="description"
+      content="Manage your Easy Chatbot profile settings and preferences"
+    />
+    <meta name="author" content="CISC3003-2024-02 Team 09" />
+    <link rel="icon" type="image/x-icon" href="favicon.ico" />
+    <title>User Profile - Easy Chatbot</title>
     <link rel="stylesheet" href="css/styles.css" />
   </head>
   <body>
     <div class="container">
-      <div class="sidebar" id="sidebar">
+      <nav class="sidebar" id="sidebar" aria-label="Main navigation">
         <h2>My Chatbot</h2>
-        <div id="user-email" class="user-email"></div>
+        <div id="user-email" class="user-email" aria-live="polite"></div>
         <ul>
-          <li><a href="home.html">Home</a></li>
-          <li><a href="history.html">History</a></li>
-          <li><a href="profile.html" class="active">Profile</a></li>
+          <li><a href="home.html" aria-label="Go to home page">Home</a></li>
+          <li>
+            <a href="history.html" aria-label="View chat history">History</a>
+          </li>
+          <li>
+            <a
+              href="profile.html"
+              class="active"
+              aria-label="View profile settings"
+              aria-current="page"
+              >Profile</a
+            >
+          </li>
         </ul>
-        <!-- Auth block -->
-        <div class="auth-block" id="auth_reg">
+        <!-- Auth block for unauthenticated users -->
+        <section
+          class="auth-block"
+          id="auth_reg"
+          aria-label="Authentication options"
+        >
           <h3>Get Started</h3>
           <p>Sign in to save your conversations</p>
           <div class="auth-buttons">
-            <a href="login.html" class="auth-button">Login</a>
-            <a href="register.html" class="auth-button">Register</a>
-            <a href="test-auth.html" class="auth-test">Register</a>
+            <a
+              href="login.html"
+              class="auth-button"
+              aria-label="Login to your account"
+              >Login</a
+            >
+            <a
+              href="register.html"
+              class="auth-button"
+              aria-label="Create new account"
+              >Register</a
+            >
+            <a
+              href="test-auth.html"
+              class="auth-test"
+              aria-label="Test authentication"
+              >Register</a
+            >
           </div>
-        </div>
-        <!-- Auth block -->
-        <div class="auth-block" id="auth_logout">
+        </section>
+        <!-- Auth block for authenticated users -->
+        <section
+          class="auth-block"
+          id="auth_logout"
+          aria-label="Account actions"
+        >
           <div class="logout-section">
-            <button id="logout-button" class="auth-button">Sign Out</button>
+            <button
+              id="logout-button"
+              class="auth-button"
+              aria-label="Sign out of your account"
+            >
+              Sign Out
+            </button>
           </div>
-        </div>
-      </div>
+        </section>
+      </nav>
 
-      <div class="chat-container">
-        <div class="chat-header">
-          <button class="hamburger">☰</button>
+      <main class="chat-container">
+        <header class="chat-header">
+          <button
+            class="hamburger"
+            aria-label="Toggle navigation menu"
+            aria-expanded="false"
+          >
+            ☰
+          </button>
           <h2>User Profile</h2>
-        </div>
-        <div id="alert_msg">
+        </header>
+        <div id="alert_msg" role="alert" aria-live="polite">
           <div class="alert_msg">
-            <a href="login.html" class="auth-button"
+            <a
+              href="login.html"
+              class="auth-button"
+              aria-label="Login to view profile"
               >Please Login to view the record</a
             >
           </div>
         </div>
-        <div class="profile-content rdylogin">
+        <section class="profile-content rdylogin">
           <div class="profile-card">
-            <form id="profile-form">
+            <form id="profile-form" novalidate>
               <h3>Edit your profile</h3>
               <div class="form-group">
-                <label for="email">Email:</label>
+                <label for="profile_email">Email:</label>
                 <input
                   type="email"
                   id="profile_email"
                   name="email"
                   value=""
                   readonly
+                  aria-label="Your email address"
                 />
               </div>
               <div class="form-group">
-                <label for="name">Name:</label>
-                <input type="text" id="profile_name" name="name" value="" />
+                <label for="profile_name">Name:</label>
+                <input
+                  type="text"
+                  id="profile_name"
+                  name="name"
+                  value=""
+                  aria-label="Your display name"
+                  autocomplete="name"
+                />
               </div>
 
               <div class="form-group">
-                <label>Dark Mode</label>
+                <label for="theme-switch">Dark Mode</label>
                 <div class="theme-toggle-wrapper">
-                  <label class="theme-toggle">
-                    <input type="checkbox" id="theme-switch" />
+                  <label class="theme-toggle" for="theme-switch">
+                    <input
+                      type="checkbox"
+                      id="theme-switch"
+                      aria-label="Toggle dark mode"
+                    />
                     <span class="slider"></span>
                   </label>
                 </div>
               </div>
-              <p id="success-message" class="success-message"></p>
+              <p
+                id="success-message"
+                class="success-message"
+                role="status"
+                aria-live="polite"
+              ></p>
 
-              <button id="profile_btn" type="submit" class="save-btn">
+              <button
+                id="profile_btn"
+                type="submit"
+                class="save-btn"
+                aria-label="Save profile changes"
+              >
                 Save Changes
               </button>
             </form>
           </div>
-        </div>
-      </div>
+        </section>
+      </main>
     </div>
     <script type="module" src="js/script.js"></script>
     <script type="module" src="js/app.js"></script>
