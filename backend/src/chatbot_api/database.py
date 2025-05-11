@@ -134,23 +134,6 @@ class Message(SQLModel, table=True):
     conversation: Conversation = Relationship(back_populates="messages")
 
 
-class Model(SQLModel, table=True):
-    """
-    SQLModel representing a model record.
-
-    Attributes:
-        id: Primary key identifier for the model
-        name: Name of the model
-        description: Description of the model
-        created_at: Timestamp when the model was created
-        updated_at: Timestamp when the model was last updated
-    """
-
-    id: int | None = Field(default=None, primary_key=True)
-    name: str = Field(sa_column=Column(Text))
-    description: str = Field(sa_column=Column(Text))
-
-
 class Payment(SQLModel, table=True):
     """
     SQLModel representing a payment record.
