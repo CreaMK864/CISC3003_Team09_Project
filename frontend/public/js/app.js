@@ -125,7 +125,22 @@ export async function get_username(uid) {
     throw error;
   }
 }
+/**
+ * Get username from user ID
 
+ 
+async function get_title(cid) {
+    try {
+    const response = await fetch(`${API_BASE_URL}/conversations`);
+    if (!response.ok) {
+      throw new Error("Network response was not ok");
+    }
+    const data = await response.json();
+    return data[cid].title;
+  } catch (error) {
+    console.error("There was a problem with the fetch operation:", error);
+  }
+}
 /**
  * Update authentication UI based on user state
  * @param {User|null} user - The user object from authentication
@@ -152,7 +167,7 @@ async function updateAuthUI(user) {
   );
 
   if (user) {
-    userEmail.textContent = "WELCOME ~ " + user.email;
+    userEmail.textContent = "WELCOME ~ " + (await get_username(user.id));
     auth_logout.style.display = "block";
     auth_reg.style.display = "none";
     authButtons.style.display = "none";
@@ -189,14 +204,16 @@ async function getOrCreateConversation() {
     }
 
     const conversations = await response.json();
+    //  const url = new URL(window.location.href);
+    //   const conversationId = url.searchParams.get('conversationId');
 
     if (conversations.length > 0) {
-      currentConversationId = conversations[0].id;
       const chatHeader = /** @type {HTMLElement} */ (
         document.querySelector(".chat-header h1")
       );
       if (chatHeader) {
         chatHeader.textContent = conversations[0].title;
+        // chatHeader.textContent = await get_title(conversationId);
       }
     } else {
       await createNewConversation();
@@ -215,7 +232,7 @@ async function getOrCreateConversation() {
     );
     currentConversationId = 1;
     const chatHeader = /** @type {HTMLElement} */ (
-      document.querySelector(".chat-header h2")
+      document.querySelector(".chat-header h1")
     );
     if (chatHeader) {
       chatHeader.textContent = "Default Conversation";
@@ -255,7 +272,7 @@ async function createNewConversation() {
     const conversation = await response.json();
     currentConversationId = conversation.id;
     const chatHeader = /** @type {HTMLElement} */ (
-      document.querySelector(".chat-header h2")
+      document.querySelector(".chat-header h1")
     );
     if (chatHeader) {
       chatHeader.textContent = conversation.title;
