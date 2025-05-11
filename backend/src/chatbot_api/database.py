@@ -21,7 +21,7 @@ from contextlib import asynccontextmanager
 from enum import StrEnum
 
 from dotenv import load_dotenv
-from sqlalchemy import Column, DateTime, Text, text
+from sqlalchemy import Column, DateTime, Text, text, DECIMAL, UniqueConstraint
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlmodel import Field, Relationship, SQLModel
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -142,27 +142,31 @@ class Payment(SQLModel, table=True):
     Attributes:
         id: Primary key identifier for the payment
         user_id: Foreign key to the user who made the payment
-        amount: Amount of the payment
+        amount: Amount of the payment (stored as DECIMAL for exact precision)
         method: Payment method used (e.g., credit card, PayPal)
         status: Status of the payment (e.g., completed, pending, failed)
-        Plan: The plan associated with the payment
+        plan: The plan associated with the payment
         created_at: Timestamp when the payment was created
         updated_at: Timestamp when the payment was last updated
     """
 
     id: int | None = Field(default=None, primary_key=True)
     user_id: uuid.UUID = Field(foreign_key="user.id", index=True)
-    amount: float = Field(sa_column=Column(Text))
-    method: str = Field(sa_column=Column(Text))
-    status: str = Field(sa_column=Column(Text))
-    Plan: str = Field(sa_column=Column(Text))
+    amount: float = Field(sa_column=Column(DECIMAL(10, 2), nullable=False))
+    method: str = Field(sa_column=Column(Text, nullable=False))
+    status: str = Field(sa_column=Column(Text, nullable=False, index=True))
+    plan: str = Field(sa_column=Column(Text, nullable=False))
     created_at: datetime.datetime = Field(
         default_factory=lambda: datetime.datetime.now(datetime.UTC),
         sa_column=Column(DateTime(timezone=True), server_default=text("(now() AT TIME ZONE 'UTC')")),
     )
     updated_at: datetime.datetime = Field(
         default_factory=lambda: datetime.datetime.now(datetime.UTC),
-        sa_column=Column(DateTime(timezone=True), server_default=text("(now() AT TIME ZONE 'UTC')")),
+        sa_column=Column(
+            DateTime(timezone=True),
+            server_default=text("(now() AT TIME ZONE 'UTC')"),
+            onupdate=text("(now() AT TIME ZONE 'UTC')"),
+        ),
     )
 
 
@@ -181,8 +185,8 @@ class Subscription(SQLModel, table=True):
 
     id: int | None = Field(default=None, primary_key=True)
     user_id: uuid.UUID = Field(foreign_key="user.id", index=True)
-    payment_id: int | None = Field(foreign_key="payment.id", index=True)
-    plan: str = Field(sa_column=Column(Text))
+    payment_id: int = Field(foreign_key="payment.id", index=True, nullable=False)
+    plan: str = Field(sa_column=Column(Text, nullable=False))
     start_date: datetime.datetime = Field(
         default_factory=lambda: datetime.datetime.now(datetime.UTC),
         sa_column=Column(DateTime(timezone=True), server_default=text("(now() AT TIME ZONE 'UTC')")),
@@ -190,8 +194,14 @@ class Subscription(SQLModel, table=True):
     end_date: datetime.datetime = Field(
         default_factory=lambda: datetime.datetime.now(datetime.UTC) + datetime.timedelta(days=30),
         sa_column=Column(
-            DateTime(timezone=True), server_default=text("(now() AT TIME ZONE 'UTC') + interval '30 days'")
+            DateTime(timezone=True),
+            server_default=text("(now() AT TIME ZONE 'UTC') + interval '30 days'"),
+            index=True,
         ),
+    )
+
+    __table_args__ = (
+        UniqueConstraint('user_id', 'end_date', name='uix_user_active_subscription'),
     )
 
 
