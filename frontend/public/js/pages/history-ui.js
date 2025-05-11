@@ -63,6 +63,15 @@ document.addEventListener("DOMContentLoaded", () => {
     input.value = currentTitle;
     input.className = "conversation-edit";
 
+    // Find the parent li element to disable its click event during editing
+    const listItem = titleElement.closest(".history-item");
+    const originalOnClick = listItem ? listItem.onclick : null;
+
+    // Disable the click event on the parent list item during editing
+    if (listItem) {
+      listItem.onclick = (e) => e.stopPropagation();
+    }
+
     const handleSubmit = async () => {
       const newTitle = input.value.trim();
       if (newTitle && newTitle !== currentTitle) {
@@ -77,6 +86,11 @@ document.addEventListener("DOMContentLoaded", () => {
         titleElement.textContent = currentTitle;
       }
       input.remove();
+
+      // Restore the original click handler after editing is complete
+      if (listItem && originalOnClick) {
+        listItem.onclick = originalOnClick;
+      }
     };
 
     input.addEventListener("blur", handleSubmit);
