@@ -1,15 +1,5 @@
 @charset "UTF-8";
-/* Reset for landing page */
-body {
-  margin: 0;
-  padding: 0;
-  overflow-x: hidden;
-}
-
-.landing-container {
-  width: 100%;
-  overflow-x: hidden;
-}
+@import "./main.css";
 
 /* Navigation */
 .landing-nav {
@@ -183,13 +173,13 @@ body {
 .feature-content h2 {
   font-size: 2.5rem;
   margin-bottom: 20px;
-  color: #333;
+  color: black;
   line-height: 1.2;
 }
 
 .feature-content p {
   font-size: 1.1rem;
-  color: #666;
+  color: black;
   line-height: 1.6;
   margin-bottom: 20px;
 }
@@ -367,30 +357,5 @@ body {
     flex-direction: column;
     gap: 20px;
     text-align: center;
-  }
-}
-
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-  .cta-section {
-    background-color: #222;
-  }
-
-  .cta-section h2,
-  .feature-content h2 {
-    color: #f0f0f0;
-  }
-
-  .cta-section p,
-  .feature-content p {
-    color: #ddd;
-  }
-
-  .browser-button {
-    background-color: #444;
-  }
-
-  .browser-button:hover {
-    background-color: #555;
   }
 }
