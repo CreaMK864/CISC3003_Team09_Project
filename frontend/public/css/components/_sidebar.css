@@ -15,6 +15,11 @@
   font-size: var(--font-size-xl);
 }
 
+.sidebar h2 a {
+  color: var(--sidebar-text);
+  text-decoration: none;
+}
+
 .sidebar ul {
   list-style: none;
   margin-bottom: auto;
