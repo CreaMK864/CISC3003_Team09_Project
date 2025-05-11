@@ -33,18 +33,46 @@ async function update_username(uid, newUsername) {
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error("There was a problem with the update operation:", error);
+    if (error instanceof Error) {
+      console.error(
+        "There was a problem with the update operation:",
+        error.message,
+      );
+    } else {
+      console.error(
+        "There was a problem with the update operation: Unknown error",
+      );
+    }
   }
 }
 
 async function update_profile(user) {
   const uid = user.id;
   const user_name = await get_username(uid);
-  const profile_name = document.getElementById("profile_name");
-  const profile_form = document.getElementById("profile-form");
-  const profile_email = document.getElementById("profile_email");
-  const profile_btn = document.getElementById("profile_btn");
-  const success_msg = document.getElementById("success-message");
+  const profile_name = /** @type {HTMLInputElement} */ (
+    document.getElementById("profile_name")
+  );
+  const profile_form = /** @type {HTMLFormElement} */ (
+    document.getElementById("profile-form")
+  );
+  const profile_email = /** @type {HTMLInputElement} */ (
+    document.getElementById("profile_email")
+  );
+  const profile_btn = /** @type {HTMLButtonElement} */ (
+    document.getElementById("profile_btn")
+  );
+  const success_msg = /** @type {HTMLElement} */ (
+    document.getElementById("success-message")
+  );
+
+  if (
+    !profile_name ||
+    !profile_form ||
+    !profile_email ||
+    !profile_btn ||
+    !success_msg
+  )
+    return;
 
   profile_email.value = user.email;
   profile_name.placeholder = user_name;
@@ -58,7 +86,7 @@ async function update_profile(user) {
     }
   });
 
-  profile_form.addEventListener("submit", async () => {
+  profile_form.addEventListener("submit", async (event) => {
     event?.preventDefault();
     if (profile_name.value != user_name) {
       await update_username(uid, profile_name.value);

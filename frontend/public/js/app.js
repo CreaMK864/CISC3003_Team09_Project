@@ -12,30 +12,60 @@ import { API_BASE_URL } from "./config.js";
 import { sendMessage, connectToStream } from "./chat.js";
 
 // DOM elements for chat page (home.html)
-let messageForm = document.getElementById("message-form");
-let messageInput = document.getElementById("message-input");
-let messagesContainer = document.getElementById("chat-messages");
+const messageForm = /** @type {HTMLFormElement} */ (
+  document.getElementById("message-form")
+);
+const messageInput = /** @type {HTMLInputElement} */ (
+  document.getElementById("message-input")
+);
+const messagesContainer = /** @type {HTMLDivElement} */ (
+  document.getElementById("chat-messages")
+);
 
 // DOM elements for login and register pages (login.html, register.html)
-const loginForm = document.getElementById("login-form");
-const registerForm = document.getElementById("register-form");
-const googleLoginButton = document.getElementById("google-login");
-const googleRegisterButton = document.getElementById("google-register");
+const loginForm = /** @type {HTMLFormElement} */ (
+  document.getElementById("login-form")
+);
+const registerForm = /** @type {HTMLFormElement} */ (
+  document.getElementById("register-form")
+);
+const googleLoginButton = /** @type {HTMLButtonElement} */ (
+  document.getElementById("google-login")
+);
+const googleRegisterButton = /** @type {HTMLButtonElement} */ (
+  document.getElementById("google-register")
+);
 
 // DOM elements for test-auth.html
-const loginTab = document.getElementById("loginTab");
-const registerTab = document.getElementById("registerTab");
-const resetTab = document.getElementById("resetTab");
-const testLoginForm = document.getElementById("loginForm");
-const testRegisterForm = document.getElementById("registerForm");
-const testResetForm = document.getElementById("resetForm");
-const statusMessage = document.getElementById("statusMessage");
+const loginTab = /** @type {HTMLElement} */ (
+  document.getElementById("loginTab")
+);
+const registerTab = /** @type {HTMLElement} */ (
+  document.getElementById("registerTab")
+);
+const resetTab = /** @type {HTMLElement} */ (
+  document.getElementById("resetTab")
+);
+const testLoginForm = /** @type {HTMLFormElement} */ (
+  document.getElementById("loginForm")
+);
+const testRegisterForm = /** @type {HTMLFormElement} */ (
+  document.getElementById("registerForm")
+);
+const testResetForm = /** @type {HTMLFormElement} */ (
+  document.getElementById("resetForm")
+);
+const statusMessage = /** @type {HTMLElement} */ (
+  document.getElementById("statusMessage")
+);
 
 // New button for creating a new chat
-const createNewChatButton = document.getElementById("create-new-chat");
+const createNewChatButton = /** @type {HTMLButtonElement} */ (
+  document.getElementById("create-new-chat")
+);
 
-let activeSocket = null;
-let currentConversationId = null;
+let activeSocket = /** @type {WebSocket | null} */ (null);
+let currentConversationId = /** @type {number | null} */ (null);
 
 /**
  * Apply the selected theme to the document
@@ -109,24 +139,37 @@ export async function get_username(uid) {
  * @param {any} user
  */
 async function updateAuthUI(user) {
-  const auth_reg = document.getElementById("auth_reg");
-  const auth_logout = document.getElementById("auth_logout");
-  const userEmail = document.getElementById("user-email");
-  const alert_msg = document.getElementById("alert_msg");
-  const rdylogin = document.querySelector(".rdylogin");
+  const auth_reg = /** @type {HTMLElement} */ (
+    document.getElementById("auth_reg")
+  );
+  const auth_logout = /** @type {HTMLElement} */ (
+    document.getElementById("auth_logout")
+  );
+  const userEmail = /** @type {HTMLElement} */ (
+    document.getElementById("user-email")
+  );
+  const alert_msg = /** @type {HTMLElement} */ (
+    document.getElementById("alert_msg")
+  );
+  const rdylogin = /** @type {HTMLElement} */ (
+    document.querySelector(".rdylogin")
+  );
+  const authButtons = /** @type {HTMLElement} */ (
+    document.querySelector(".auth-buttons")
+  );
 
   if (user) {
     userEmail.textContent = "WELCOME ~ " + user.email;
     auth_logout.style.display = "block";
     auth_reg.style.display = "none";
-    document.querySelector(".auth-buttons").style.display = "none";
+    authButtons.style.display = "none";
     rdylogin.style.display = "inline";
     alert_msg.style.display = "none";
   } else {
     userEmail.textContent = "";
     auth_reg.style.display = "block";
     auth_logout.style.display = "none";
-    document.querySelector(".auth-buttons").style.display = "flex";
+    authButtons.style.display = "flex";
     rdylogin.style.display = "none";
     alert_msg.style.display = "flex";
   }
@@ -215,24 +258,34 @@ async function getOrCreateConversation() {
 
     if (conversations.length > 0) {
       currentConversationId = conversations[0].id;
-      document.querySelector(".chat-header h2").textContent =
-        conversations[0].title;
+      const chatHeader = /** @type {HTMLElement} */ (
+        document.querySelector(".chat-header h2")
+      );
+      if (chatHeader) {
+        chatHeader.textContent = conversations[0].title;
+      }
     } else {
       await createNewConversation();
     }
 
-    localStorage.setItem(
-      "current_conversation_id",
-      currentConversationId.toString(),
-    );
+    if (currentConversationId !== null) {
+      localStorage.setItem(
+        "current_conversation_id",
+        currentConversationId.toString(),
+      );
+    }
   } catch (error) {
     console.error("Error getting conversations:", error);
     displayErrorMessage(
       "Failed to load conversations. Using a default conversation.",
     );
     currentConversationId = 1;
-    document.querySelector(".chat-header h2").textContent =
-      "Default Conversation";
+    const chatHeader = /** @type {HTMLElement} */ (
+      document.querySelector(".chat-header h2")
+    );
+    if (chatHeader) {
+      chatHeader.textContent = "Default Conversation";
+    }
     localStorage.setItem(
       "current_conversation_id",
       currentConversationId.toString(),
@@ -266,7 +319,12 @@ async function createNewConversation() {
 
     const conversation = await response.json();
     currentConversationId = conversation.id;
-    document.querySelector(".chat-header h2").textContent = conversation.title;
+    const chatHeader = /** @type {HTMLElement} */ (
+      document.querySelector(".chat-header h2")
+    );
+    if (chatHeader) {
+      chatHeader.textContent = conversation.title;
+    }
   } catch (error) {
     console.error("Error creating conversation:", error);
     throw error;
@@ -283,10 +341,12 @@ async function createNewChat() {
     await createNewConversation();
 
     // Update localStorage
-    localStorage.setItem(
-      "current_conversation_id",
-      currentConversationId.toString(),
-    );
+    if (currentConversationId !== null) {
+      localStorage.setItem(
+        "current_conversation_id",
+        currentConversationId.toString(),
+      );
+    }
 
     // Clear the chat messages area
     if (messagesContainer) {
@@ -351,10 +411,6 @@ function displayErrorMessage(content) {
 
 // Event Listeners
 document.addEventListener("DOMContentLoaded", () => {
-  messageForm = document.getElementById("message-form");
-  messageInput = document.getElementById("message-input");
-  messagesContainer = document.getElementById("chat-messages");
-
   if (messageForm) {
     messageForm.addEventListener("submit", async (event) => {
       event.preventDefault();
@@ -375,6 +431,9 @@ document.addEventListener("DOMContentLoaded", () => {
       messageInput.value = "";
 
       try {
+        if (currentConversationId === null) {
+          throw new Error("No active conversation");
+        }
         const response = await sendMessage(currentConversationId, content);
         if (!response || !response.ws_url) {
           displayErrorMessage("Error: No WebSocket URL received");
@@ -394,13 +453,18 @@ document.addEventListener("DOMContentLoaded", () => {
             botMessageElement.textContent += content;
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
           },
+          /** @param {string} error */
           (error) => {
             botMessageElement.textContent = `Error: ${error}`;
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
           },
         );
       } catch (error) {
-        displayErrorMessage(`Error: ${error.message}`);
+        if (error instanceof Error) {
+          displayErrorMessage(`Error: ${error.message}`);
+        } else {
+          displayErrorMessage("An unknown error occurred");
+        }
       }
     });
   }
@@ -412,8 +476,12 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  const profileForm = document.getElementById("profile-form");
-  const themeSelect = document.getElementById("theme-select");
+  const profileForm = /** @type {HTMLFormElement} */ (
+    document.getElementById("profile-form")
+  );
+  const themeSelect = /** @type {HTMLSelectElement} */ (
+    document.getElementById("theme-select")
+  );
   if (profileForm && themeSelect) {
     profileForm.addEventListener("submit", (event) => {
       event.preventDefault();
@@ -423,7 +491,9 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  const themeToggleBtn = document.getElementById("theme-toggle");
+  const themeToggleBtn = /** @type {HTMLButtonElement} */ (
+    document.getElementById("theme-toggle")
+  );
   if (themeToggleBtn) {
     themeToggleBtn.addEventListener("click", () => {
       const currentTheme = localStorage.getItem("theme") || "light";
@@ -433,9 +503,11 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  document
-    .getElementById("logout-button")
-    ?.addEventListener("click", async () => {
+  const logoutButton = /** @type {HTMLButtonElement} */ (
+    document.getElementById("logout-button")
+  );
+  if (logoutButton) {
+    logoutButton.addEventListener("click", async () => {
       try {
         await signOut();
         window.location.href = "login.html";
@@ -444,20 +516,33 @@ document.addEventListener("DOMContentLoaded", () => {
         displayErrorMessage("Failed to sign out. Please try again.");
       }
     });
+  }
 });
 
 if (loginForm) {
   loginForm.addEventListener("submit", async (event) => {
     event.preventDefault();
-    const email = loginForm.querySelector("#email").value;
-    const password = loginForm.querySelector("#password").value;
+    const emailInput = /** @type {HTMLInputElement} */ (
+      loginForm.querySelector("#email")
+    );
+    const passwordInput = /** @type {HTMLInputElement} */ (
+      loginForm.querySelector("#password")
+    );
+    if (!emailInput || !passwordInput) return;
+
+    const email = emailInput.value;
+    const password = passwordInput.value;
     try {
       const user = await signInWithEmail(email, password);
       if (user) {
         window.location.href = "home.html";
       }
     } catch (error) {
-      alert("Login failed: " + error.message);
+      if (error instanceof Error) {
+        alert("Login failed: " + error.message);
+      } else {
+        alert("Login failed: An unknown error occurred");
+      }
     }
   });
 }
@@ -465,15 +550,27 @@ if (loginForm) {
 if (registerForm) {
   registerForm.addEventListener("submit", async (event) => {
     event.preventDefault();
-    const email = registerForm.querySelector("#email").value;
-    const password = registerForm.querySelector("#password").value;
+    const emailInput = /** @type {HTMLInputElement} */ (
+      registerForm.querySelector("#email")
+    );
+    const passwordInput = /** @type {HTMLInputElement} */ (
+      registerForm.querySelector("#password")
+    );
+    if (!emailInput || !passwordInput) return;
+
+    const email = emailInput.value;
+    const password = passwordInput.value;
     try {
       const user = await signUpWithEmail(email, password);
       if (user) {
         window.location.href = "home.html";
       }
     } catch (error) {
-      alert("Sign up failed: " + error.message);
+      if (error instanceof Error) {
+        alert("Sign up failed: " + error.message);
+      } else {
+        alert("Sign up failed: An unknown error occurred");
+      }
     }
   });
 }
@@ -483,7 +580,11 @@ if (googleLoginButton) {
     try {
       await signInWithGoogle();
     } catch (error) {
-      alert("Google Sign-In failed: " + error.message);
+      if (error instanceof Error) {
+        alert("Google Sign-In failed: " + error.message);
+      } else {
+        alert("Google Sign-In failed: An unknown error occurred");
+      }
     }
   });
 }
@@ -493,7 +594,11 @@ if (googleRegisterButton) {
     try {
       await signInWithGoogle();
     } catch (error) {
-      alert("Google Sign-In failed: " + error.message);
+      if (error instanceof Error) {
+        alert("Google Sign-In failed: " + error.message);
+      } else {
+        alert("Google Sign-In failed: An unknown error occurred");
+      }
     }
   });
 }
@@ -509,39 +614,73 @@ if (resetTab) {
 }
 
 if (testLoginForm) {
-  testLoginForm.querySelector("button").addEventListener("click", async () => {
-    const email = document.getElementById("loginEmail").value;
-    const password = document.getElementById("loginPassword").value;
-    try {
-      const user = await signInWithEmail(email, password);
-      if (user) {
-        showMessage("Login successful!");
-        setTimeout(() => {
-          window.location.href = "home.html";
-        }, 1500);
-      }
-    } catch (error) {
-      showMessage(`Error: ${error.message}`, true);
-    }
-  });
+  const loginButton = /** @type {HTMLButtonElement} */ (
+    testLoginForm.querySelector("button")
+  );
+  if (loginButton) {
+    loginButton.addEventListener("click", async () => {
+      const emailInput = /** @type {HTMLInputElement} */ (
+        document.getElementById("loginEmail")
+      );
+      const passwordInput = /** @type {HTMLInputElement} */ (
+        document.getElementById("loginPassword")
+      );
+      if (!emailInput || !passwordInput) return;
 
-  testLoginForm
-    .querySelector("button[onclick='signInWithGoogle()']")
-    .addEventListener("click", async () => {
+      const email = emailInput.value;
+      const password = passwordInput.value;
+      try {
+        const user = await signInWithEmail(email, password);
+        if (user) {
+          showMessage("Login successful!");
+          setTimeout(() => {
+            window.location.href = "home.html";
+          }, 1500);
+        }
+      } catch (error) {
+        if (error instanceof Error) {
+          showMessage(`Error: ${error.message}`, true);
+        } else {
+          showMessage("An unknown error occurred", true);
+        }
+      }
+    });
+  }
+
+  const googleButton = /** @type {HTMLButtonElement} */ (
+    testLoginForm.querySelector("button[onclick='signInWithGoogle()']")
+  );
+  if (googleButton) {
+    googleButton.addEventListener("click", async () => {
       try {
         await signInWithGoogle();
       } catch (error) {
-        showMessage(`Error: ${error.message}`, true);
+        if (error instanceof Error) {
+          showMessage(`Error: ${error.message}`, true);
+        } else {
+          showMessage("An unknown error occurred", true);
+        }
       }
     });
+  }
 }
 
 if (testRegisterForm) {
-  testRegisterForm
-    .querySelector("button")
-    .addEventListener("click", async () => {
-      const email = document.getElementById("registerEmail").value;
-      const password = document.getElementById("registerPassword").value;
+  const registerButton = /** @type {HTMLButtonElement} */ (
+    testRegisterForm.querySelector("button")
+  );
+  if (registerButton) {
+    registerButton.addEventListener("click", async () => {
+      const emailInput = /** @type {HTMLInputElement} */ (
+        document.getElementById("registerEmail")
+      );
+      const passwordInput = /** @type {HTMLInputElement} */ (
+        document.getElementById("registerPassword")
+      );
+      if (!emailInput || !passwordInput) return;
+
+      const email = emailInput.value;
+      const password = passwordInput.value;
       try {
         const user = await signUpWithEmail(email, password);
         if (user) {
@@ -553,31 +692,57 @@ if (testRegisterForm) {
           }, 1500);
         }
       } catch (error) {
-        showMessage(`Error: ${error.message}`, true);
+        if (error instanceof Error) {
+          showMessage(`Error: ${error.message}`, true);
+        } else {
+          showMessage("An unknown error occurred", true);
+        }
       }
     });
+  }
 
-  testRegisterForm
-    .querySelector("button[onclick='signInWithGoogle()']")
-    .addEventListener("click", async () => {
+  const googleButton = /** @type {HTMLButtonElement} */ (
+    testRegisterForm.querySelector("button[onclick='signInWithGoogle()']")
+  );
+  if (googleButton) {
+    googleButton.addEventListener("click", async () => {
       try {
         await signInWithGoogle();
       } catch (error) {
-        showMessage(`Error: ${error.message}`, true);
+        if (error instanceof Error) {
+          showMessage(`Error: ${error.message}`, true);
+        } else {
+          showMessage("An unknown error occurred", true);
+        }
       }
     });
+  }
 }
 
 if (testResetForm) {
-  testResetForm.querySelector("button").addEventListener("click", async () => {
-    const email = document.getElementById("resetEmail").value;
-    try {
-      await resetPassword(email);
-      showMessage("Password reset email sent. Please check your inbox.");
-    } catch (error) {
-      showMessage(`Error: ${error.message}`, true);
-    }
-  });
+  const resetButton = /** @type {HTMLButtonElement} */ (
+    testResetForm.querySelector("button")
+  );
+  if (resetButton) {
+    resetButton.addEventListener("click", async () => {
+      const emailInput = /** @type {HTMLInputElement} */ (
+        document.getElementById("resetEmail")
+      );
+      if (!emailInput) return;
+
+      const email = emailInput.value;
+      try {
+        await resetPassword(email);
+        showMessage("Password reset email sent. Please check your inbox.");
+      } catch (error) {
+        if (error instanceof Error) {
+          showMessage(`Error: ${error.message}`, true);
+        } else {
+          showMessage("An unknown error occurred", true);
+        }
+      }
+    });
+  }
 }
 
 document.addEventListener("DOMContentLoaded", () => {
