@@ -17,7 +17,7 @@
       <!-- Sidebar -->
       <nav class="sidebar" id="sidebar" aria-label="Main navigation">
         <div class="user-info">
-          <h2>My Chatbot</h2>
+          <h2><a href="index.html">My Chatbot</a></h2>
           <div id="user-email" class="user-email" aria-live="polite"></div>
         </div>
         <ul>
@@ -102,7 +102,7 @@
         </section>
         <section class="chat-input">
           <form id="message-form" novalidate>
-            <label for="message-input" class="visually-hidden"
+            <label for="message-input" style="display: none"
               >Type your message</label
             >
             <input
@@ -127,9 +127,8 @@
     >
       ☰
     </button>
-    <script type="module" src="js/script.js"></script>
+    <script type="module" src="js/pages/home-ui.js"></script>
     <script type="module" src="js/app.js"></script>
-    <script type="module" src="js/home.js"></script>
     <script src="js/components/footer.js"></script>
   </body>
 </html>
