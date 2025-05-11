@@ -286,7 +286,7 @@ async def init_default_plans(session: AsyncSession):
     for plan_data in default_plans:
         plan = await session.get(Plan, plan_data["id"])
         if not plan:
-            plan = Plan(**plan_data)  # pyright: ignore
+            plan = Plan(**plan_data)  # pyright: ignore [reportArgumentType]
             session.add(plan)
 
     await session.commit()
