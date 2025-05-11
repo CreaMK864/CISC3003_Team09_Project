@@ -53,6 +53,7 @@ class User(SQLModel, table=True):
         last_selected_model: The model the user last selected
         created_at: Timestamp when the user was created
         updated_at: Timestamp when the user was last updated
+        theme: User's selected theme (dark or light)
         conversations: Relationship to the user's conversations
     """
 
@@ -69,6 +70,7 @@ class User(SQLModel, table=True):
         default_factory=lambda: datetime.datetime.now(datetime.UTC),
         sa_column=Column(DateTime(timezone=True), server_default=text("(now() AT TIME ZONE 'UTC')")),
     )
+    theme: str = Field(sa_column=Column(Text), default="light")
 
     conversations: list["Conversation"] = Relationship(back_populates="user")
 
