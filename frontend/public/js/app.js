@@ -10,7 +10,6 @@ import {
   signInWithEmail,
   signInWithGoogle,
   signUpWithEmail,
-  resetPassword,
   getAuthToken,
   getCurrentUser,
   signOut,
@@ -41,29 +40,6 @@ const googleLoginButton = /** @type {HTMLButtonElement} */ (
 );
 const googleRegisterButton = /** @type {HTMLButtonElement} */ (
   document.getElementById("google-register")
-);
-
-// DOM elements for test-auth.html
-const loginTab = /** @type {HTMLElement} */ (
-  document.getElementById("loginTab")
-);
-const registerTab = /** @type {HTMLElement} */ (
-  document.getElementById("registerTab")
-);
-const resetTab = /** @type {HTMLElement} */ (
-  document.getElementById("resetTab")
-);
-const testLoginForm = /** @type {HTMLFormElement} */ (
-  document.getElementById("loginForm")
-);
-const testRegisterForm = /** @type {HTMLFormElement} */ (
-  document.getElementById("registerForm")
-);
-const testResetForm = /** @type {HTMLFormElement} */ (
-  document.getElementById("resetForm")
-);
-const statusMessage = /** @type {HTMLElement} */ (
-  document.getElementById("statusMessage")
 );
 
 // New button for creating a new chat
@@ -189,69 +165,6 @@ async function updateAuthUI(user) {
     authButtons.style.display = "flex";
     rdylogin.style.display = "none";
     alert_msg.style.display = "flex";
-  }
-}
-
-/**
- * Show a specific tab (for test-auth.html)
- * @param {string} tabName - The name of the tab to show ('login', 'register', 'reset')
- * @returns {void}
- */
-function showTab(tabName) {
-  if (!testLoginForm || !testRegisterForm || !testResetForm) return;
-
-  testLoginForm.classList.add("hidden");
-  testRegisterForm.classList.add("hidden");
-  testResetForm.classList.add("hidden");
-
-  loginTab?.classList.remove("tab-active");
-  registerTab?.classList.remove("tab-active");
-  resetTab?.classList.remove("tab-active");
-
-  if (tabName === "login") {
-    testLoginForm.classList.remove("hidden");
-    loginTab?.classList.add("tab-active");
-  } else if (tabName === "register") {
-    testRegisterForm.classList.remove("hidden");
-    registerTab?.classList.add("tab-active");
-  } else if (tabName === "reset") {
-    testResetForm.classList.remove("hidden");
-    resetTab?.classList.add("tab-active");
-  }
-  return;
-}
-
-/**
- * Show status message (for test-auth.html)
- * @param {string} message - The message to display
- * @param {boolean} [isError=false] - Whether the message is an error
- * @returns {void}
- */
-function showMessage(message, isError = false) {
-  if (!statusMessage) return;
-
-  statusMessage.textContent = message;
-  statusMessage.classList.remove(
-    "hidden",
-    "bg-green-100",
-    "text-green-800",
-    "bg-red-100",
-    "text-red-800",
-  );
-  if (isError) {
-    statusMessage.classList.add(
-      "bg-red-100",
-      "text-red-800",
-      "dark:bg-red-900",
-      "dark:text-red-200",
-    );
-  } else {
-    statusMessage.classList.add(
-      "bg-green-100",
-      "text-green-800",
-      "dark:bg-green-900",
-      "dark:text-green-200",
-    );
   }
 }
 
@@ -630,148 +543,6 @@ if (googleRegisterButton) {
       }
     }
   });
-}
-
-if (loginTab) {
-  loginTab.addEventListener("click", () => showTab("login"));
-}
-if (registerTab) {
-  registerTab.addEventListener("click", () => showTab("register"));
-}
-if (resetTab) {
-  resetTab.addEventListener("click", () => showTab("reset"));
-}
-
-if (testLoginForm) {
-  const loginButton = /** @type {HTMLButtonElement} */ (
-    testLoginForm.querySelector("button")
-  );
-  if (loginButton) {
-    loginButton.addEventListener("click", async () => {
-      const emailInput = /** @type {HTMLInputElement} */ (
-        document.getElementById("loginEmail")
-      );
-      const passwordInput = /** @type {HTMLInputElement} */ (
-        document.getElementById("loginPassword")
-      );
-      if (!emailInput || !passwordInput) return;
-
-      const email = emailInput.value;
-      const password = passwordInput.value;
-      try {
-        const user = await signInWithEmail(email, password);
-        if (user) {
-          showMessage("Login successful!");
-          setTimeout(() => {
-            window.location.href = "home.html";
-          }, 1500);
-        }
-      } catch (error) {
-        if (error instanceof Error) {
-          showMessage(`Error: ${error.message}`, true);
-        } else {
-          showMessage("An unknown error occurred", true);
-        }
-      }
-    });
-  }
-
-  const googleButton = /** @type {HTMLButtonElement} */ (
-    testLoginForm.querySelector("button[onclick='signInWithGoogle()']")
-  );
-  if (googleButton) {
-    googleButton.addEventListener("click", async () => {
-      try {
-        await signInWithGoogle();
-      } catch (error) {
-        if (error instanceof Error) {
-          showMessage(`Error: ${error.message}`, true);
-        } else {
-          showMessage("An unknown error occurred", true);
-        }
-      }
-    });
-  }
-}
-
-if (testRegisterForm) {
-  const registerButton = /** @type {HTMLButtonElement} */ (
-    testRegisterForm.querySelector("button")
-  );
-  if (registerButton) {
-    registerButton.addEventListener("click", async () => {
-      const emailInput = /** @type {HTMLInputElement} */ (
-        document.getElementById("registerEmail")
-      );
-      const passwordInput = /** @type {HTMLInputElement} */ (
-        document.getElementById("registerPassword")
-      );
-      if (!emailInput || !passwordInput) return;
-
-      const email = emailInput.value;
-      const password = passwordInput.value;
-      try {
-        const user = await signUpWithEmail(email, password);
-        if (user) {
-          showMessage(
-            "Registration successful! Please check your email for confirmation.",
-          );
-          setTimeout(() => {
-            window.location.href = "home.html";
-          }, 1500);
-        }
-      } catch (error) {
-        if (error instanceof Error) {
-          showMessage(`Error: ${error.message}`, true);
-        } else {
-          showMessage("An unknown error occurred", true);
-        }
-      }
-    });
-  }
-
-  const googleButton = /** @type {HTMLButtonElement} */ (
-    testRegisterForm.querySelector("button[onclick='signInWithGoogle()']")
-  );
-  if (googleButton) {
-    googleButton.addEventListener("click", async () => {
-      try {
-        await signInWithGoogle();
-      } catch (error) {
-        if (error instanceof Error) {
-          showMessage(`Error: ${error.message}`, true);
-        } else {
-          showMessage("An unknown error occurred", true);
-        }
-      }
-    });
-  }
-}
-
-if (testResetForm) {
-  const resetButton = /** @type {HTMLButtonElement} */ (
-    testResetForm.querySelector("button")
-  );
-  if (resetButton) {
-    resetButton.addEventListener("click", async () => {
-      const emailInput = /** @type {HTMLInputElement} */ (
-        document.getElementById("resetEmail")
-      );
-      if (!emailInput) return;
-
-      const email = emailInput.value;
-      try {
-        await resetPassword(email);
-        showMessage("Password reset email sent. Please check your inbox.");
-      } catch (error) {
-        if (error instanceof Error) {
-          showMessage(`Error: ${error.message}`, true);
-        } else {
-          showMessage("An unknown error occurred", true);
-        }
-      }
-    });
-  }
 }
 
 document.addEventListener("DOMContentLoaded", () => {
