@@ -6,7 +6,6 @@ It includes endpoints for conversation handling and message operations.
 The API uses SQLModel for database interactions and supports real-time chat functionality.
 
 The module provides the following main features:
-- Conversation management (create, retrieve, and list conversations)
 - Message management (create and retrieve messages)
 - Real-time chat using WebSockets with OpenAI integration
 - Health check endpoint
@@ -18,18 +17,20 @@ import datetime
 import json
 import uuid
 from contextlib import asynccontextmanager
-from typing import Any, TypedDict
+from typing import TypedDict
 
 import uvicorn
-from fastapi import Depends, FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect, status
+from fastapi import Depends, FastAPI, Request, WebSocket, WebSocketDisconnect, status
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from chatbot_api.auth import UserInfo, get_current_user
-from chatbot_api.config import AVAILABLE_MODELS, DEFAULT_MODEL, is_valid_model
-from chatbot_api.database import Conversation, Message, Role, create_db_and_tables, create_session, get_session
+from chatbot_api.config import AVAILABLE_MODELS
+from chatbot_api.conversation_routes import router as conversation_router
+from chatbot_api.conversation_routes import verify_conversation_access
+from chatbot_api.database import Message, Role, create_db_and_tables, create_session, get_session
 from chatbot_api.openai_client import stream_chat_completion
 from chatbot_api.user_routes import router as user_router
 
@@ -57,8 +58,9 @@ app.add_middleware(
     allow_headers=["*"],  # Allows all headers
 )
 
-# Include the user routes
+# Include the routers
 app.include_router(user_router)
+app.include_router(conversation_router)
 
 
 class StreamRequest(TypedDict):
@@ -71,26 +73,6 @@ class StreamRequest(TypedDict):
 
 
 stream_requests: dict[str, StreamRequest] = {}
-
-
-class ConversationCreate(BaseModel):
-    """
-    Request model for creating a new conversation.
-
-    Attributes:
-        title: Title of the conversation, defaults to "New Conversation"
-        model: The model used for this conversation, defaults to DEFAULT_MODEL
-    """
-
-    title: str = "New Conversation"
-    model: str = DEFAULT_MODEL
-
-    @field_validator("model")
-    @classmethod
-    def validate_model(cls, v: Any) -> str:
-        if not is_valid_model(v):
-            raise ValueError(f"Invalid model. Available models: {', '.join(AVAILABLE_MODELS)}")
-        return v
 
 
 class MessageCreate(BaseModel):
@@ -106,26 +88,6 @@ class MessageCreate(BaseModel):
     content: str
 
 
-class ConversationUpdate(BaseModel):
-    """
-    Request model for updating a conversation.
-
-    Attributes:
-        title: New title for the conversation
-        model: New model to use for this conversation
-    """
-
-    title: str | None = None
-    model: str | None = None
-
-    @field_validator("model")
-    @classmethod
-    def validate_model(cls, v: Any) -> str | None:
-        if v is not None and not is_valid_model(v):
-            raise ValueError(f"Invalid model. Available models: {', '.join(AVAILABLE_MODELS)}")
-        return v
-
-
 @app.get("/health")
 async def health_check():
     """
@@ -135,185 +97,6 @@ async def health_check():
         A dictionary with a status message
     """
     return {"status": "ok"}
-
-
-# Conversation CRUD operations
-async def verify_conversation_access(
-    conversation_id: int,
-    current_user: UserInfo,
-    session: AsyncSession,
-) -> Conversation:
-    """
-    Verify that a conversation exists and belongs to the current user.
-
-    Args:
-        conversation_id: The ID of the conversation to verify
-        current_user: User information from the JWT token
-        session: Database session
-
-    Returns:
-        The conversation object if it exists and belongs to the user
-
-    Raises:
-        HTTPException: If the conversation is not found or doesn't belong to the user
-    """
-    conversation = await session.get(Conversation, conversation_id)
-    if not conversation:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Conversation not found")
-
-    # Check if the conversation belongs to the authenticated user
-    user_id = uuid.UUID(current_user["id"])
-    if conversation.user_id != user_id:
-        # Don't leak information about whether a conversation exists or not
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Conversation not found")
-
-    return conversation
-
-
-@app.get("/conversations", response_model=list[Conversation])
-async def get_user_conversations(
-    current_user: UserInfo = Depends(get_current_user), session: AsyncSession = Depends(get_session)
-):
-    """
-    Get all conversations for the authenticated user.
-    Requires authentication with Supabase JWT.
-
-    Args:
-        current_user: User information from JWT token
-        session: Database session
-
-    Returns:
-        A list of conversation objects belonging to the user
-    """
-    user_id = uuid.UUID(current_user["id"])
-    statement = select(Conversation).where(Conversation.user_id == user_id)
-    result = await session.exec(statement)
-    conversations = result.all()
-    return conversations
-
-
-@app.post("/conversations", response_model=Conversation)
-async def create_conversation(
-    conversation: ConversationCreate,
-    current_user: UserInfo = Depends(get_current_user),
-    session: AsyncSession = Depends(get_session),
-):
-    """
-    Create a new conversation.
-    Requires authentication with Supabase JWT.
-
-    Args:
-        conversation: Conversation information from request body
-        current_user: User information from JWT token
-        session: Database session
-
-    Returns:
-        The created conversation object
-
-    Raises:
-        HTTPException: If the model is invalid
-    """
-    user_id = uuid.UUID(current_user["id"])
-
-    db_conversation = Conversation(user_id=user_id, title=conversation.title, model=conversation.model)
-    session.add(db_conversation)
-    await session.commit()
-    await session.refresh(db_conversation)
-    return db_conversation
-
-
-@app.get("/conversations/{conversation_id}", response_model=Conversation)
-async def get_conversation(
-    conversation_id: int,
-    current_user: UserInfo = Depends(get_current_user),
-    session: AsyncSession = Depends(get_session),
-):
-    """
-    Get a conversation by its ID.
-    Requires authentication with Supabase JWT.
-
-    Args:
-        conversation_id: The ID of the conversation to retrieve
-        current_user: User information from JWT token
-        session: Database session
-
-    Returns:
-        The conversation object if found
-
-    Raises:
-        HTTPException: If the conversation is not found or doesn't belong to the user
-    """
-    conversation = await verify_conversation_access(conversation_id, current_user, session)
-    return conversation
-
-
-@app.patch("/conversations/{conversation_id}", response_model=Conversation)
-async def update_conversation(
-    conversation_id: int,
-    update: ConversationUpdate,
-    current_user: UserInfo = Depends(get_current_user),
-    session: AsyncSession = Depends(get_session),
-):
-    """
-    Update a conversation's title or model.
-    Requires authentication with Supabase JWT.
-
-    Args:
-        conversation_id: The ID of the conversation to update
-        update: Update information from request body
-        current_user: User information from JWT token
-        session: Database session
-
-    Returns:
-        The updated conversation object
-
-    Raises:
-        HTTPException: If the conversation is not found or doesn't belong to the user
-    """
-    conversation = await verify_conversation_access(conversation_id, current_user, session)
-
-    # Update fields if provided
-    if update.title is not None:
-        conversation.title = update.title
-    if update.model is not None:
-        conversation.model = update.model
-
-    # Update the timestamp
-    conversation.updated_at = datetime.datetime.now(datetime.UTC)
-
-    session.add(conversation)
-    await session.commit()
-    await session.refresh(conversation)
-    return conversation
-
-
-@app.get("/conversations/{conversation_id}/messages", response_model=list[Message])
-async def get_conversation_messages(
-    conversation_id: int,
-    current_user: UserInfo = Depends(get_current_user),
-    session: AsyncSession = Depends(get_session),
-):
-    """
-    Get all messages for a specific conversation.
-    Requires authentication with Supabase JWT.
-
-    Args:
-        conversation_id: The ID of the conversation whose messages to retrieve
-        current_user: User information from JWT token
-        session: Database session
-
-    Returns:
-        A list of message objects belonging to the conversation
-
-    Raises:
-        HTTPException: If the conversation is not found or doesn't belong to the user
-    """
-    await verify_conversation_access(conversation_id, current_user, session)
-
-    statement = select(Message).where(Message.conversation_id == conversation_id)
-    result = await session.exec(statement)
-    messages = result.all()
-    return messages
 
 
 @app.post("/chat", response_model=dict)
@@ -471,60 +254,6 @@ async def get_available_models():
         A list of available model names
     """
     return {"models": AVAILABLE_MODELS}
-
-
-class ConversationSearchResult(BaseModel):
-    """
-    Response model for conversation search results.
-
-    Attributes:
-        conversation: The conversation object
-        matching_messages: List of messages that match the search query
-    """
-
-    conversation: Conversation
-    matching_messages: list[Message]
-
-
-@app.get("/search", response_model=list[ConversationSearchResult])
-async def search_conversations(
-    query: str,
-    current_user: UserInfo = Depends(get_current_user),
-    session: AsyncSession = Depends(get_session),
-):
-    """
-    Search through conversations and messages for the authenticated user.
-    Requires authentication with Supabase JWT.
-
-    Args:
-        query: The search query string
-        current_user: User information from JWT token
-        session: Database session
-
-    Returns:
-        A list of conversations with their matching messages that contain the search query
-    """
-    user_id = uuid.UUID(current_user["id"])
-
-    # Get all conversations for the user
-    conv_statement = select(Conversation).where(Conversation.user_id == user_id)
-    conversations = (await session.exec(conv_statement)).all()
-
-    results: list[ConversationSearchResult] = []
-    for conversation in conversations:
-        # Search in conversation title
-        title_match = query.lower() in conversation.title.lower()
-
-        # Search in messages
-        msg_statement = select(Message).where(Message.conversation_id == conversation.id)
-        messages = (await session.exec(msg_statement)).all()
-        matching_messages = [msg for msg in messages if query.lower() in msg.content.lower()]
-
-        # If either title or messages match, include in results
-        if title_match or matching_messages:
-            results.append(ConversationSearchResult(conversation=conversation, matching_messages=matching_messages))
-
-    return results
 
 
 def main():
